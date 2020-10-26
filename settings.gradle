@@ -1,0 +1,9 @@
+include ':rapidminer-studio-core'
+
+new File(rootDir, "open-source").listFiles().each {
+    if (it.directory && new File(it, 'build.gradle').exists())
+    {
+        include ":${it.name}"
+        project(":${it.name}").projectDir = file("open-source/${it.name}")
+    }
+}

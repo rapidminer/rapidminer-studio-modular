@@ -1,0 +1,32 @@
+buildscript {
+    repositories {
+        jcenter()
+        maven { url 'https://maven.rapidminer.com/content/groups/public/' }
+    }
+    dependencies {
+        classpath 'com.rapidminer.gradle:java-basics:0.4.0'
+        classpath 'com.rapidminer.gradle:java-publishing:0.2.1'
+    }
+}
+
+apply plugin: 'com.rapidminer.java-basics'
+apply plugin: 'com.rapidminer.java-publishing.agpl-v3'
+
+repositories {
+    jcenter()
+    maven { url 'https://maven.rapidminer.com/content/groups/public/' }
+}
+
+group 'com.rapidminer.studio'
+version '9.8.0'
+
+dependencies {
+    compile project(':rapidminer-studio-filesystem')
+    compile project(':rapidminer-studio-tools')
+
+    // new encryption framework (since 9.7)
+    compile 'com.google.crypto.tink:tink:1.3.0'
+    compile 'commons-codec:commons-codec:1.14'
+
+    testCompile 'junit:junit:4.12'
+}

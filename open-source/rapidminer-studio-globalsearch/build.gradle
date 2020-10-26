@@ -1,0 +1,31 @@
+buildscript {
+    repositories {
+        jcenter()
+        maven { url 'https://maven.rapidminer.com/content/groups/public/' }
+    }
+    dependencies {
+        classpath 'com.rapidminer.gradle:java-basics:0.4.0'
+        classpath 'com.rapidminer.gradle:java-publishing:0.2.1'
+    }
+}
+
+apply plugin: 'com.rapidminer.java-basics'
+apply plugin: 'com.rapidminer.java-publishing.agpl-v3'
+
+repositories {
+    jcenter()
+    maven { url 'https://maven.rapidminer.com/content/groups/public/' }
+}
+
+group 'com.rapidminer.studio'
+version '9.8.0'
+
+dependencies {
+    compile project(':rapidminer-studio-tools')
+
+    compile 'org.apache.lucene:lucene-queryparser:7.2.0'
+    // Highlight Lucene search result matches
+    compile 'org.apache.lucene:lucene-highlighter:7.2.0'
+
+    testCompile 'org.mockito:mockito-core:2.8.47'
+}

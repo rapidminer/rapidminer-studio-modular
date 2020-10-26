@@ -1,0 +1,17 @@
+bin/
+target/
+build/
+.gradle/
+.settings/
+*.classpath
+*.project
+*.DS_Store
+lib/
+**/out/
+**/build/
+licenses/
+.idea/
+*.iml
+*.class
+**/*.tutorial
+**/*.template
