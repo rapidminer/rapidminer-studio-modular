@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
- * 
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.tools.plugin;
 
 import java.awt.Frame;
@@ -60,6 +60,7 @@ import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.jar.Attributes;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
@@ -126,6 +127,75 @@ import com.rapidminer.tools.usagestats.ActionStatisticsCollector;
  * @author Simon Fischer, Ingo Mierswa, Nils Woehler, Adrian Wilke
  */
 public class Plugin {
+
+	/**
+	 * The reason why an extension is incompatible.
+	 *
+	 * @since 9.9.0
+	 */
+	public enum IncompatibilityReason {
+		MISSING_DEPENDENCY(I18N.getGUILabel("plugin.incompatibility_reason.missing_dependency")),
+
+		ERROR_DURING_STARTUP(I18N.getGUILabel("plugin.incompatibility_reason.error_during_startup")),
+
+		DEPRECATED(I18N.getGUILabel("plugin.incompatibility_reason.deprecated")),
+
+		BLACKLISTED(I18N.getGUILabel("plugin.incompatibility_reason.blacklisted"));
+
+
+		private final String message;
+
+
+		IncompatibilityReason(String message) {
+			this.message = message;
+		}
+
+		/**
+		 * @return an i18n description of the reason.
+		 */
+		public String getI18nMessage() {
+			return message;
+		}
+	}
+
+	/**
+	 * A plugin that could not be loaded.
+	 *
+	 * @since 9.9.0
+	 */
+	public static final class BrokenPlugin {
+		private final Plugin plugin;
+		private final IncompatibilityReason reason;
+		private final String message;
+
+
+		private BrokenPlugin(Plugin plugin, IncompatibilityReason reason, String message) {
+			this.plugin = plugin;
+			this.reason = reason;
+			this.message = message;
+		}
+
+		/**
+		 * @return the plugin that could not be loaded
+		 */
+		public Plugin getPlugin() {
+			return plugin;
+		}
+
+		/**
+		 * @return the reason why it could not be loaded
+		 */
+		public IncompatibilityReason getReason() {
+			return reason;
+		}
+
+		/**
+		 * @return the message associated with it. Can be {@code null}
+		 */
+		public String getMessage() {
+			return message;
+		}
+	}
 
 	/**
 	 * The name for the manifest entry RapidMiner-Type which can be used to indicate that a jar file
@@ -207,7 +277,7 @@ public class Plugin {
 	private String requiredRapidMinerVersion = "0.0.000";
 
 	/** The plugins and their versions which are needed for this plugin. */
-	private final List<Dependency> pluginDependencies = new LinkedList<>();
+	private final List<Dependency> pluginDependencies = new CopyOnWriteArrayList<>();
 
 	private String extensionId;
 
@@ -228,6 +298,8 @@ public class Plugin {
 	private String pluginGUIDescriptions;
 
 	private String pluginSettingsDescriptions;
+
+	private String pluginLoggingDescriptions;
 
 	private String pluginSettingsStructure;
 
@@ -282,7 +354,7 @@ public class Plugin {
 	private static final Collection<Plugin> ALL_PLUGINS = new TreeSet<>(PLUGIN_COMPARATOR);
 
 	/** Set of plugins that failed to load. */
-	private static final Set<Plugin> INCOMPATIBLE_PLUGINS = new HashSet<>();
+	private static final Set<BrokenPlugin> INCOMPATIBLE_PLUGINS = new HashSet<>();
 
 	/**
 	 * The map of blacklisted plugins that should not be loaded. The key is the extension id. The
@@ -458,6 +530,10 @@ public class Plugin {
 		return pluginSettingsDescriptions;
 	}
 
+	public String getPluginLoggingDescriptions() {
+		return pluginLoggingDescriptions;
+	}
+
 	public String getPluginSettingsStructure() {
 		return pluginSettingsStructure;
 	}
@@ -478,7 +554,7 @@ public class Plugin {
 
 	/** Returns the plugin dependencies of this plugin. */
 	public List<Dependency> getPluginDependencies() {
-		return pluginDependencies;
+		return new ArrayList<>(pluginDependencies);
 	}
 
 	/**
@@ -510,27 +586,31 @@ public class Plugin {
 		}
 	}
 
-	/** Checks the RapidMiner version and plugin dependencies. */
-	private boolean checkDependencies(Plugin plugin, Collection<Plugin> plugins) {
+	/**
+	 * Checks the RapidMiner version and plugin dependencies.
+	 *
+	 * @return the missing dependency ids, empty if all dependencies are met
+	 */
+	private Set<String> checkDependencies(Plugin plugin, Collection<Plugin> plugins) {
+		Set<String> missingDependencies = new HashSet<>();
 		if (RapidMiner.getVersion().compareTo(getNecessaryRapidMinerVersion()) < 0) {
 			LogService.getRoot().log(Level.WARNING,
 					"com.rapidminer.tools.plugin.Plugin.registring_operators_error_rm_version",
 					new Object[] { plugin.getName(), plugin.getNecessaryRapidMinerVersion(), RapidMiner.getVersion() });
-			return false;
+			missingDependencies.add(String.format("%s %s", "RapidMiner Studio", plugin.getNecessaryRapidMinerVersion()));
+			// we shortcut here, because this may have other implications like expecting certain code to be there
+			return missingDependencies;
 		}
 		// other extensions
-		Iterator<Dependency> i = pluginDependencies.iterator();
-		while (i.hasNext()) {
-			Dependency dependency = i.next();
+		for (Dependency dependency : pluginDependencies) {
 			if (!dependency.isFulfilled(plugins)) {
 				LogService.getRoot().log(Level.WARNING,
 						"com.rapidminer.tools.plugin.Plugin.registring_operators_error_ext_missing",
-						new Object[] { plugin.getName(), dependency.getPluginExtensionId(), dependency.getPluginVersion() });
-				return false;
+						new Object[]{plugin.getName(), dependency.getPluginExtensionId(), dependency.getPluginVersion()});
+				missingDependencies.add(String.format("%s[%s]", dependency.getPluginExtensionId(), dependency.getPluginVersion()));
 			}
 		}
-		// all ok
-		return true;
+		return missingDependencies;
 	}
 
 	/** Collects all meta data of the plugin from the manifest file. */
@@ -583,6 +663,7 @@ public class Plugin {
 			pluginGUIDescriptions = getDescriptorResource("GUI-Descriptor", false, true, atts);
 			pluginSettingsDescriptions = getDescriptorResource("Settings-Descriptor", false, true, atts);
 			pluginSettingsStructure = getDescriptorResource("SettingsStructure-Descriptor", false, false, atts);
+			pluginLoggingDescriptions = getDescriptorResource("Logging-Descriptor", false, true, atts);
 		} catch (Exception e) {
 			if (e instanceof IOException) {
 				throw e;
@@ -737,6 +818,9 @@ public class Plugin {
 					this.classLoader);
 			I18N.registerSettingsBundle(settingsRessourceBundle);
 		}
+		if (pluginLoggingDescriptions != null) {
+			I18N.registerLoggingBundle(ResourceBundle.getBundle(pluginLoggingDescriptions, Locale.getDefault(), this.classLoader));
+		}
 
 		// Do only register renderers and process renderer colors if not in headless mode
 		if (!RapidMiner.getExecutionMode().isHeadless()) {
@@ -789,7 +873,7 @@ public class Plugin {
 	}
 
 	/**
-	 * Scans the directory for jar files and calls {@link #registerPlugins(List, boolean)} on the
+	 * Scans the directory for jar files and calls {@link #registerPlugins(List, boolean, boolean)} on the
 	 * list of files.
 	 */
 	private static void findAndRegisterPlugins(File pluginDir, boolean showWarningForNonPluginJars,
@@ -998,10 +1082,11 @@ public class Plugin {
 		Iterator<Plugin> i = ALL_PLUGINS.iterator();
 		while (i.hasNext()) {
 			Plugin plugin = i.next();
-			if (!plugin.checkDependencies(plugin, ALL_PLUGINS)) {
+			Set<String> missingDependencies = plugin.checkDependencies(plugin, ALL_PLUGINS);
+			if (!missingDependencies.isEmpty()) {
 				plugin.disabled = true;
 				i.remove();
-				INCOMPATIBLE_PLUGINS.add(plugin);
+				INCOMPATIBLE_PLUGINS.add(new BrokenPlugin(plugin, IncompatibilityReason.MISSING_DEPENDENCY, String.join(", ", missingDependencies)));
 			}
 		}
 
@@ -1018,7 +1103,7 @@ public class Plugin {
 							"com.rapidminer.tools.plugin.Plugin.plugin_initializing_error", e), e);
 					i.remove();
 					plugin.disabled = true;
-					INCOMPATIBLE_PLUGINS.add(plugin);
+					INCOMPATIBLE_PLUGINS.add(new BrokenPlugin(plugin, IncompatibilityReason.ERROR_DURING_STARTUP, e.getMessage()));
 				}
 			}
 		}
@@ -1115,10 +1200,14 @@ public class Plugin {
 		Iterator<Plugin> i = ALL_PLUGINS.iterator();
 		while (i.hasNext()) {
 			Plugin plugin = i.next();
-			if (plugin.isIncompatible()) {
+			if (plugin.isBlacklisted()) {
 				plugin.disabled = true;
 				i.remove();
-				INCOMPATIBLE_PLUGINS.add(plugin);
+				INCOMPATIBLE_PLUGINS.add(new BrokenPlugin(plugin, IncompatibilityReason.BLACKLISTED, I18N.getGUILabel("plugin.blacklisted.label")));
+			} else if (plugin.isDeprecated()) {
+				plugin.disabled = true;
+				i.remove();
+				INCOMPATIBLE_PLUGINS.add(new BrokenPlugin(plugin, IncompatibilityReason.DEPRECATED, I18N.getGUILabel("plugin.deprecated.label")));
 			}
 		}
 	}
@@ -1128,10 +1217,11 @@ public class Plugin {
 	 *
 	 * @return whether the plugin is incompatible
 	 */
-	private final boolean isIncompatible() {
-		if (!isExtensionWhitelisted(this)) {
-			return true;
-		}
+	private boolean isBlacklisted() {
+		return !isExtensionWhitelisted(this);
+	}
+
+	private boolean isDeprecated() {
 		if (PLUGIN_BLACKLIST.containsKey(getExtensionId())) {
 			Pair<VersionNumber, VersionNumber> forbiddenRange = PLUGIN_BLACKLIST.get(getExtensionId());
 			if (forbiddenRange == null) {
@@ -1165,6 +1255,7 @@ public class Plugin {
 			}
 
 		}
+
 		return false;
 	}
 
@@ -1227,7 +1318,7 @@ public class Plugin {
 						// if we cannot find dependency plugin: Don't load this one, instead remove
 						// it and post error
 						ALL_PLUGINS.remove(plugin);
-						INCOMPATIBLE_PLUGINS.add(plugin);
+						INCOMPATIBLE_PLUGINS.add(new BrokenPlugin(plugin, IncompatibilityReason.MISSING_DEPENDENCY, dependency.getPluginExtensionId()));
 						iterator.remove();
 						LogService.getRoot().log(Level.SEVERE, "com.rapidminer.tools.plugin.Plugin.loading_extension_error",
 								new Object[] { plugin.extensionId, dependency.getPluginExtensionId() });
@@ -1283,8 +1374,20 @@ public class Plugin {
 	 * Returns unmodifiable list of plugins that failed to load.
 	 *
 	 * @return the list of plugins
+	 * @deprecated since 9.9.0, use {@link #getFailedPlugins()} instead
 	 */
+	@Deprecated
 	public static Collection<Plugin> getIncompatiblePlugins() {
+		return Collections.unmodifiableCollection(INCOMPATIBLE_PLUGINS.stream().map(BrokenPlugin::getPlugin).collect(Collectors.toSet()));
+	}
+
+	/**
+	 * Returns unmodifiable list of plugins that failed to load.
+	 *
+	 * @return the list of plugins with reasons why the failed to load
+	 * @since 9.9.0
+	 */
+	public static Collection<BrokenPlugin> getFailedPlugins() {
 		return Collections.unmodifiableCollection(INCOMPATIBLE_PLUGINS);
 	}
 
@@ -1373,29 +1476,31 @@ public class Plugin {
 				// so skip the initialization
 				continue;
 			}
-			if (!plugin.checkDependencies(plugin, ALL_PLUGINS)) {
+			Set<String> missingDependencies = plugin.checkDependencies(plugin, ALL_PLUGINS);
+			if (!missingDependencies.isEmpty()) {
 				ALL_PLUGINS.remove(plugin);
-				INCOMPATIBLE_PLUGINS.add(plugin);
+				INCOMPATIBLE_PLUGINS.add(new BrokenPlugin(plugin, IncompatibilityReason.MISSING_DEPENDENCY, String.join(", ", missingDependencies)));
 				continue;
 			}
 
 			long start = System.currentTimeMillis();
-			if (!plugin.callInitMethod(methodName, arguments, argumentValues, useOriginalJarClassLoader)) {
+			String fatalErrorMessage = plugin.callInitMethod(methodName, arguments, argumentValues, useOriginalJarClassLoader);
+			if (fatalErrorMessage != null) {
 				ALL_PLUGINS.remove(plugin);
-				INCOMPATIBLE_PLUGINS.add(plugin);
+				INCOMPATIBLE_PLUGINS.add(new BrokenPlugin(plugin, IncompatibilityReason.ERROR_DURING_STARTUP, fatalErrorMessage));
 			}
 			recordLoadingTime(plugin.getExtensionId(), start);
 		}
 	}
 
 	/**
-	 * @return true if everything went well, false if a fatal error occurred. The plugin should be
-	 *         unregistered in this case.
+	 * @return {@code null} if everything went well; an error message if a fatal error occurred. The plugin should be
+	 * unregistered in this case.
 	 */
-	private boolean callInitMethod(String methodName, Class<?>[] arguments, Object[] argumentValues,
+	private String callInitMethod(String methodName, Class<?>[] arguments, Object[] argumentValues,
 			boolean useOriginalJarClassLoader) {
 		if (pluginInitClassName == null) {
-			return true;
+			return null;
 		}
 		try {
 			ClassLoader classLoader;
@@ -1409,17 +1514,23 @@ public class Plugin {
 			try {
 				initMethod = pluginInitator.getMethod(methodName, arguments);
 			} catch (NoSuchMethodException e) {
-				return true;
+				return null;
 			}
 			initMethod.invoke(null, argumentValues);
-			return true;
+			return null;
 		} catch (Throwable e) {
+			Throwable err = e.getCause() != null ? e.getCause() : e;
 			LogService.getRoot().log(Level.WARNING,
 					I18N.getMessage(LogService.getRoot().getResourceBundle(),
 							"com.rapidminer.tools.plugin.Plugin.plugin_initializer_error", pluginInitClassName, methodName,
-							getName(), e.getMessage()),
+							getName(), err.getMessage()),
 					e);
-			return false;
+			String errMsg = err.getMessage();
+			if (errMsg == null) {
+				// can happen with NPEs for example
+				errMsg = I18N.getGUILabel("plugin.null_error.label");
+			}
+			return errMsg;
 		}
 	}
 
@@ -1609,7 +1720,7 @@ public class Plugin {
 			String value;
 			if (plugin != null) {
 				LogService.getRoot().log(logLevel, "com.rapidminer.tools.plugin.Plugin.loading_time",
-						new Object[] { plugin.getName(), loadingTime });
+						new Object[] { plugin.getName() + " " + plugin.getVersion(), loadingTime });
 				identifier = plugin.getExtensionId() + ActionStatisticsCollector.ARG_SPACER + plugin.getVersion();
 				value = ActionStatisticsCollector.VALUE_EXTENSION_INITIALIZATION;
 			} else {

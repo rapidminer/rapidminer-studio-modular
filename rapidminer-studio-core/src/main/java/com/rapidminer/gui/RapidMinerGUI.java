@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -47,6 +47,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.regex.Pattern;
 import javax.swing.JFrame;
@@ -380,7 +381,12 @@ public class RapidMinerGUI extends RapidMiner {
 		DockingUISettings.setInstance(new RapidDockingUISettings());
 		DockableContainerFactory.setFactory(new RapidDockableContainerFactory());
 
-		LogService.getRoot().log(Level.INFO, "com.rapidminer.gui.RapidMinerGUI.start_version", new Object[] {RapidMiner.getLongVersion(), PlatformUtilities.getReleasePlatform()} );
+		LogService.getRoot().log(Level.INFO, "com.rapidminer.gui.RapidMinerGUI.start_version", new Object[] {
+				RapidMiner.getLongVersion(),
+				PlatformUtilities.getReleasePlatform(),
+				String.format("%s %s", System.getProperty("java.vendor"), System.getProperty("java.version")),
+				String.format("%s (%s / %s)", System.getProperty("os.name"), System.getProperty("os.version"), System.getProperty("os.arch"))
+		} );
 
 		// inform listeners that splash is about to be shown
 		for (GUIStartupListener sl : startupListener) {
@@ -919,9 +925,13 @@ public class RapidMinerGUI extends RapidMiner {
 
 		// init ParameterService as early as possible (but after FileSystemService and LogService)
 		ParameterService.init();
-		// init i18n (it is initialized in a static block)
-		String localeLanguage = ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_GENERAL_LOCALE_LANGUAGE);
-		Settings.setSetting(SettingsConstants.I18N_LOCALE, localeLanguage);
+
+		// register all Core i18n here
+		// legacy plotter i18n
+		ResourceBundle plotterBundle = ResourceBundle.getBundle("com.rapidminer.resources.i18n.PlotterMessages", I18N.getI18nLocale(),
+				I18N.class.getClassLoader());
+		I18N.registerGUIBundle(plotterBundle);
+
 		if (RapidMiner.getExecutionMode().canAccessFilesystem()) {
 			// if this file exists, it gets filled with missing translations if locale is not english
 			Settings.setSetting(SettingsConstants.I18N_TRANSLATION_HELPER, FileSystemService.getUserRapidMinerDir().toPath().resolve("translation_helper.txt").toAbsolutePath().toString());
@@ -1021,7 +1031,6 @@ public class RapidMinerGUI extends RapidMiner {
 				openLocation = args[0];
 			}
 		}
-		RapidMiner.setInputHandler(new GUIInputHandler());
 
 		new RapidMinerGUI().run(openLocation);
 		// make sure urls of type 'rm://{action}' can be used

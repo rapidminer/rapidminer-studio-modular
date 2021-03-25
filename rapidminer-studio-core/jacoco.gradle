@@ -1,19 +1,14 @@
 apply plugin: 'jacoco'
 
 jacoco {
-    toolVersion ='0.8.5'
-}
-
-test {
-    jacoco {
-        // go 1 up to end up in root project dir
-        destinationFile = file("../build/jacoco.exec")
-    }
+    toolVersion ='0.8.6'
+    // go 1 up to end up in root project dir
+    reportsDir file('../build/')
 }
 
 jacocoTestReport {
     // Temporary work-around -- http://issues.gradle.org/browse/GRADLE-2764
-    additionalSourceDirs = files(sourceSets.main.allJava.srcDirs)
+    additionalSourceDirs files(sourceSets.main.allJava.srcDirs)
     reports {
         html.enabled true
         xml.enabled true

@@ -1,20 +1,20 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
  * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General
- * Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any
- * later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
- * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more
- * details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License along with this program. If not, see
- * http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.tools;
 
@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.io.InvalidObjectException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.Callable;
@@ -50,6 +51,7 @@ import com.rapidminer.example.table.AttributeFactory;
 import com.rapidminer.example.utils.ExampleSets;
 import com.rapidminer.test_utils.RapidAssert;
 import com.rapidminer.tools.Ontology;
+import com.rapidminer.tools.Tools;
 
 
 /**
@@ -104,7 +106,7 @@ public class SerializationToStreamTest {
 				.withColumnFiller(date, i -> random.nextDouble() > 0.7 ? Double.NaN : (i % 3 == 0 ? -1 : 1) *
 						230169600000d + random.nextInt(100) * 1000d * 60 * 60 * 24)
 				.withColumnFiller(time, i -> random.nextDouble() > 0.7 ? Double.NaN :
-						(i % 3 == 0 ? -1 : 1) * Math.floor(Math.random() * 60 * 60 * 24 * 1000))
+						randomTimeMillis(random))
 				.withColumnFiller(nominal, i -> random.nextDouble() > 0.7 ? Double.NaN : random.nextInt(5))
 				.withColumnFiller(string, i -> random.nextDouble() > 0.7 ? Double.NaN : random.nextInt(4))
 				.withColumnFiller(polynominal, i -> random.nextDouble() > 0.7 ? Double.NaN : random.nextInt(6))
@@ -114,7 +116,6 @@ public class SerializationToStreamTest {
 
 		RapidMiner.initAsserters();
 	}
-
 
 	@Test
 	public void testExampleSet() throws IOException {
@@ -228,4 +229,10 @@ public class SerializationToStreamTest {
 
 	};
 
+	private static long randomTimeMillis(Random random){
+		Calendar cal = Tools.getPreferredCalendar();
+		cal.setTimeInMillis((long) Math.floor(random.nextDouble() * 60 * 60 * 24 * 1000));
+		cal.set(1970, Calendar.JANUARY, 1);
+		return cal.getTimeInMillis();
+	}
 }

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -113,6 +113,8 @@ import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.ports.Port;
 import com.rapidminer.operator.ports.Ports;
+import com.rapidminer.settings.Settings;
+import com.rapidminer.settings.SettingsConstants;
 import com.rapidminer.tools.FileSystemService;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.LogService;
@@ -364,6 +366,7 @@ public class SwingTools {
 		if (isRetina()) {
 			scaling = Scaling.RETINA;
 		}
+		Settings.setSetting(SettingsConstants.UI_SCALE, String.valueOf(scaling.scalingFactor));
 	}
 
 	public static void setFrameIconProvider(final FrameIconProvider _frameIconProvider) {
@@ -1529,7 +1532,7 @@ public class SwingTools {
 					SimpleFileFilter simpleFF = (SimpleFileFilter) selectedFilter;
 					extension = simpleFF.getExtension();
 				}
-				if (extension != null) {
+				if (extension != null && !extension.endsWith(".*")) {
 					if (!selectedFile.getAbsolutePath().toLowerCase().endsWith(extension.toLowerCase())) {
 						selectedFile = new File(selectedFile.getAbsolutePath() + extension);
 					}

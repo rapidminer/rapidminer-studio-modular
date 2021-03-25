@@ -1,20 +1,20 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
  * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General
- * Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any
- * later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
- * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more
- * details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License along with this program. If not, see
- * http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.io;
 
@@ -75,7 +75,7 @@ import com.rapidminer.parameter.conditions.BelowOrEqualOperatorVersionCondition;
 import com.rapidminer.parameter.conditions.EqualTypeCondition;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.Ontology;
-import com.rapidminer.tools.ValidationUtil;
+import com.rapidminer.tools.ValidationUtilV2;
 import com.rapidminer.tools.io.Encoding;
 
 import jxl.Workbook;
@@ -98,7 +98,7 @@ import jxl.write.WriteException;
  * by Excel 95, 97, 2000, XP, 2003 and newer. Missing data values are indicated by empty cells.
  * </p>
  *
- * @author Ingo Mierswa, Nils Woehler
+ * @author Ingo Mierswa, Nils Woehler, Kevin Majchrzak
  */
 public class ExcelExampleSetWriter extends Operator {
 
@@ -680,7 +680,7 @@ public class ExcelExampleSetWriter extends Operator {
 
 	/**
 	 * Helper method that is used to shorten the sheet name in case it has become to long after calling {@link
-	 * ValidationUtil#getNewName(Collection, String)} because of the index that this method might add to the name.
+	 * ValidationUtilV2#getNewName(Collection, String)} because of the index that this method might add to the name.
 	 */
 	private static String shortenSheetName(String originalName) {
 		int length = originalName.length();
@@ -709,13 +709,13 @@ public class ExcelExampleSetWriter extends Operator {
 		}
 		// the following code makes sure sheet name is valid and there are no duplicates
 		sheetName = WorkbookUtil.createSafeSheetName(sheetName);
-		sheetName = ValidationUtil.getNewName(usedNames, sheetName, false);
+		sheetName = ValidationUtilV2.getNewName(usedNames, sheetName, false);
 		String shortenedName = shortenSheetName(sheetName);
 		// If shortened name == sheetName we know that the name is still unique.
 		// Otherwise we need to repeat the procedure to make sure.
 		while (!shortenedName.equals(sheetName)) {
 			sheetName = shortenedName;
-			sheetName = ValidationUtil.getNewName(usedNames, sheetName, false);
+			sheetName = ValidationUtilV2.getNewName(usedNames, sheetName, false);
 			shortenedName = shortenSheetName(sheetName);
 		}
 		usedNames.add(sheetName);

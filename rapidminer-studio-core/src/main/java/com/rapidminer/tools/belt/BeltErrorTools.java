@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -18,16 +18,20 @@
  */
 package com.rapidminer.tools.belt;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import com.rapidminer.belt.column.Column;
 import com.rapidminer.belt.column.ColumnType;
 import com.rapidminer.belt.execution.Context;
 import com.rapidminer.belt.execution.ExecutionUtils;
 import com.rapidminer.belt.table.Table;
+import com.rapidminer.belt.table.Tables;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.UserError;
+import com.rapidminer.tools.Ontology;
 
 
 /**
@@ -187,6 +191,56 @@ public final class BeltErrorTools {
 	public static void nonEmpty(Table table, Operator operator) throws UserError {
 		if (table.height() == 0) {
 			throw new UserError(operator, "empty_exampleset");
+		}
+	}
+
+	/**
+	 * Throws a {@link UserError} if the table does not match the training schema. The errors are analog to {@link
+	 * com.rapidminer.example.set.ExampleSetUtilities#checkAttributesMatching}. Use
+	 * {@link BeltTools#findIncompatibleRegulars} if no {@link UserError} is required.
+	 *
+	 * @param operator
+	 * 		the operator that does the check, can be {@code null}
+	 * @param table
+	 * 		the table to check
+	 * @param schema
+	 * 		the schema used for training
+	 * @param columnSetRequirement
+	 * 		the column set requirement to check
+	 * @param typeRequirements
+	 * 		the type requirements to check, can be empty for no type check
+	 * @throws UserError
+	 * 		with error id {@code attribute_check.misfitting_for_equal}, {@code attribute_check.wrong_for_subset},
+	 * 		{@code attribute_check.missing_attribute}, {@code type_check.not_equal}, {@code type_check.not_subtype}
+	 * 		or {@code type_check.require_sub_dictionary}
+	 * @since 9.9
+	 */
+	public static void requireCompatibleRegulars(Operator operator, Table table, Table schema,
+												 Tables.ColumnSetRequirement columnSetRequirement,
+												 Tables.TypeRequirement... typeRequirements) throws UserError {
+		Map<String, Tables.Incompatibility> incompatibleRegulars =
+				BeltTools.findIncompatibleRegulars(table, schema, columnSetRequirement, typeRequirements);
+		if (!incompatibleRegulars.isEmpty()) {
+			Map.Entry<String, Tables.Incompatibility> entry = incompatibleRegulars.entrySet().iterator().next();
+			switch (entry.getValue()) {
+				case MISSING_COLUMN:
+					throw new UserError(operator, "attribute_check.missing_attribute", entry.getKey());
+				case WRONG_COLUMN_PRESENT:
+					throw new UserError(operator, columnSetRequirement == Tables.ColumnSetRequirement.EQUAL ?
+							"attribute_check.misfitting_for_equal" : "attribute_check.wrong_for_subset", entry.getKey());
+				case TYPE_MISMATCH:
+					Column.TypeId schemaId = schema.column(entry.getKey()).type().id();
+					if (Arrays.asList(typeRequirements).contains(Tables.TypeRequirement.ALLOW_INT_FOR_REAL)
+							&& schemaId == Column.TypeId.REAL) {
+						throw new UserError(operator, "type_check.not_subtype", entry.getKey(),
+								table.column(entry.getKey()).type().id(), Ontology.VALUE_TYPE_NAMES[Ontology.NUMERICAL]);
+					} else {
+						throw new UserError(operator, "type_check.not_equal", entry.getKey(), schemaId,
+								table.column(entry.getKey()).type().id());
+					}
+				case NOT_SUB_DICTIONARY:
+					throw new UserError(operator, "type_check.require_sub_dictionary", entry.getKey());
+			}
 		}
 	}
 

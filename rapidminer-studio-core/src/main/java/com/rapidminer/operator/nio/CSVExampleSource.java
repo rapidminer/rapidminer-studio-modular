@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -21,7 +21,6 @@ package com.rapidminer.operator.nio;
 import java.text.NumberFormat;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.commons.lang.ArrayUtils;
 
@@ -45,7 +44,6 @@ import com.rapidminer.parameter.ParameterTypeString;
 import com.rapidminer.parameter.conditions.BooleanParameterCondition;
 import com.rapidminer.tools.LineParser;
 import com.rapidminer.tools.StrictDecimalFormat;
-import com.rapidminer.tools.io.Encoding;
 
 
 /**
@@ -56,27 +54,31 @@ import com.rapidminer.tools.io.Encoding;
  * </p>
  *
  * @author Ingo Mierswa, Tobias Malbrecht, Sebastian Loh, Sebastian Land, Simon Fischer, Marco Boeck
+ * @deprecated since 9.9 use {@link CSVTableSource} instead
  */
+@Deprecated
 public class CSVExampleSource extends AbstractDataResultSetReader {
 
-	public static final String PARAMETER_CSV_FILE = "csv_file";
-	public static final String PARAMETER_TRIM_LINES = "trim_lines";
-	public static final String PARAMETER_SKIP_COMMENTS = "skip_comments";
-	public static final String PARAMETER_COMMENT_CHARS = "comment_characters";
-	public static final String PARAMETER_USE_QUOTES = "use_quotes";
-	public static final String PARAMETER_QUOTES_CHARACTER = "quotes_character";
-	public static final String PARAMETER_COLUMN_SEPARATORS = "column_separators";
-	public static final String PARAMETER_ESCAPE_CHARACTER = "escape_character";
-	public static final String PARAMETER_STARTING_ROW = "starting_row";
+	public static final String PARAMETER_CSV_FILE = CSVTableSource.PARAMETER_CSV_FILE;
+	public static final String PARAMETER_TRIM_LINES = CSVTableSource.PARAMETER_TRIM_LINES;
+	public static final String PARAMETER_SKIP_COMMENTS = CSVTableSource.PARAMETER_SKIP_COMMENTS;
+	public static final String PARAMETER_COMMENT_CHARS = CSVTableSource.PARAMETER_COMMENT_CHARS;
+	public static final String PARAMETER_USE_QUOTES = CSVTableSource.PARAMETER_USE_QUOTES;
+	public static final String PARAMETER_QUOTES_CHARACTER = CSVTableSource.PARAMETER_QUOTES_CHARACTER;
+	public static final String PARAMETER_COLUMN_SEPARATORS = CSVTableSource.PARAMETER_COLUMN_SEPARATORS;
+	public static final String PARAMETER_ESCAPE_CHARACTER = CSVTableSource.PARAMETER_ESCAPE_CHARACTER;
+	public static final String PARAMETER_STARTING_ROW = CSVTableSource.PARAMETER_STARTING_ROW;
 
 	/**
 	 * Values will be trimmed for guessing after this version
+	 *
 	 * @since 9.2.0
 	 */
-	public static final OperatorVersion BEFORE_VALUE_TRIMMING_GUESSING = new OperatorVersion(9, 0, 3);
+	public static final OperatorVersion BEFORE_VALUE_TRIMMING_GUESSING = CSVTableSource.BEFORE_VALUE_TRIMMING_GUESSING;
 
 	static {
-		AbstractReader.registerReaderDescription(new ReaderDescription("csv", CSVExampleSource.class, PARAMETER_CSV_FILE));
+		AbstractReader.registerReaderDescription(new ReaderDescription("csv", CSVExampleSource.class,
+				PARAMETER_CSV_FILE));
 	}
 
 	public CSVExampleSource(final OperatorDescription description) {
@@ -182,40 +184,7 @@ public class CSVExampleSource extends AbstractDataResultSetReader {
 	@Override
 	public void configure(DataSource dataSource) throws DataSetException {
 		// set general csv import configParameters
-		Map<String, String> configParameters = dataSource.getConfiguration().getParameters();
-
-		setParameter(PARAMETER_CSV_FILE, configParameters.get(CSVResultSetConfiguration.CSV_FILE_LOCATION));
-		setParameter(PARAMETER_SKIP_COMMENTS, configParameters.get(CSVResultSetConfiguration.CSV_SKIP_COMMENTS));
-		setParameter(PARAMETER_COMMENT_CHARS, configParameters.get(CSVResultSetConfiguration.CSV_COMMENT_CHARACTERS));
-		setParameter(PARAMETER_COLUMN_SEPARATORS, configParameters.get(CSVResultSetConfiguration.CSV_COLUMN_SEPARATORS));
-		setParameter(StrictDecimalFormat.PARAMETER_DECIMAL_CHARACTER, configParameters.get(CSVResultSetConfiguration.CSV_DECIMAL_CHARACTER));
-		setParameter(Encoding.PARAMETER_ENCODING, configParameters.get(CSVResultSetConfiguration.CSV_ENCODING));
-		setParameter(PARAMETER_ESCAPE_CHARACTER, configParameters.get(CSVResultSetConfiguration.CSV_ESCAPE_CHARACTER));
-		setParameter(PARAMETER_USE_QUOTES, configParameters.get(CSVResultSetConfiguration.CSV_USE_QUOTES));
-		setParameter(PARAMETER_QUOTES_CHARACTER, configParameters.get(CSVResultSetConfiguration.CSV_QUOTE_CHARACTER));
-		setParameter(PARAMETER_TRIM_LINES, configParameters.get(CSVResultSetConfiguration.CSV_TRIM_LINES));
-
-		// the backend uses technical row values starting with 0 but the operator parameters show human readable versions thus +1
-		int rowOffset = Integer.parseInt(configParameters.get(CSVResultSetConfiguration.CSV_STARTING_ROW)) + 1;
-		int headerRowIndex = Integer.parseInt(configParameters.get(CSVResultSetConfiguration.CSV_HEADER_ROW));
-
-		if (rowOffset < 0) {
-			rowOffset = 0;
-		}
-
-		boolean headerRowEqualsStartingRow = headerRowIndex == rowOffset;
-		// if row offset equals header row, then we need to increase offset by one
-		if (headerRowEqualsStartingRow) {
-			rowOffset++;
-		}
-		setParameter(PARAMETER_FIRST_ROW_AS_NAMES, String.valueOf(Boolean.valueOf(configParameters.get(CSVResultSetConfiguration.CSV_HAS_HEADER_ROW)) || headerRowEqualsStartingRow));
-		setParameter(PARAMETER_STARTING_ROW, String.valueOf(rowOffset));
-
-		// set meta data
-		ImportWizardUtils.setMetaData(dataSource, this);
-
-		// update compatibility level to latest version
-		setCompatibilityLevel(OperatorVersion.getLatestVersion(getOperatorDescription()));
+		CSVTableSource.configure(dataSource, this);
 	}
 
 	@Override

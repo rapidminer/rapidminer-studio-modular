@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -67,7 +67,7 @@ import com.rapidminer.tools.parameter.internal.DataManagementParameterHelper;
  *
  * @author Sebastian Land
  */
-public abstract class AbstractDataResultSetReader extends AbstractExampleSource {
+public abstract class AbstractDataResultSetReader extends AbstractExampleSource implements ConfigurationSupporter{
 
 	/** Pseudo-annotation to be used for attribute names. */
 	public static final String ANNOTATION_NAME = "Name";
@@ -372,6 +372,7 @@ public abstract class AbstractDataResultSetReader extends AbstractExampleSource 
 	 * 		if something goes wrong during configuration
 	 * @since 9.0.0
 	 */
+	@Override
 	public void configure(DataSource dataSource) throws DataSetException {
 		// reader not supported if this method is not overridden in subclass
 		throw new UnsupportedOperationException("This reader is not (yet) supported by the data import wizards.");

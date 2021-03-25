@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -97,7 +97,7 @@ public final class Settings {
 	 * Sets the specified setting for the default context ({@link #CONTEXT_STUDIO_PREFERENCES}.
 	 *
 	 * @param key     the setting key, must not be {@code null}
-	 * @param value   the setting value, can be {@code null}
+	 * @param value   the setting value, can be {@code null} in which case it will be removed from the settings
 	 */
 	public static void setSetting(String key, String value) {
 		setSetting(CONTEXT_STUDIO_PREFERENCES, key, value);
@@ -109,7 +109,7 @@ public final class Settings {
 	 *
 	 * @param context the context. If {@code null}, {@link #CONTEXT_STUDIO_PREFERENCES} will be used
 	 * @param key     the setting key, must not be {@code null}
-	 * @param value   the setting value, can be {@code null}
+	 * @param value   the setting value, can be {@code null} in which case it will be removed from the settings
 	 */
 	public static void setSetting(String context, String key, String value) {
 		if (key == null) {
@@ -128,7 +128,13 @@ public final class Settings {
 			}
 		}
 
-		String previousValue = SETTINGS.computeIfAbsent(context, s -> new ConcurrentHashMap<>()).put(key, value);
+		Map<String, String> map = SETTINGS.computeIfAbsent(context, s -> new ConcurrentHashMap<>());
+		String previousValue;
+		if (value != null) {
+			previousValue = map.put(key, value);
+		} else {
+			previousValue = map.remove(key);
+		}
 
 		// only fire if new value is different than before
 		if (!Objects.equals(value, previousValue)) {

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -18,7 +18,7 @@
  */
 package com.rapidminer.repository;
 
-import com.rapidminer.tools.ValidationUtil;
+import com.rapidminer.tools.ValidationUtilV2;
 
 
 /**
@@ -55,7 +55,7 @@ public class RepositoryLocationBuilder {
 	 * @return this builder
 	 */
 	public RepositoryLocationBuilder withLocationType(RepositoryLocationType locationType) {
-		this.locationType = ValidationUtil.requireNonNull(locationType, "locationType");
+		this.locationType = ValidationUtilV2.requireNonNull(locationType, "locationType");
 		return this;
 	}
 

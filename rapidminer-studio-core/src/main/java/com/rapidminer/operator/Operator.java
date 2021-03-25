@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -54,6 +54,7 @@ import com.rapidminer.BreakpointListener;
 import com.rapidminer.MacroHandler;
 import com.rapidminer.Process;
 import com.rapidminer.RapidMiner;
+import com.rapidminer.adaption.belt.AtPortConverter;
 import com.rapidminer.belt.execution.ExecutionAbortedException;
 import com.rapidminer.tools.encryption.EncryptionProvider;
 import com.rapidminer.gui.tools.VersionNumber;
@@ -2408,7 +2409,8 @@ public abstract class Operator extends AbstractObservable<Operator>
 		assumePreconditionsSatisfied();
 		transformMetaData();
 		for (OutputPort outPort : getOutputPorts().getAllPorts()) {
-			if (outPort.getMetaData() != null && outputClass.isAssignableFrom(outPort.getMetaData().getObjectClass())) {
+			if (outPort.getRawMetaData() != null && (outputClass.isAssignableFrom(outPort.getRawMetaData().getObjectClass())||
+					AtPortConverter.isConvertible(outPort.getRawMetaData().getObjectClass(), outputClass))) {
 				return true;
 			}
 		}

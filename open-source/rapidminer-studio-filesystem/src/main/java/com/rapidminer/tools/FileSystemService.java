@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -37,7 +37,7 @@ public class FileSystemService {
 	/** file where all user settings (preferences) are stored */
 	private static final String RAPIDMINER_CONFIG_FILE_NAME = "rapidminer-studio-settings.cfg";
 	/** named like the jxVersion gradle variable to make it easier to find whenever JxBrowser version is bumped */
-	private static final String jxVersion = "7.10";
+	private static final String jxVersion = "7.12.2";
 	/** folder in which extensions have their workspace */
 	private static final String RAPIDMINER_EXTENSIONS_FOLDER = "extensions";
 	/** folder in which extensions get their own folder to work with files */

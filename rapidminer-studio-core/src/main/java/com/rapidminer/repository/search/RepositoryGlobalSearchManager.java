@@ -1,20 +1,20 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
  * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General
- * Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any
- * later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
- * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more
- * details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License along with this program. If not, see
- * http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.repository.search;
 
@@ -41,6 +41,7 @@ import com.rapidminer.operator.ports.metadata.ConnectionInformationMetaData;
 import com.rapidminer.operator.ports.metadata.ExampleSetMetaData;
 import com.rapidminer.operator.ports.metadata.MetaData;
 import com.rapidminer.operator.ports.metadata.ModelMetaData;
+import com.rapidminer.operator.ports.metadata.table.TableMetaData;
 import com.rapidminer.repository.ConnectionEntry;
 import com.rapidminer.repository.ConnectionListener;
 import com.rapidminer.repository.ConnectionRepository;
@@ -520,22 +521,27 @@ class RepositoryGlobalSearchManager extends AbstractGlobalSearchManager implemen
 			// Extract attributes from example sets
 			try {
 				MetaData md = ((IOObjectEntry) entry).retrieveMetaData();
-				ExampleSetMetaData exampleSetMetaData = null;
-				if (md instanceof ExampleSetMetaData) {
-					exampleSetMetaData = (ExampleSetMetaData) md;
-				} else if (md instanceof ModelMetaData) {
-					exampleSetMetaData = ((ModelMetaData) md).getTrainingSetMetaData();
-				}
-
-				if (exampleSetMetaData != null) {
-					int size = exampleSetMetaData.getAllAttributes().size();
-					String[] attributes = new String[size];
-					int i = 0;
-					for (AttributeMetaData amd : exampleSetMetaData.getAllAttributes()) {
-						attributes[i++] = amd.getName();
+				if (md instanceof TableMetaData) {
+					String[] columnNames = ((TableMetaData) md).labels().toArray(new String[0]);
+					item.setAttributes(columnNames);
+				} else {
+					ExampleSetMetaData exampleSetMetaData = null;
+					if (md instanceof ExampleSetMetaData) {
+						exampleSetMetaData = (ExampleSetMetaData) md;
+					} else if (md instanceof ModelMetaData) {
+						exampleSetMetaData = ((ModelMetaData) md).getTrainingSetMetaData();
 					}
 
-					item.setAttributes(attributes);
+					if (exampleSetMetaData != null) {
+						int size = exampleSetMetaData.getAllAttributes().size();
+						String[] attributes = new String[size];
+						int i = 0;
+						for (AttributeMetaData amd : exampleSetMetaData.getAllAttributes()) {
+							attributes[i++] = amd.getName();
+						}
+
+						item.setAttributes(attributes);
+					}
 				}
 			} catch (RepositoryException e) {
 				// no metadata available, ignore

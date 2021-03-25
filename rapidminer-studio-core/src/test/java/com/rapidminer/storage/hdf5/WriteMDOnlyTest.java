@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -27,6 +27,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.IntToDoubleFunction;
@@ -53,6 +54,7 @@ import com.rapidminer.operator.ports.metadata.MDReal;
 import com.rapidminer.operator.ports.metadata.MetaDataFactory;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.RandomGenerator;
+import com.rapidminer.tools.Tools;
 import com.rapidminer.tools.math.container.Range;
 
 
@@ -74,7 +76,7 @@ public class WriteMDOnlyTest {
 		RandomGenerator rng = RandomGenerator.getGlobalRandomGenerator();
 		attributes.put(AttributeFactory.createAttribute("integer", Ontology.INTEGER), i -> rng.nextInt());
 		attributes.put(AttributeFactory.createAttribute("real", Ontology.REAL), i -> rng.nextDouble());
-		attributes.put(AttributeFactory.createAttribute("time", Ontology.TIME), i -> rng.nextInt(86400000));
+		attributes.put(AttributeFactory.createAttribute("time", Ontology.TIME), i -> randomTimeMillis());
 		attributes.put(AttributeFactory.createAttribute("date", Ontology.DATE), i -> rng.nextInt() * 86400000L);
 		attributes.put(AttributeFactory.createAttribute("date time", Ontology.DATE_TIME), i -> rng.nextLongInRange(-1L<<50, 1L<<50));
 		Attribute smallNominal = AttributeFactory.createAttribute("small nominal", Ontology.NOMINAL);
@@ -253,4 +255,10 @@ public class WriteMDOnlyTest {
 		}
 	}
 
+	static long randomTimeMillis(){
+		Calendar cal = Tools.getPreferredCalendar();
+		cal.setTimeInMillis((long) Math.floor(Math.random() * 60 * 60 * 24 * 1000));
+		cal.set(1970, Calendar.JANUARY, 1);
+		return cal.getTimeInMillis();
+	}
 }

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -38,7 +38,7 @@ import com.rapidminer.Process;
 import com.rapidminer.core.concurrency.ConcurrencyContext;
 import com.rapidminer.core.concurrency.ExecutionStoppedException;
 import com.rapidminer.studio.internal.ProcessStoppedRuntimeException;
-import com.rapidminer.tools.ValidationUtil;
+import com.rapidminer.tools.ValidationUtilV2;
 
 
 /**
@@ -78,7 +78,7 @@ abstract class AbstractConcurrencyContext implements ConcurrencyContext {
 	}
 
 	AbstractConcurrencyContext(PoolInstance instance) {
-		this.pool = ValidationUtil.requireNonNull(instance, "instance");
+		this.pool = ValidationUtilV2.requireNonNull(instance, "instance");
 		process = null;
 	}
 
@@ -308,7 +308,7 @@ abstract class AbstractConcurrencyContext implements ConcurrencyContext {
 	 * @since 9.7.1
 	 */
 	private <T> boolean callableCheck(List<T> callables) {
-		ValidationUtil.requireNonNull(callables, "callables");
+		ValidationUtilV2.requireNonNull(callables, "callables");
 
 		// nothing to do if list is empty
 		if (callables.isEmpty()) {

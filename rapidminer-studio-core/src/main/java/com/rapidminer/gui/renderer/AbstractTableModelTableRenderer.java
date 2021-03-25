@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
- * 
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.gui.renderer;
 
 import java.awt.BorderLayout;
@@ -23,7 +23,6 @@ import java.awt.Component;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
-
 import javax.swing.BorderFactory;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -39,7 +38,6 @@ import com.rapidminer.gui.tools.ExtendedJTable;
 import com.rapidminer.operator.IOContainer;
 import com.rapidminer.operator.ports.InputPort;
 import com.rapidminer.operator.ports.metadata.ExampleSetMetaData;
-import com.rapidminer.operator.ports.metadata.MetaData;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.parameter.ParameterTypeInt;
@@ -301,15 +299,12 @@ public abstract class AbstractTableModelTableRenderer extends NonGraphicalRender
 		int max_row = Integer.MAX_VALUE;
 		int max_column = Integer.MAX_VALUE;
 		if (inputPort != null) {
-			MetaData metaData = inputPort.getMetaData();
-			if (metaData != null) {
-				if (metaData instanceof ExampleSetMetaData) {
-					ExampleSetMetaData emd = (ExampleSetMetaData) metaData;
-					if (emd.getNumberOfExamples().isKnown()) {
-						max_row = emd.getNumberOfExamples().getNumber();
-					}
-					max_column = emd.getAllAttributes().size();
+			final ExampleSetMetaData emd = inputPort.getMetaDataAsOrNull(ExampleSetMetaData.class);
+			if (emd != null) {
+				if (emd.getNumberOfExamples().isKnown()) {
+					max_row = emd.getNumberOfExamples().getNumber();
 				}
+				max_column = emd.getAllAttributes().size();
 			}
 		}
 		types.add(new ParameterTypeInt(PARAMETER_MIN_ROW, "Indicates the first row number which should be rendered.", 1,

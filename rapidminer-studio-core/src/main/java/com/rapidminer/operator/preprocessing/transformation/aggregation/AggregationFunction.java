@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -31,6 +31,7 @@ import com.rapidminer.example.Attribute;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.table.AttributeFactory;
 import com.rapidminer.example.table.DoubleArrayDataRow;
+import com.rapidminer.math.aggregation.manager.AggregationManagers;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.OperatorVersion;
 import com.rapidminer.operator.ProcessSetupError.Severity;
@@ -66,39 +67,40 @@ public abstract class AggregationFunction {
 	public static final String FUNCTION_SEPARATOR_CLOSE = ")";
 
 	// available functions
-	public static final String FUNCTION_NAME_SUM = "sum";
-	public static final String FUNCTION_NAME_SUM_FRACTIONAL = "sum (fractional)";
-	public static final String FUNCTION_NAME_MEDIAN = "median";
-	public static final String FUNCTION_NAME_AVERAGE = "average";
-	public static final String FUNCTION_NAME_VARIANCE = "variance";
+	public static final String FUNCTION_NAME_SUM = AggregationManagers.FUNCTION_NAME_SUM;
+	public static final String FUNCTION_NAME_SUM_FRACTIONAL = AggregationManagers.FUNCTION_NAME_FRACTIONAL_SUM;
+	public static final String FUNCTION_NAME_MEDIAN = AggregationManagers.FUNCTION_NAME_MEDIAN;
+	public static final String FUNCTION_NAME_AVERAGE = AggregationManagers.FUNCTION_NAME_AVERAGE;
+	public static final String FUNCTION_NAME_VARIANCE = AggregationManagers.FUNCTION_NAME_VARIANCE;
+	// We are not reusing AggregationFunction.FUNCTION_NAME_STANDARD_DEVIATION since for historical reasons we've had an underline here
 	public static final String FUNCTION_NAME_STANDARD_DEVIATION = "standard_deviation";
 	public static final String FUNCTION_NAME_COUNT_IGNORE_MISSINGS = "count (ignoring missings)";
-	public static final String FUNCTION_NAME_COUNT_INCLUDE_MISSINGS = "count (including missings)";
-	public static final String FUNCTION_NAME_COUNT = "count";
-	public static final String FUNCTION_NAME_COUNT_FRACTIONAL = "count (fractional)";
-	public static final String FUNCTION_NAME_COUNT_PERCENTAGE = "count (percentage)";
-	public static final String FUNCTION_NAME_MINIMUM = "minimum";
-	public static final String FUNCTION_NAME_MAXIMUM = "maximum";
-	public static final String FUNCTION_NAME_LOG_PRODUCT = "log product";
-	public static final String FUNCTION_NAME_PRODOCT = "product";
+	public static final String FUNCTION_NAME_COUNT_INCLUDE_MISSINGS = AggregationManagers.FUNCTION_NAME_COUNT_INCLUDING_MISSINGS;
+	public static final String FUNCTION_NAME_COUNT = AggregationManagers.FUNCTION_NAME_COUNT;
+	public static final String FUNCTION_NAME_COUNT_FRACTIONAL = AggregationManagers.FUNCTION_NAME_COUNT_FRACTIONAL;
+	public static final String FUNCTION_NAME_COUNT_PERCENTAGE = AggregationManagers.FUNCTION_NAME_COUNT_PERCENTAGE;
+	public static final String FUNCTION_NAME_MINIMUM = AggregationManagers.FUNCTION_NAME_MINIMUM;
+	public static final String FUNCTION_NAME_MAXIMUM = AggregationManagers.FUNCTION_NAME_MAXIMUM;
+	public static final String FUNCTION_NAME_LOG_PRODUCT = AggregationManagers.FUNCTION_NAME_LOG_PRODUCT;
+	public static final String FUNCTION_NAME_PRODOCT = AggregationManagers.FUNCTION_NAME_PRODUCT;
 	public static final String FUNCTION_NAME_PERCENTILE = "percentile (75)";
-	public static final String FUNCTION_NAME_MODE = "mode";
-	public static final String FUNCTION_NAME_LEAST = "least";
+	public static final String FUNCTION_NAME_MODE = AggregationManagers.FUNCTION_NAME_MODE;
+	public static final String FUNCTION_NAME_LEAST = AggregationManagers.FUNCTION_NAME_LEAST;
 	public static final String FUNCTION_NAME_LEAST_ONLY_OCCURRING = "least (only occurring)";
-	public static final String FUNCTION_NAME_CONCATENATION = "concatenation";
+	public static final String FUNCTION_NAME_CONCATENATION = AggregationManagers.FUNCTION_NAME_CONCATENATION;
 
 	/**
 	 * Indicates when to use a map instead of full array for nominal mapping counting
 	 *
 	 * @since 9.7
 	 */
-	public static final int MAX_MAPPING_SIZE = 1000;
+	public static final int MAX_MAPPING_SIZE = AggregationManagers.MAX_MAPPING_SIZE;
 	/**
 	 * Fill ratio of {@link #MAX_MAPPING_SIZE} maps. When a map get's too big, switch back to full array.
 	 *
 	 * @since 9.7
 	 */
-	public static final int MAP_FILL_RATIO = 5;
+	public static final int MAP_FILL_RATIO = AggregationManagers.MAP_FILL_RATIO;
 
 	private static final List<AggregationFunction> CUSTOMIZABLE_AGGREGATION_FUNCTIONS = new ArrayList<>();
 

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -25,7 +25,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import com.rapidminer.operator.IOObject;
 import com.rapidminer.repository.IOObjectEntry;
 import com.rapidminer.tools.DominatingClassFinder;
-import com.rapidminer.tools.ValidationUtil;
+import com.rapidminer.tools.ValidationUtilV2;
 
 
 /**
@@ -50,8 +50,8 @@ public enum IOObjectEntryTypeRegistry {
      * @return {@code true} when the registering was successful
      */
     public static boolean register(Class<? extends IOObject> clazz, Class<? extends IOObjectEntry> entryClass) {
-        ValidationUtil.requireNonNull(clazz, "clazz");
-        ValidationUtil.requireNonNull(entryClass, "entryClass");
+		ValidationUtilV2.requireNonNull(clazz, "clazz");
+		ValidationUtilV2.requireNonNull(entryClass, "entryClass");
 
         if (ENTRY_MAP.putIfAbsent(clazz, entryClass) == null) {
             CLASS_MAP.put(entryClass, clazz);
@@ -69,7 +69,7 @@ public enum IOObjectEntryTypeRegistry {
      * dominating class, ultimately ending up at {@link IOObjectEntry}, never {@code null}
      */
     public static Class<? extends IOObjectEntry> getEntryClassForIOObjectClass(Class<? extends IOObject> ioClass) {
-        Class<? extends IOObjectEntry> clazz = ENTRY_MAP.get(ValidationUtil.requireNonNull(ioClass, "ioClass"));
+        Class<? extends IOObjectEntry> clazz = ENTRY_MAP.get(ValidationUtilV2.requireNonNull(ioClass, "ioClass"));
 
         if (clazz == null) {
             // look for next registered dominating IOObject class
@@ -95,7 +95,7 @@ public enum IOObjectEntryTypeRegistry {
      * dominating class, ultimately ending up at {@link IOObject}, never {@code null}
      */
     public static Class<? extends IOObject> getIOObjectClassForEntryClass(Class<? extends IOObjectEntry> entryClass) {
-        Class<? extends IOObject> clazz = CLASS_MAP.get(ValidationUtil.requireNonNull(entryClass, "entryClass"));
+        Class<? extends IOObject> clazz = CLASS_MAP.get(ValidationUtilV2.requireNonNull(entryClass, "entryClass"));
 
         if (clazz == null) {
             // look for next registered dominating IOObject class

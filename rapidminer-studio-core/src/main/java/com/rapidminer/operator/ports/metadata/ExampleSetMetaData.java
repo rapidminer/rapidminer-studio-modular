@@ -1,24 +1,29 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
- * 
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.operator.ports.metadata;
 
+import static com.rapidminer.operator.ports.metadata.ToTableMetaDataConverter.ADDITIONAL_DATA_POS_NEG_VALUE_KEY;
+
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -29,11 +34,16 @@ import java.util.stream.Collectors;
 import com.rapidminer.RapidMiner;
 import com.rapidminer.adaption.belt.IOTable;
 import com.rapidminer.adaption.belt.TableViewingTools;
+import com.rapidminer.belt.column.ColumnType;
 import com.rapidminer.belt.table.BeltConverter;
 import com.rapidminer.belt.table.Table;
+import com.rapidminer.example.Attribute;
 import com.rapidminer.example.AttributeRole;
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.ExampleSet;
+import com.rapidminer.example.table.NominalMapping;
+import com.rapidminer.operator.ports.metadata.table.ColumnInfoBuilder;
+import com.rapidminer.operator.ports.metadata.table.DictionaryInfo;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.ParameterService;
 import com.rapidminer.tools.Tools;
@@ -44,7 +54,11 @@ import com.rapidminer.tools.belt.BeltTools;
  * This class stores detailed meta data information about ExampleSets.
  *
  * @author Simon Fischer, Sebastian Land
+ * @deprecated since 9.9, use {@link com.rapidminer.operator.ports.metadata.table.TableMetaData} together with {@link
+ * Table} from the new Belt data core instead, see <a href="https://docs.rapidminer.com/latest/developers/extensions/changes-in-9.8"
+ * target="_blank" >documentation</a>.
  */
+@Deprecated
 public class ExampleSetMetaData extends MetaData {
 
 	/**
@@ -163,20 +177,45 @@ public class ExampleSetMetaData extends MetaData {
 				// May not be supported by HeaderExampleSet
 			}
 		}
+		List<Attribute> binominals = new ArrayList<>();
 		Iterator<AttributeRole> i = exampleSet.getAttributes().allAttributeRoles();
 		while (i.hasNext()) {
 			AttributeRole role = i.next();
 			addAttribute(new AttributeMetaData(role, exampleSet, shortened));
+			if (role.getAttribute().getValueType() == Ontology.BINOMINAL) {
+				binominals.add(role.getAttribute());
+			}
 			maxNumber--;
 			if (maxNumber == 0) {
 				break;
 			}
 		}
+		storePositiveValues(binominals);
 		if (getAllAttributes().size() < exampleSet.getAttributes().allSize()) {
 			mergeSetRelation(SetRelation.SUPERSET);
 		}
 
 		numberOfExamples = new MDInteger(exampleSet.size());
+	}
+
+	/**
+	 * Insures that going from {@link ExampleSet} to {@link com.rapidminer.operator.ports.metadata.table.TableMetaData}
+	 * via {@link ExampleSetMetaData} gives the same result as going via {@link IOTable}. Without this hack, the
+	 * positive value is wrong if it is not the second value in alphabetic order.
+	 */
+	@SuppressWarnings("deprecation")
+	private void storePositiveValues(List<Attribute> binominals) {
+		Map<String, DictionaryInfo> posNegValues = new HashMap<>();
+		for (Attribute binominal : binominals) {
+			final NominalMapping mapping = binominal.getMapping();
+			final String positiveString = mapping.getPositiveString();
+			final String negativeString = mapping.getNegativeString();
+			if (positiveString != null || negativeString != null) {
+				posNegValues.put(binominal.getName(), new ColumnInfoBuilder(ColumnType.NOMINAL)
+						.setBooleanDictionaryValues(positiveString, negativeString).getDictionary());
+			}
+		}
+		addAdditionalData(ADDITIONAL_DATA_POS_NEG_VALUE_KEY, Collections.unmodifiableMap(posNegValues));
 	}
 
 	public ExampleSetMetaData(IOTable tableObject, boolean shortened) {

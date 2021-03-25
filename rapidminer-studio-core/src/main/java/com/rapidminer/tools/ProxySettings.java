@@ -1,24 +1,25 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
- * 
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.tools;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.Proxy;
 import java.net.ProxySelector;
@@ -138,90 +139,102 @@ public class ProxySettings {
 	 * Applies the RapidMiner proxy settings on the corresponding JVM System properties
 	 */
 	public static void apply() {
+		try {
+			switch (Objects.toString(ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_PROXY_MODE), RapidMiner.RAPIDMINER_PROXY_MODE_SYSTEM)) {
+				case RapidMiner.RAPIDMINER_PROXY_MODE_DIRECT:
+					// No Proxy
+					MAIN_PROXY_SELECTOR.setDelegate(NO_PROXY_SELECTOR);
+					break;
+				case RapidMiner.RAPIDMINER_PROXY_MODE_MANUAL:
+					MAIN_PROXY_SELECTOR.setDelegate(DEFAULT_PROXY_SELECTOR);
+					// User Settings
+					copyParameterToSystem(PROXY_HOSTS, toNative(PROXY_HOSTS));
+					copyParameterToSystem(PROXY_PORTS, toNative(PROXY_PORTS));
+					String exclusionRule =
+							ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_PROXY_EXCLUDE);
+					setSystemValue(exclusionRule, PROXY_RULES);
+					// Apply Socks Version
+					int socksVersionOffset = Arrays.asList(RapidMiner.RAPIDMINER_SOCKS_VERSIONS)
+							.indexOf(ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_SOCKS_VERSION));
+					int initialSocksVersion = 4;
+					ParameterService.setParameterValue(toNative(RapidMiner.PROPERTY_RAPIDMINER_SOCKS_VERSION),
+							String.valueOf(initialSocksVersion + socksVersionOffset));
+					break;
+				case RapidMiner.RAPIDMINER_PROXY_MODE_PAC:
+					MAIN_PROXY_SELECTOR.setDelegate(DEFAULT_PROXY_SELECTOR);
+					String pacType = ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_PROXY_PAC_TYPE);
+					String pacUrl = null;
+					if (RapidMiner.RAPIDMINER_PROXY_PAC_TYPE_PATH.equals(pacType)) {
+						// convert path to url
+						String pacPath = ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_PROXY_PAC_PATH);
+						pacPath = StringUtils.trimToNull(pacPath);
+						if (pacPath != null) {
+							try {
+								final URL url = Paths.get(pacPath).toUri().toURL();
+								pacUrl = url.toString();
+							} catch (MalformedURLException e) {
+								LogService.getRoot().log(Level.WARNING,
+										I18N.getMessage(LogService.getRoot().getResourceBundle(),
+												"com.rapidminer.tools.ProxyService.pac_invalid_url", pacPath), e);
+							}
+						}
+					} else {
+						String url = ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_PROXY_PAC_URL);
+						pacUrl = StringUtils.trimToNull(url);
+					}
 
-		switch (Objects.toString(ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_PROXY_MODE), RapidMiner.RAPIDMINER_PROXY_MODE_SYSTEM)) {
-			case RapidMiner.RAPIDMINER_PROXY_MODE_DIRECT:
-				// No Proxy
-				MAIN_PROXY_SELECTOR.setDelegate(NO_PROXY_SELECTOR);
-				break;
-			case RapidMiner.RAPIDMINER_PROXY_MODE_MANUAL:
-				MAIN_PROXY_SELECTOR.setDelegate(DEFAULT_PROXY_SELECTOR);
-				// User Settings
-				copyParameterToSystem(PROXY_HOSTS, toNative(PROXY_HOSTS));
-				copyParameterToSystem(PROXY_PORTS, toNative(PROXY_PORTS));
-				String exclusionRule =
-						ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_PROXY_EXCLUDE);
-				setSystemValue(exclusionRule, PROXY_RULES);
-				// Apply Socks Version
-				int socksVersionOffset = Arrays.asList(RapidMiner.RAPIDMINER_SOCKS_VERSIONS)
-						.indexOf(ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_SOCKS_VERSION));
-				int initialSocksVersion = 4;
-				ParameterService.setParameterValue(toNative(RapidMiner.PROPERTY_RAPIDMINER_SOCKS_VERSION),
-						String.valueOf(initialSocksVersion + socksVersionOffset));
-				break;
-			case RapidMiner.RAPIDMINER_PROXY_MODE_PAC:
-				MAIN_PROXY_SELECTOR.setDelegate(DEFAULT_PROXY_SELECTOR);
-				String pacType = ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_PROXY_PAC_TYPE);
-				String pacUrl = null;
-				if (RapidMiner.RAPIDMINER_PROXY_PAC_TYPE_PATH.equals(pacType)) {
-					// convert path to url
-					String pacPath = ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_PROXY_PAC_PATH);
-					pacPath = StringUtils.trimToNull(pacPath);
-					if (pacPath != null) {
-						try {
-							final URL url = Paths.get(pacPath).toUri().toURL();
-							pacUrl = url.toString();
-						} catch (MalformedURLException e) {
-							LogService.getRoot().log(Level.WARNING,
-									I18N.getMessage(LogService.getRoot().getResourceBundle(),
-											"com.rapidminer.tools.ProxyService.pac_invalid_url", pacPath), e);
+					ProxySelector selector = DEFAULT_PROXY_SELECTOR;
+					if (pacUrl != null) {
+						final UrlPacScriptSource pacSource = new UrlPacScriptSource(pacUrl);
+						if (pacSource.isScriptValid()) {
+							selector = new PacProxySelector(pacSource);
+						} else {
+							LogService.getRoot().log(Level.WARNING, "com.rapidminer.tools.ProxyService.pac_script_invalid");
+						}
+					} else {
+						LogService.getRoot().log(Level.WARNING, "com.rapidminer.tools.ProxyService.pac_not_specified");
+					}
+					MAIN_PROXY_SELECTOR.setDelegate(selector);
+					break;
+				case RapidMiner.RAPIDMINER_PROXY_MODE_SYSTEM:
+				default:
+					//set to default before search so that old settings are not found
+					MAIN_PROXY_SELECTOR.setDelegate(DEFAULT_PROXY_SELECTOR);
+					// System Proxy
+					SYSTEM_SETTINGS.apply();
+					ProxySearch s = new ProxySearch();
+					// to keep compatibility with older versions
+					s.addStrategy(ProxySearch.Strategy.JAVA);
+					// This needs switches for different OS
+					s.addStrategy(ProxySearch.Strategy.OS_DEFAULT);
+					// The fancy win 10 ui still sets the same Registry value as IE6
+					if (SystemInfoUtilities.getOperatingSystem() == OperatingSystem.WINDOWS) {
+						s.addStrategy(ProxySearch.Strategy.IE);
+					}
+					s.addStrategy(ProxySearch.Strategy.WPAD);
+					// Invoke the proxy search. This will create a ProxySelector with the detected proxy settings.
+					ProxySelector proxySelector = null;
+					try {
+						proxySelector = s.getProxySelector();
+					}  catch (Throwable e) {
+						// check if HostPortrange#toLowerCase explodes
+						if (IllegalArgumentException.class.equals(e.getClass()) && "Invalid characters in hostname".equals(e.getMessage())) {
+							LogService.log(LogService.getRoot(), Level.WARNING, e, "com.rapidminer.tools.ProxyService.wpad_failed", getHostname());
+						} else {
+							LogService.getRoot().log(Level.WARNING, "com.rapidminer.tools.ProxyService.system_failed", e);
 						}
 					}
-				} else {
-					String url = ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_PROXY_PAC_URL);
-					pacUrl = StringUtils.trimToNull(url);
-				}
-
-				ProxySelector selector = DEFAULT_PROXY_SELECTOR;
-				if (pacUrl != null) {
-					final UrlPacScriptSource pacSource = new UrlPacScriptSource(pacUrl);
-					if (pacSource.isScriptValid()) {
-						selector = new PacProxySelector(pacSource);
-					} else {
-						LogService.getRoot().log(Level.WARNING, "com.rapidminer.tools.ProxyService.pac_script_invalid");
+					// Install this ProxySelector as default ProxySelector for all connections.
+					if (proxySelector == null) {
+						proxySelector = DEFAULT_PROXY_SELECTOR;
 					}
-				} else {
-					LogService.getRoot().log(Level.WARNING, "com.rapidminer.tools.ProxyService.pac_not_specified");
-				}
-				MAIN_PROXY_SELECTOR.setDelegate(selector);
-				break;
-			case RapidMiner.RAPIDMINER_PROXY_MODE_SYSTEM:
-			default:
-				//set to default before search so that old settings are not found
-				MAIN_PROXY_SELECTOR.setDelegate(DEFAULT_PROXY_SELECTOR);
-				// System Proxy
-				SYSTEM_SETTINGS.apply();
-				ProxySearch s = new ProxySearch();
-				// to keep compatibility with older versions
-				s.addStrategy(ProxySearch.Strategy.JAVA);
-				// This needs switches for different OS
-				s.addStrategy(ProxySearch.Strategy.OS_DEFAULT);
-				// The fancy win 10 ui still sets the same Registry value as IE6
-				if (SystemInfoUtilities.getOperatingSystem() == OperatingSystem.WINDOWS) {
-					s.addStrategy(ProxySearch.Strategy.IE);
-				}
-				s.addStrategy(ProxySearch.Strategy.WPAD);
-				// Invoke the proxy search. This will create a ProxySelector with the detected proxy settings.
-				ProxySelector proxySelector = s.getProxySelector();
-
-				// Install this ProxySelector as default ProxySelector for all connections.
-				if (proxySelector == null) {
-					proxySelector = DEFAULT_PROXY_SELECTOR;
-				}
-				MAIN_PROXY_SELECTOR.setDelegate(proxySelector);
-				break;
+					MAIN_PROXY_SELECTOR.setDelegate(proxySelector);
+					break;
+			}
+			GlobalAuthenticator.refreshProxyAuthenticators();
+		} catch (Throwable e) {
+			LogService.getRoot().log(Level.WARNING, "com.rapidminer.tools.ProxyService.failed", e);
 		}
-		GlobalAuthenticator.refreshProxyAuthenticators();
 	}
 
 	/**
@@ -240,9 +253,18 @@ public class ProxySettings {
 		if (value != null && key != null) {
 			System.setProperty(key, value);
 		}
-
 	}
 
+	/**
+	 * @return the canonical hostname of local host or "unknown"
+	 */
+	private static String getHostname() {
+		try {
+			return InetAddress.getLocalHost().getCanonicalHostName();
+		} catch (Exception e) {
+			return "unknown";
+		}
+	}
 	/**
 	 * Copies the ParameterService values from the source keys to target System property keys
 	 * <p>

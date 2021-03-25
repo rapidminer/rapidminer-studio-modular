@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -50,6 +50,7 @@ import com.rapidminer.operator.learner.tree.criterions.GiniIndexColumnCriterion;
 import com.rapidminer.operator.learner.tree.criterions.InfoGainColumnCriterion;
 import com.rapidminer.operator.learner.tree.criterions.LeastSquareColumnCriterion;
 import com.rapidminer.operator.learner.tree.criterions.LeastSquareDistributionColumnCriterion;
+import com.rapidminer.operator.learner.tree.criterions.LeastSquareImprovedColumnCriterion;
 import com.rapidminer.operator.ports.InputPort;
 import com.rapidminer.operator.ports.OutputPort;
 import com.rapidminer.operator.ports.metadata.AbstractPrecondition;
@@ -111,18 +112,23 @@ public abstract class AbstractParallelTreeLearner extends AbstractLearner {
 
 	public static final String PARAMETER_NUMBER_OF_PREPRUNING_ALTERNATIVES = "number_of_prepruning_alternatives";
 
-	public static final String[] CRITERIA_NAMES = { "gain_ratio", "information_gain", "gini_index", "accuracy",
-	"least_square" };
+	public static final String[] CRITERIA_NAMES = {"gain_ratio", "information_gain", "gini_index", "accuracy",
+			"least_square"};
 
-	public static final Class<?>[] CRITERIA_CLASSES = { GainRatioColumnCriterion.class, InfoGainColumnCriterion.class,
-			GiniIndexColumnCriterion.class, AccuracyColumnCriterion.class, LeastSquareColumnCriterion.class };
+	public static final Class<?>[] CRITERIA_CLASSES = {GainRatioColumnCriterion.class, InfoGainColumnCriterion.class,
+			GiniIndexColumnCriterion.class, AccuracyColumnCriterion.class, LeastSquareColumnCriterion.class};
 
 	public static final Class<?>[] CRITERIA_CLASSES_NEW;
+
+	public static final Class<?>[] CRITERIA_CLASSES_9_DOT_9;
 
 	static {
 		Class<?>[] criteriaClassesCopy = Arrays.copyOf(CRITERIA_CLASSES, CRITERIA_CLASSES.length);
 		criteriaClassesCopy[criteriaClassesCopy.length - 1] = LeastSquareDistributionColumnCriterion.class;
 		CRITERIA_CLASSES_NEW = criteriaClassesCopy;
+		criteriaClassesCopy = Arrays.copyOf(CRITERIA_CLASSES, CRITERIA_CLASSES.length);
+		criteriaClassesCopy[criteriaClassesCopy.length - 1] = LeastSquareImprovedColumnCriterion.class;
+		CRITERIA_CLASSES_9_DOT_9 = criteriaClassesCopy;
 	}
 
 	public static final int CRITERION_GAIN_RATIO = 0;
@@ -137,6 +143,9 @@ public abstract class AbstractParallelTreeLearner extends AbstractLearner {
 
 	/** The version before a faster least square criterion was introduced */
 	public static final OperatorVersion FASTER_REGRESSION = new OperatorVersion(9, 4, 0);
+
+	/** The version before the regression attribute weights were fixed */
+	public static final OperatorVersion ATTRIBUTE_WEIGHTS_FIX = new OperatorVersion(9, 8, 1);
 
 	private static class CriterionLabelPrecondition extends AbstractPrecondition {
 
@@ -384,7 +393,9 @@ public abstract class AbstractParallelTreeLearner extends AbstractLearner {
 
 	protected ColumnCriterion createCriterion() throws OperatorException {
 		Class<?>[] criteriaClasses = CRITERIA_CLASSES;
-		if (getCompatibilityLevel().isAbove(FASTER_REGRESSION)) {
+		if (getCompatibilityLevel().isAbove(ATTRIBUTE_WEIGHTS_FIX)) {
+			criteriaClasses = CRITERIA_CLASSES_9_DOT_9;
+		} else if (getCompatibilityLevel().isAbove(FASTER_REGRESSION)) {
 			criteriaClasses = CRITERIA_CLASSES_NEW;
 		}
 		if (getParameterAsBoolean(PARAMETER_PRE_PRUNING)) {
@@ -398,8 +409,8 @@ public abstract class AbstractParallelTreeLearner extends AbstractLearner {
 
 	@Override
 	public OperatorVersion[] getIncompatibleVersionChanges() {
-		return (OperatorVersion[]) ArrayUtils.add(super.getIncompatibleVersionChanges(),
-				FASTER_REGRESSION);
+		return (OperatorVersion[]) ArrayUtils.addAll(super.getIncompatibleVersionChanges(),
+				new OperatorVersion[]{FASTER_REGRESSION, ATTRIBUTE_WEIGHTS_FIX});
 	}
 
 	@Override

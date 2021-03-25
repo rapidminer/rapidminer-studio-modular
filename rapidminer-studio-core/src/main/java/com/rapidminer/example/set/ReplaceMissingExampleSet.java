@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -38,7 +38,10 @@ import com.rapidminer.operator.Annotations;
  * values will be replaced by the average of all other values or by the mean.
  *
  * @author Ingo Mierswa
+ * @deprecated since 9.9, use {@link com.rapidminer.belt.table.Table} from the new Belt data core instead, see <a
+ *  href="https://docs.rapidminer.com/latest/developers/extensions/changes-in-9.8" target="_blank" >documentation</a>.
  */
+@Deprecated
 public class ReplaceMissingExampleSet extends AbstractExampleSet {
 
 	private static final long serialVersionUID = -5662936146589379273L;

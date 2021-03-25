@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -36,7 +36,6 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
-
 import javax.swing.Icon;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
@@ -51,6 +50,7 @@ import com.rapidminer.operator.ports.InputPort;
 import com.rapidminer.operator.ports.metadata.ExampleSetMetaData;
 import com.rapidminer.operator.ports.metadata.MetaData;
 import com.rapidminer.operator.ports.metadata.ModelMetaData;
+import com.rapidminer.operator.ports.metadata.table.TableMetaData;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeAttribute;
 import com.rapidminer.parameter.ParameterTypeBoolean;
@@ -1301,8 +1301,9 @@ public abstract class PlotterAdapter extends JPanel implements Plotter {
 
 		boolean inputDeliversAttributes = false;
 		if (inputPort != null) {
-			MetaData metaData = inputPort.getMetaData();
-			if (metaData != null && (metaData instanceof ExampleSetMetaData || metaData instanceof ModelMetaData)) {
+			MetaData metaData = inputPort.getRawMetaData();
+			if (metaData != null && (metaData instanceof ExampleSetMetaData || metaData instanceof TableMetaData ||
+					metaData instanceof ModelMetaData)) {
 				inputDeliversAttributes = true;
 			}
 		}

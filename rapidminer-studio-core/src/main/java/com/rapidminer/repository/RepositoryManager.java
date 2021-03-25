@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -65,7 +65,7 @@ import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.Observer;
 import com.rapidminer.tools.ProgressListener;
 import com.rapidminer.tools.SecurityTools;
-import com.rapidminer.tools.ValidationUtil;
+import com.rapidminer.tools.ValidationUtilV2;
 import com.rapidminer.tools.XMLException;
 import com.rapidminer.tools.encryption.EncryptionProvider;
 
@@ -629,7 +629,7 @@ public class RepositoryManager extends AbstractObservable<Repository> {
 	/** Stores an IOObject at the given location. Creates entries if they don't exist. */
 	public IOObject store(IOObject ioobject, RepositoryLocation location, Operator callingOperator,
 						  ProgressListener progressListener) throws RepositoryException {
-		ValidationUtil.requireNonNull(ioobject, "ioobject");
+		ValidationUtilV2.requireNonNull(ioobject, "ioobject");
 		DataEntry entry = location.locateData();
 		Repository repository = location.getRepository();
 		if (repository != null) {
@@ -1197,7 +1197,7 @@ public class RepositoryManager extends AbstractObservable<Repository> {
 		if (path.trim().isEmpty()) {
 			return null;
 		}
-		ValidationUtil.requireNonNull(expectedDataType, "expectedDataType");
+		ValidationUtilV2.requireNonNull(expectedDataType, "expectedDataType");
 		String[] pathArray = path.split("" + RepositoryLocation.SEPARATOR);
 		if (Arrays.stream(pathArray).anyMatch(p -> p == null || p.isEmpty())) {
 			throw new RepositoryException("Path did contain empty elements, probably two or more '" + RepositoryLocation.SEPARATOR + "' were part of the path");

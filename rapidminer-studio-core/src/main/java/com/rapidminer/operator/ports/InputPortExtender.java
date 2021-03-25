@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
- * 
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.operator.ports;
 
 import java.util.ArrayList;
@@ -172,11 +172,54 @@ public class InputPortExtender extends SinglePortExtender<InputPort> {
 	}
 
 	/**
-	 * Returns a list of non-null meta data of all input ports.
+	 * Returns a list of meta data of the desired class. If the desired class is not possible, {@code null} is used
+	 * instead.
+	 *
+	 * @param desiredClass
+	 * 		the desired metadata class
+	 * @param unfold
+	 * 		whether to unfold collection meta data
+	 * @return a list of meta data of the desired class that can contain {@code null}
 	 */
+	public <T extends MetaData> List<T> getMetaDataAsOrNull(Class<T> desiredClass, boolean unfold) {
+		List<T> results = new ArrayList<>();
+		for (InputPort port : getManagedPorts()) {
+			MetaData data = port.getRawMetaData();
+			if (unfold && data instanceof CollectionMetaData) {
+				addSingleMD(results, ((CollectionMetaData) data).getElementMetaDataRecursive(), desiredClass, port);
+			} else {
+				addSingleMD(results, data, desiredClass, port);
+			}
+		}
+		return results;
+	}
+
+	/**
+	 * Adds the data to the results list if it is of the desired class or convertible to it. Adds {@code null} otherwise.
+	 */
+	private <T extends MetaData> void addSingleMD(List<T> results, MetaData data, Class<T> desiredClass, Port port) {
+		if (desiredClass.isInstance(data)) {
+			results.add(desiredClass.cast(data));
+		} else if (data != null && AtPortConverter.isMDConvertible(data.getClass(), desiredClass)) {
+			results.add(desiredClass.cast(AtPortConverter.convert(data, port)));
+		} else {
+			results.add(null);
+		}
+	}
+
+	/**
+	 * Returns a list of non-null meta data of all input ports. For compatibility reasons does not return {@link
+	 * com.rapidminer.operator.ports.metadata.table.TableMetaData} but converts to {@link
+	 * com.rapidminer.operator.ports.metadata.ExampleSetMetaData} instead.
+	 *
+	 * @deprecated use {@link #getMetaDataAsOrNull(Class, boolean)} instead.
+	 */
+	@Deprecated
 	public List<MetaData> getMetaData(boolean unfold) {
 		List<MetaData> results = new LinkedList<MetaData>();
 		for (InputPort port : getManagedPorts()) {
+			// must keep deprecated method because callers expects ExampleSetMetaData instead of TableMetaData
+			@SuppressWarnings("deprecation")
 			MetaData data = port.getMetaData();
 			if (data != null) {
 				if (unfold && data instanceof CollectionMetaData) {
@@ -215,7 +258,7 @@ public class InputPortExtender extends SinglePortExtender<InputPort> {
 						boolean isMandatory = (portIndex < numberOfMandatory);
 						// checking if some of the ports received collection
 						for (int i = portIndex; i >= 0; i--) {
-							MetaData portMetaData = getManagedPorts().get(i).getMetaData();
+							MetaData portMetaData = getManagedPorts().get(i).getRawMetaData();
 							if (portMetaData != null) {
 								isMandatory &= !portMetaData.isCompatible(new CollectionMetaData(desiredMetaData),
 										CompatibilityLevel.VERSION_5);

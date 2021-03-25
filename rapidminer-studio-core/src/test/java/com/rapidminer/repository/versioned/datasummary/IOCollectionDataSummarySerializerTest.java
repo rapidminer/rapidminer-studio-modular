@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -32,16 +32,22 @@ import java.util.Iterator;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.apache.commons.io.FileUtils;
 
+import com.rapidminer.belt.util.ColumnRole;
 import com.rapidminer.operator.clustering.ClusterModel;
 import com.rapidminer.operator.ports.metadata.AttributeMetaData;
 import com.rapidminer.operator.ports.metadata.CollectionMetaData;
 import com.rapidminer.operator.ports.metadata.ExampleSetMetaData;
+import com.rapidminer.operator.ports.metadata.MDInteger;
 import com.rapidminer.operator.ports.metadata.MDNumber;
 import com.rapidminer.operator.ports.metadata.MetaData;
 import com.rapidminer.operator.ports.metadata.ModelMetaData;
+import com.rapidminer.operator.ports.metadata.SetRelation;
+import com.rapidminer.operator.ports.metadata.table.TableMetaData;
+import com.rapidminer.operator.ports.metadata.table.TableMetaDataBuilder;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.math.container.Range;
 
@@ -148,9 +154,22 @@ public class IOCollectionDataSummarySerializerTest extends TestCase {
 					.thenComparing(wrap(AttributeMetaData::getValueSet, nestCol(null)))
 					.thenComparing(wrap(AttributeMetaData::getValueRange, RANGE_COMPARE));
 
-	public static final Comparator<ExampleSetMetaData> EMD_COMPARATOR = wrap(ExampleSetMetaData::getNumberOfExamples, MD_NUMBER_COMPARE)
-			.thenComparing(wrap(ExampleSetMetaData::getAttributeSetRelation))
-			.thenComparing(wrap(ExampleSetMetaData::getAllAttributes, nestCol(nest(ATTRIBUTE_MD_COMPARATOR))));
+	public static final Comparator<ExampleSetMetaData> EMD_COMPARATOR =
+			wrap(ExampleSetMetaData::getNumberOfExamples, MD_NUMBER_COMPARE)
+					.thenComparing(wrap(ExampleSetMetaData::getAttributeSetRelation))
+					.thenComparing(wrap(ExampleSetMetaData::getAllAttributes, nestCol(nest(ATTRIBUTE_MD_COMPARATOR))));
+
+	/** Should only be used to check for 0 in assertEquals, not a real comparator. */
+	public static final Comparator<TableMetaData> TMD_COMPARATOR =
+			wrap(TableMetaData::height, MD_NUMBER_COMPARE)
+					.thenComparing(wrap(TableMetaData::getColumnSetRelation))
+					.thenComparing(wrap(TableMetaData::labels, nestCol(String::compareTo)))
+					.thenComparing(wrap(TableMetaData::getColumns, nestCol(dummyEquals()))
+							.thenComparing(wrap(t -> t.labels().stream().map(t::getColumnMetaData).collect(Collectors.toSet()), dummyEquals())));
+
+	private static <T> Comparator<T> dummyEquals() {
+		return (o1, o2) -> o1.equals(o2) ? 0 : 1;
+	}
 
 	@Override
 	protected void setUp() throws Exception {
@@ -164,7 +183,8 @@ public class IOCollectionDataSummarySerializerTest extends TestCase {
 
 
 	public void testSimpleMD() throws IOException {
-		ExampleSetMetaData emd = new ExampleSetMetaData(Collections.singletonList(new AttributeMetaData("col", Ontology.NUMERICAL, "label")));
+		TableMetaData emd = new TableMetaDataBuilder(10).addReal("col", null, SetRelation.EQUAL, new MDInteger(5))
+				.addColumnMetaData("col", ColumnRole.LABEL).build();
 		emd.getAnnotations().setAnnotation("anno", "es");
 		CollectionMetaData collection = new CollectionMetaData(emd);
 		collection.getAnnotations().setAnnotation("anno", "level 0");
@@ -173,13 +193,14 @@ public class IOCollectionDataSummarySerializerTest extends TestCase {
 		IOCollectionDataSummarySerializer.INSTANCE.serialize(tmpmd.toPath(), collection);
 		assertTrue(tmpmd.exists());
 
-		CollectionMetaData colRead = (CollectionMetaData) IOCollectionDataSummarySerializer.INSTANCE.deserialize(tmpmd.toPath());
+		CollectionMetaData colRead =
+				(CollectionMetaData) IOCollectionDataSummarySerializer.INSTANCE.deserialize(tmpmd.toPath());
 		assertEquals(collection.getAnnotations(), colRead.getAnnotations());
 		MetaData readElementMD = colRead.getElementMetaData();
-		assertEquals(ExampleSetMetaData.class, readElementMD.getClass());
-		ExampleSetMetaData readEMD = (ExampleSetMetaData) readElementMD;
+		assertEquals(TableMetaData.class, readElementMD.getClass());
+		TableMetaData readEMD = (TableMetaData) readElementMD;
 		assertEquals(emd.getAnnotations(), readEMD.getAnnotations());
-		assertEquals(0, EMD_COMPARATOR.compare(emd, readEMD));
+		assertEquals(0, TMD_COMPARATOR.compare(emd, readEMD));
 	}
 
 	public void testSimpleEmptyMD() throws IOException {
@@ -199,7 +220,9 @@ public class IOCollectionDataSummarySerializerTest extends TestCase {
 	}
 
 	public void testNestedCollectionMD() throws IOException {
-		ExampleSetMetaData emd = new ExampleSetMetaData(Collections.singletonList(new AttributeMetaData("col", Ontology.NUMERICAL, "label")));
+		TableMetaData emd =
+				new TableMetaDataBuilder(10).addReal("col", null, SetRelation.EQUAL, new MDInteger(5))
+						.addColumnMetaData("col", ColumnRole.LABEL).build();
 		emd.getAnnotations().setAnnotation("anno", "es");
 		CollectionMetaData collection = new CollectionMetaData(emd);
 		collection.getAnnotations().setAnnotation("anno", "level 1");
@@ -210,17 +233,18 @@ public class IOCollectionDataSummarySerializerTest extends TestCase {
 		IOCollectionDataSummarySerializer.INSTANCE.serialize(tmpmd.toPath(), collection2);
 		assertTrue(tmpmd.exists());
 
-		CollectionMetaData colRead = (CollectionMetaData) IOCollectionDataSummarySerializer.INSTANCE.deserialize(tmpmd.toPath());
+		CollectionMetaData colRead =
+				(CollectionMetaData) IOCollectionDataSummarySerializer.INSTANCE.deserialize(tmpmd.toPath());
 		assertEquals(collection2.getAnnotations(), colRead.getAnnotations());
 		MetaData readElementMD = colRead.getElementMetaData();
 		assertEquals(CollectionMetaData.class, readElementMD.getClass());
 		colRead = (CollectionMetaData) readElementMD;
 		assertEquals(collection.getAnnotations(), colRead.getAnnotations());
 		readElementMD = colRead.getElementMetaData();
-		assertEquals(ExampleSetMetaData.class, readElementMD.getClass());
-		ExampleSetMetaData readEMD = (ExampleSetMetaData) readElementMD;
+		assertEquals(TableMetaData.class, readElementMD.getClass());
+		TableMetaData readEMD = (TableMetaData) readElementMD;
 		assertEquals(emd.getAnnotations(), readEMD.getAnnotations());
-		assertEquals(0, EMD_COMPARATOR.compare(emd, readEMD));
+		assertEquals(0, TMD_COMPARATOR.compare(emd, readEMD));
 	}
 
 	public void testNestedCollectionEmptyMD() throws IOException {

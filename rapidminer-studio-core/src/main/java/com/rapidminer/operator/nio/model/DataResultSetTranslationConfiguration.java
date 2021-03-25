@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
- * 
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.operator.nio.model;
 
 import static com.rapidminer.operator.nio.model.AbstractDataResultSetReader.ANNOTATION_NAME;
@@ -44,6 +44,7 @@ import java.util.stream.IntStream;
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.table.DataRowFactory;
 import com.rapidminer.operator.Annotations;
+import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.OperatorRuntimeException;
 import com.rapidminer.operator.UserError;
@@ -97,6 +98,19 @@ public class DataResultSetTranslationConfiguration {
 	}
 
 	/**
+	 * This constructor can be used to generate an empty configuration just depending on the given
+	 * resultSet
+	 *
+	 * @param readerOperator
+	 * @throws OperatorException
+	 */
+	public DataResultSetTranslationConfiguration(AbstractDataResultTableReader readerOperator) {
+		reconfigure(readerOperator,
+				readerOperator != null && readerOperator.shouldTrimAttributeNames(),
+				readerOperator != null && readerOperator.trimForGuessing());
+	}
+
+	/**
 	 * This constructor can be used to generate a configuration with the given annotations.
 	 *
 	 * @param dataResultSet
@@ -130,6 +144,12 @@ public class DataResultSetTranslationConfiguration {
 	}
 
 	public void reconfigure(AbstractDataResultSetReader readerOperator) {
+		reconfigure(readerOperator,
+				readerOperator != null && readerOperator.shouldTrimAttributeNames(),
+				readerOperator != null && readerOperator.trimForGuessing());
+	}
+
+	private void reconfigure(Operator readerOperator, boolean trimAttributeNames, boolean trimForGuessing) {
 		// reading parameter settings
 		if (readerOperator != null) {
 			try {
@@ -138,20 +158,7 @@ public class DataResultSetTranslationConfiguration {
 				dataManagementType = DataRowFactory.TYPE_DOUBLE_ARRAY;
 			}
 
-			boolean firstRowAsNames = readerOperator.getParameterAsBoolean(PARAMETER_FIRST_ROW_AS_NAMES);
-			if (firstRowAsNames) {
-				annotationsMap.put(0, ANNOTATION_NAME);
-			} else {
-				List<String[]> annotations;
-				try {
-					annotations = readerOperator.getParameterList(PARAMETER_ANNOTATIONS);
-				} catch (UndefinedParameterError e) {
-					annotations = Collections.emptyList();
-				}
-				for (String[] annotation : annotations) {
-					annotationsMap.put(Integer.parseInt(annotation[0]), annotation[1]);
-				}
-			}
+			reconfigureAnnotations(readerOperator);
 
 			// reading date format settings
 			try {
@@ -170,14 +177,31 @@ public class DataResultSetTranslationConfiguration {
 				locale = Locale.getDefault();
 			}
 
-			columnMetaData = readColumnMetaData(readerOperator);
+			columnMetaData = readColumnMetaData(readerOperator, trimAttributeNames);
 			setFaultTolerant(readerOperator.getParameterAsBoolean(AbstractDataResultSetReader.PARAMETER_ERROR_TOLERANT));
-			trimAttributeNames = readerOperator.shouldTrimAttributeNames();
-			trimForGuessing = readerOperator.trimForGuessing();
+			this.trimAttributeNames = trimAttributeNames;
+			this.trimForGuessing = trimForGuessing;
 		} else {
 			annotationsMap.put(0, ANNOTATION_NAME);
-			trimAttributeNames = true;
-			trimForGuessing = true;
+			this.trimAttributeNames = true;
+			this.trimForGuessing = true;
+		}
+	}
+
+	private void reconfigureAnnotations(Operator readerOperator) {
+		boolean firstRowAsNames = readerOperator.getParameterAsBoolean(PARAMETER_FIRST_ROW_AS_NAMES);
+		if (firstRowAsNames) {
+			annotationsMap.put(0, ANNOTATION_NAME);
+		} else {
+			List<String[]> annotations;
+			try {
+				annotations = readerOperator.getParameterList(PARAMETER_ANNOTATIONS);
+			} catch (UndefinedParameterError e) {
+				annotations = Collections.emptyList();
+			}
+			for (String[] annotation : annotations) {
+				annotationsMap.put(Integer.parseInt(annotation[0]), annotation[1]);
+			}
 		}
 	}
 
@@ -368,12 +392,26 @@ public class DataResultSetTranslationConfiguration {
 
 	/**
 	 * @param readerOperator
-	 *            the operator to retrieve the parameter from
+	 * 		the operator to retrieve the parameter from
 	 */
 	public static ColumnMetaData[] readColumnMetaData(AbstractDataResultSetReader readerOperator) {
+		return readColumnMetaData(readerOperator, readerOperator.shouldTrimAttributeNames());
+	}
+
+	/**
+	 * Extracts column meta data from the reader operator parameters.
+	 *
+	 * @param readerOperator
+	 * 		the operator to retrieve the parameter from
+	 * @param trimAttributeNames
+	 * 		whether attribute names should be trimmed
+	 * @return the extracted column meta data
+	 */
+	public static ColumnMetaData[] readColumnMetaData(Operator readerOperator, boolean trimAttributeNames) {
 		// initializing data structures
 		List<String[]> metaDataSettings;
-		if (readerOperator.isParameterSet(PARAMETER_META_DATA) && !readerOperator.getParameterAsBoolean(PARAMETER_READ_AS_POLYNOMINAL)) {
+		if (readerOperator.isParameterSet(PARAMETER_META_DATA) &&
+				!readerOperator.getParameterAsBoolean(PARAMETER_READ_AS_POLYNOMINAL)) {
 			try {
 				metaDataSettings = readerOperator.getParameterList(PARAMETER_META_DATA);
 			} catch (UndefinedParameterError e) {
@@ -391,7 +429,6 @@ public class DataResultSetTranslationConfiguration {
 		}
 		// initialize with values from settings
 		ColumnMetaData[] columnMetaData = new ColumnMetaData[maxUsedColumnIndex + 1];
-		boolean trimAttributeNames = readerOperator.shouldTrimAttributeNames();
 		for (String[] metaDataDefinition : metaDataSettings) {
 			int currentColumn = Integer.parseInt(metaDataDefinition[0]);
 			String[] metaDataDefintionValues = ParameterTypeTupel.transformString2Tupel(metaDataDefinition[1]);

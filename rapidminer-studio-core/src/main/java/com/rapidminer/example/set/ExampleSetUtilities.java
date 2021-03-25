@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
- * 
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.example.set;
 
 import java.util.Arrays;
@@ -133,7 +133,7 @@ public class ExampleSetUtilities {
 					Ontology valueTypes = Ontology.ATTRIBUTE_VALUE_TYPE;
 					if (compareTypes == TypesCompareOption.ALLOW_SUBTYPES) {
 						if (!valueTypes.isA(comparedValueType, originalValueType)) {
-							throw new UserError(op, 964, comparedAttribute.getName(),
+							throw new UserError(op, "type_check.not_subtype", comparedAttribute.getName(),
 									Ontology.VALUE_TYPE_NAMES[comparedValueType],
 									Ontology.VALUE_TYPE_NAMES[originalValueType]);
 						}
@@ -159,16 +159,16 @@ public class ExampleSetUtilities {
 									Ontology.VALUE_TYPE_NAMES[originalValueType]);
 						}
 					} else if (compareTypes == TypesCompareOption.EQUAL) {
-						throw new UserError(op, 963, comparedAttribute.getName(),
+						throw new UserError(op, "type_check.not_equal", comparedAttribute.getName(),
 								Ontology.VALUE_TYPE_NAMES[originalValueType], Ontology.VALUE_TYPE_NAMES[comparedValueType]);
 					}
 				}
 			} else {
 				if (compareSets == SetsCompareOption.EQUAL) {
-					throw new UserError(op, 960, originalAttribute.getName());
+					throw new UserError(op, "attribute_check.misfitting_for_equal", originalAttribute.getName());
 				}
 				if (compareSets == SetsCompareOption.ALLOW_SUPERSET) {
-					throw new UserError(op, 962, originalAttribute.getName());
+					throw new UserError(op, "attribute_check.missing_attribute", originalAttribute.getName());
 				}
 			}
 		}
@@ -176,10 +176,10 @@ public class ExampleSetUtilities {
 		for (Attribute comparedAttribute : comparedAttributes) {
 			if (!originalAttributes.contains(comparedAttribute)) {
 				if (compareSets == SetsCompareOption.EQUAL) {
-					throw new UserError(op, 960, comparedAttribute.getName());
+					throw new UserError(op, "attribute_check.misfitting_for_equal", comparedAttribute.getName());
 				}
 				if (compareSets == SetsCompareOption.ALLOW_SUBSET) {
-					throw new UserError(op, 961, comparedAttribute.getName());
+					throw new UserError(op, "attribute_check.wrong_for_subset", comparedAttribute.getName());
 				}
 			}
 		}

@@ -1,22 +1,25 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
- * 
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.operator.ports.metadata;
+
+import java.util.LinkedList;
+import java.util.List;
 
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.ExampleSet;
@@ -26,16 +29,13 @@ import com.rapidminer.operator.OperatorCreationException;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.ProcessSetupError.Severity;
 import com.rapidminer.operator.ports.InputPort;
-import com.rapidminer.operator.ports.quickfix.ChangeAttributeRoleQuickFix;
 import com.rapidminer.operator.ports.quickfix.OperatorInsertionQuickFix;
 import com.rapidminer.operator.ports.quickfix.QuickFix;
+import com.rapidminer.operator.ports.quickfix.QuickFixSupplier;
 import com.rapidminer.operator.preprocessing.IdTagging;
 import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.OperatorService;
-
-import java.util.LinkedList;
-import java.util.List;
 
 
 /**
@@ -94,8 +94,6 @@ public class ExampleSetPrecondition extends AbstractPrecondition {
 		if (metaData == null) {
 			if (!optional) {
 				inputPort.addError(new InputMissingMetaDataError(inputPort, ExampleSet.class, null));
-			} else {
-				return;
 			}
 		} else {
 			if (metaData instanceof ExampleSetMetaData) {
@@ -111,20 +109,14 @@ public class ExampleSetPrecondition extends AbstractPrecondition {
 				// checking allowed types
 				if ((allowedValueTypes != Ontology.ATTRIBUTE_VALUE) && (allowedValueTypes != -1)) {
 					for (AttributeMetaData amd : emd.getAllAttributes()) {
-						if (amd.isSpecial()) {
+						if (amd.isSpecial() || ignore(amd.getName())) {
 							continue;
-						}
-						// check if name is in ignore list
-						for (String name : ignoreForTypeCheck) {
-							if (name.equals(amd.getName())) {
-								continue;
-							}
 						}
 
 						// otherwise do check
 						if (!Ontology.ATTRIBUTE_VALUE_TYPE.isA(amd.getValueType(), allowedValueTypes)) {
 							createError(Severity.ERROR, "regular_type_mismatch",
-									new Object[] { Ontology.ATTRIBUTE_VALUE_TYPE.mapIndex(allowedValueTypes) });
+									Ontology.ATTRIBUTE_VALUE_TYPE.mapIndex(allowedValueTypes));
 							break;
 						}
 					}
@@ -136,7 +128,7 @@ public class ExampleSetPrecondition extends AbstractPrecondition {
 						MetaDataInfo has = emd.hasSpecial(name);
 						switch (has) {
 							case NO:
-								List<QuickFix> fixes = new LinkedList<QuickFix>();
+								List<QuickFix> fixes = new LinkedList<>();
 								// ID-Tagging
 								if (name.equals(Attributes.ID_NAME)) {
 									OperatorDescription[] ods = OperatorService.getOperatorDescriptions(IdTagging.class);
@@ -166,17 +158,18 @@ public class ExampleSetPrecondition extends AbstractPrecondition {
 								}
 
 								// General Attribute Role Change
-								fixes.add(new ChangeAttributeRoleQuickFix(inputPort, name, "change_attribute_role", name));
+								fixes.add(QuickFixSupplier.getSetRoleQuickFix(inputPort, name,
+										"change_attribute_role", name));
 
 								if (fixes.size() > 0) {
 									inputPort.addError(new SimpleMetaDataError(Severity.ERROR, inputPort, fixes,
 											"exampleset.missing_role", name));
 								} else {
-									createError(Severity.ERROR, "special_missing", new Object[] { name });
+									createError(Severity.ERROR, "special_missing", name);
 								}
 								break;
 							case UNKNOWN:
-								createError(Severity.WARNING, "special_unknown", new Object[] { name });
+								createError(Severity.WARNING, "special_unknown", name);
 								break;
 							case YES:
 								// checking type
@@ -199,9 +192,24 @@ public class ExampleSetPrecondition extends AbstractPrecondition {
 				} catch (UndefinedParameterError e) {
 				}
 			} else {
-				inputPort.addError(new MetaDataUnderspecifiedError(inputPort));
+				inputPort.addError(new InputMissingMetaDataError(inputPort, ExampleSet.class,
+						metaData.getObjectClass()));
 			}
 		}
+	}
+
+	/**
+	 * @return {@code true} iff name is contained in ignoreForTypeCheck.
+	 */
+	private boolean ignore(String name) {
+		if (ignoreForTypeCheck != null) {
+			for (String label : ignoreForTypeCheck) {
+				if (label.equals(name)) {
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
 	/**
@@ -225,4 +233,5 @@ public class ExampleSetPrecondition extends AbstractPrecondition {
 	public MetaData getExpectedMetaData() {
 		return new ExampleSetMetaData();
 	}
+
 }

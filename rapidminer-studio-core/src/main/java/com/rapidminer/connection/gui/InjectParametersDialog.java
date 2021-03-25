@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -71,7 +71,7 @@ import com.rapidminer.gui.tools.ResourceAction;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.gui.tools.TextFieldWithAction;
 import com.rapidminer.tools.I18N;
-import com.rapidminer.tools.ValidationUtil;
+import com.rapidminer.tools.ValidationUtilV2;
 import com.rapidminer.tools.usagestats.ActionStatisticsCollector;
 
 
@@ -189,10 +189,10 @@ public class InjectParametersDialog extends JDialog {
 	 * 		the data, containing parameters to be altered and available {@link ValueProvider ValueProviders}
 	 */
 	public InjectParametersDialog(Window owner, String type, String key, InjectParametersModel data) {
-		super(ValidationUtil.requireNonNull(owner, "owner"), I18N.getMessage(I18N.getGUIBundle(), "gui.dialog." + key + ".title"), Dialog.ModalityType.APPLICATION_MODAL);
+		super(ValidationUtilV2.requireNonNull(owner, "owner"), I18N.getMessage(I18N.getGUIBundle(), "gui.dialog." + key + ".title"), Dialog.ModalityType.APPLICATION_MODAL);
 
-		ValidationUtil.requireNonNull(data, "data");
-		ValidationUtil.requireNonNull(type, "type");
+		ValidationUtilV2.requireNonNull(data, "data");
+		ValidationUtilV2.requireNonNull(type, "type");
 		this.data = data;
 		this.type = type;
 

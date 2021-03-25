@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -39,6 +39,7 @@ import com.rapidminer.operator.ports.Ports;
 import com.rapidminer.operator.ports.metadata.MetaData;
 import com.rapidminer.operator.ports.metadata.MetaDataError;
 import com.rapidminer.operator.ports.metadata.MetaDataErrorQuickFixFilter;
+import com.rapidminer.operator.ports.metadata.table.TableMetaData;
 import com.rapidminer.operator.ports.quickfix.BlacklistedOperatorQuickFixFilter;
 import com.rapidminer.operator.ports.quickfix.QuickFix;
 import com.rapidminer.tools.AbstractObservable;
@@ -202,6 +203,20 @@ public abstract class AbstractPort<S extends Port<S, O>, O extends Port<O, S>>
 	}
 
 	@Override
+	public <T extends MetaData> T getMetaDataAsOrNull(Class<T> desiredClass) {
+		final MetaData rawMetaData = getRawMetaData();
+		if (rawMetaData != null) {
+			if (AtPortConverter.isMDConvertible(rawMetaData.getClass(), desiredClass)) {
+				return desiredClass.cast(AtPortConverter.convert(rawMetaData, this));
+			}
+			if (desiredClass.isAssignableFrom(rawMetaData.getClass())) {
+				return desiredClass.cast(rawMetaData);
+			}
+		}
+		return null;
+	}
+
+	@Override
 	public final String getName() {
 		return name;
 	}
@@ -252,13 +267,49 @@ public abstract class AbstractPort<S extends Port<S, O>, O extends Port<O, S>>
 	}
 
 	/**
+	 * Gets the non-zero meta data as the desired class or throws an exception if this is not possible. For
+	 * compatibility reasons, if the class is {@link MetaData} then {@link TableMetaData} is converted to {@link
+	 * com.rapidminer.operator.ports.metadata.ExampleSetMetaData}.
+	 *
+	 * @param desiredClass
+	 * 		the desired class for the meta data
+	 * @param nonZero
+	 * 		the non-zero metaData to check
+	 * @param port
+	 * 		the current port
+	 * @return the desired meta data
+	 * @throws IncompatibleMDClassException
+	 * 		if the meta data is not compatible
+	 */
+	static <T extends MetaData> T getCompatibleMetaData(Class<T> desiredClass, MetaData nonZero, Port port) throws IncompatibleMDClassException {
+		if (AtPortConverter.isMDConvertible(nonZero.getClass(), desiredClass)) {
+			return desiredClass.cast(AtPortConverter.convert(nonZero, port));
+		}
+		checkDesiredClass(nonZero, desiredClass, port);
+		//keep behavior of getMetaData(MetaData.class) the same
+		if (MetaData.class.equals(desiredClass) && nonZero instanceof TableMetaData) {
+			return desiredClass.cast(AtPortConverter.convert(nonZero, port));
+		}
+		return desiredClass.cast(nonZero);
+	}
+
+	/**
+	 * Checks whether the desired class is assignable from provided meta data object class. Same as {@link
+	 * #checkDesiredClass(MetaData, Class)} but static.
+	 */
+	private static void checkDesiredClass(MetaData obj, Class<? extends MetaData> desiredClass, Port port)
+			throws IncompatibleMDClassException {
+		if (!desiredClass.isAssignableFrom(obj.getClass())) {
+			throw new IncompatibleMDClassException(port.getPorts().getOwner(), port);
+		}
+	}
+
+	/**
 	 * Checks whether the desired class is assignable from provided meta data object class.
 	 */
 	protected void checkDesiredClass(MetaData obj, Class<? extends MetaData> desiredClass)
 			throws IncompatibleMDClassException {
-		if (!desiredClass.isAssignableFrom(obj.getClass())) {
-			throw new IncompatibleMDClassException(getPorts().getOwner(), this);
-		}
+		checkDesiredClass(obj, desiredClass, this);
 	}
 
 	@Override

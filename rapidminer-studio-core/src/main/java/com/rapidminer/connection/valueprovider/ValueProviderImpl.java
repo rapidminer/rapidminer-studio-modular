@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -30,7 +30,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.rapidminer.tools.ValidationUtil;
+import com.rapidminer.tools.ValidationUtilV2;
 
 
 /**
@@ -73,7 +73,7 @@ public class ValueProviderImpl implements ValueProvider {
 	 * Sets the name of this value provider. Must be neither {@code null} nor empty.
 	 */
 	private void setName(String name) {
-		this.name = ValidationUtil.requireNonEmptyString(name, "name");
+		this.name = ValidationUtilV2.requireNonEmptyString(name, "name");
 	}
 
 	@Override
@@ -85,7 +85,7 @@ public class ValueProviderImpl implements ValueProvider {
 	 * Sets the type of this value provider. Must be neither {@code null} nor empty.
 	 */
 	private void setType(String type) {
-		this.type = ValidationUtil.requireNonEmptyString(type, "type");
+		this.type = ValidationUtilV2.requireNonEmptyString(type, "type");
 	}
 
 	@Override
@@ -97,7 +97,7 @@ public class ValueProviderImpl implements ValueProvider {
 	 * Sets the list of parameters of this value provider. Can be either {@code null} or empty.
 	 */
 	private void setParameters(List<ValueProviderParameter> parameters) {
-		this.parameters = ValidationUtil.noDuplicatesAllowed(ValidationUtil.stripToEmptyList(parameters),
+		this.parameters = ValidationUtilV2.noDuplicatesAllowed(ValidationUtilV2.stripToEmptyList(parameters),
 				ValueProviderParameter.UNIQUE_NAME_COMPARATOR, "parameters");
 		parameterMap.clear();
 	}

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -27,7 +27,8 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
-import com.rapidminer.tools.ValidationUtil;
+import com.rapidminer.tools.ValidationUtilV2;
+
 
 /**
  * A {@link FileVisitor} that deletes regular files if a {@link Predicate} was given and
@@ -47,7 +48,7 @@ public class EmptyDirCleaner implements FileVisitor<Path> {
 
 	/** Constructor to delete certain regular files and empty directories */
 	public EmptyDirCleaner(Predicate<Path> deleteFile) {
-		this.deleteFile = ValidationUtil.requireNonNull(deleteFile, "deleteFile predicate");
+		this.deleteFile = ValidationUtilV2.requireNonNull(deleteFile, "deleteFile predicate");
 	}
 
 	@Override

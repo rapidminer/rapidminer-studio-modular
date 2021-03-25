@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
- * 
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.gui.viewer.metadata.model;
 
 import java.awt.Color;
@@ -66,16 +66,16 @@ public class BeltTimeColumnStatisticsModel extends AbstractBeltColumnStatisticsM
 	private static final Color COLOR_INVISIBLE = new Color(255, 255, 255, 0);
 
 	/** the average of the numerical values */
-	private LocalTime average;
+	private String average;
 
 	/** the standard deviation of the numerical values */
-	private LocalTime deviation;
+	private String deviation;
 
 	/** the minimum of the numerical values */
-	private LocalTime minimum;
+	private String minimum;
 
 	/** the maximum of the numerical values */
-	private LocalTime maximum;
+	private String maximum;
 
 	/** array of charts for this model */
 	private JFreeChart[] chartsArray;
@@ -92,10 +92,14 @@ public class BeltTimeColumnStatisticsModel extends AbstractBeltColumnStatisticsM
 	@Override
 	public void updateStatistics(Map<String, Map<Statistic, Result>> allStatistics) {
 		Map<Statistic, Result> statistics = allStatistics.get(getColumnName());
-		average = statistics.get(Statistic.MEAN).getObject(LocalTime.class);
-		deviation = statistics.get(Statistic.SD).getObject(LocalTime.class);
-		minimum = statistics.get(Statistic.MIN).getObject(LocalTime.class);
-		maximum = statistics.get(Statistic.MAX).getObject(LocalTime.class);
+		LocalTime averageTime = statistics.get(Statistic.MEAN).getObject(LocalTime.class);
+		average = averageTime == null ? "?" : Tools.formatLocalTime(averageTime);
+		LocalTime deviationTime = statistics.get(Statistic.SD).getObject(LocalTime.class);
+		deviation = deviationTime == null ? "?" : Tools.formatLocalTime(deviationTime);
+		LocalTime minimumTime = statistics.get(Statistic.MIN).getObject(LocalTime.class);
+		minimum = minimumTime == null ? "?" : Tools.formatLocalTime(minimumTime);
+		LocalTime maximumTime = statistics.get(Statistic.MAX).getObject(LocalTime.class);
+		maximum = maximumTime == null ? "?" : Tools.formatLocalTime(maximumTime);
 		missing = getTableOrNull().height() - statistics.get(Statistic.COUNT).getNumeric();
 
 		fireStatisticsChangedEvent();
@@ -111,7 +115,7 @@ public class BeltTimeColumnStatisticsModel extends AbstractBeltColumnStatisticsM
 	 *
 	 * @return the average
 	 */
-	public LocalTime getAverage() {
+	public String getAverage() {
 		return average;
 	}
 
@@ -120,7 +124,7 @@ public class BeltTimeColumnStatisticsModel extends AbstractBeltColumnStatisticsM
 	 *
 	 * @return the standard deviation
 	 */
-	public LocalTime getDeviation() {
+	public String getDeviation() {
 		return deviation;
 	}
 
@@ -129,7 +133,7 @@ public class BeltTimeColumnStatisticsModel extends AbstractBeltColumnStatisticsM
 	 *
 	 * @return the minimum of the numerical values
 	 */
-	public LocalTime getMinimum() {
+	public String getMinimum() {
 		return minimum;
 	}
 
@@ -138,7 +142,7 @@ public class BeltTimeColumnStatisticsModel extends AbstractBeltColumnStatisticsM
 	 *
 	 * @return the maximum of the numerical values
 	 */
-	public LocalTime getMaximum() {
+	public String getMaximum() {
 		return maximum;
 	}
 

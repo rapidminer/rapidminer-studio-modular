@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -22,7 +22,7 @@ import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.rapidminer.tools.ValidationUtil;
+import com.rapidminer.tools.ValidationUtilV2;
 
 
 /**
@@ -63,7 +63,7 @@ public class PlaceholderParameterImpl extends ConfigurationParameterImpl impleme
 	 * must not be {@code null} or empty and must not contain a dot.
 	 */
 	private void setGroup(String group) {
-		this.group = ValidationUtil.requireNoDot(ValidationUtil.requireNonEmptyString(group, "group"), "group");
+		this.group = ValidationUtilV2.requireNoDot(ValidationUtilV2.requireNonEmptyString(group, "group"), "group");
 	}
 
 	@Override

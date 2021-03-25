@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
- * 
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.gui.properties;
 
 import java.awt.Component;
@@ -46,7 +46,7 @@ import com.rapidminer.gui.tools.ExtendedJScrollPane;
 import com.rapidminer.gui.tools.FilterTextField;
 import com.rapidminer.gui.tools.FilterableListModel;
 import com.rapidminer.gui.tools.ResourceAction;
-import com.rapidminer.parameter.ParameterTypeAttributes;
+import com.rapidminer.parameter.ParameterTypeAttribute;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.container.Pair;
@@ -79,7 +79,7 @@ public class AttributesPropertyDialog extends PropertyDialog {
 
 	private final JList<String> selectedItemList;
 
-	private final Action selectAttributesAction = new ResourceAction(true, "attributes_select") {
+	private final transient Action selectAttributesAction = new ResourceAction(true, "attributes_select") {
 
 		private static final long serialVersionUID = -3046621278306353077L;
 
@@ -96,7 +96,7 @@ public class AttributesPropertyDialog extends PropertyDialog {
 		}
 	};
 
-	private final Action deselectAttributesAction = new ResourceAction(true, "attributes_deselect") {
+	private final transient Action deselectAttributesAction = new ResourceAction(true, "attributes_deselect") {
 
 		private static final long serialVersionUID = -3046621278306353077L;
 
@@ -114,7 +114,7 @@ public class AttributesPropertyDialog extends PropertyDialog {
 		}
 	};
 
-	public AttributesPropertyDialog(final ParameterTypeAttributes type, Collection<String> preselectedItems) {
+	public AttributesPropertyDialog(final ParameterTypeAttribute type, Collection<String> preselectedItems) {
 		this(type, preselectedItems, true);
 	}
 
@@ -131,7 +131,7 @@ public class AttributesPropertyDialog extends PropertyDialog {
 	 * 		always be sorted because it's hugely inconvenient if it isn't
 	 * @since 9.2.0
 	 */
-	public AttributesPropertyDialog(final ParameterTypeAttributes type, Collection<String> preselectedItems, boolean sortAttributes) {
+	public AttributesPropertyDialog(final ParameterTypeAttribute type, Collection<String> preselectedItems, boolean sortAttributes) {
 		super(type, "attributes");
 		JPanel panel = new JPanel(new GridBagLayout());
 		GridBagConstraints c = new GridBagConstraints();

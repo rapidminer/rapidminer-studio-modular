@@ -1,24 +1,30 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
  * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General
- * Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any
- * later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
- * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more
- * details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License along with this program. If not, see
- * http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.tools;
 
 import static com.rapidminer.tools.FunctionWithThrowable.suppress;
+import static java.time.temporal.ChronoField.AMPM_OF_DAY;
+import static java.time.temporal.ChronoField.CLOCK_HOUR_OF_AMPM;
+import static java.time.temporal.ChronoField.HOUR_OF_DAY;
+import static java.time.temporal.ChronoField.MINUTE_OF_HOUR;
+import static java.time.temporal.ChronoField.NANO_OF_SECOND;
+import static java.time.temporal.ChronoField.SECOND_OF_MINUTE;
 
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
@@ -46,6 +52,9 @@ import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -128,6 +137,35 @@ public class Tools {
 		// instance for multiple threads
 		return (DateFormat) DateFormat.getTimeInstance(DateFormat.LONG, Locale.getDefault()).clone();
 	});
+
+	/**
+	 * Used for formatting values in the {@link #formatTime(Date)} method.
+	 */
+	private static final ThreadLocal<DateFormat> TIME_FORMAT_WITH_MILLIS = ThreadLocal.withInitial(() -> {
+		try {
+			return new SimpleDateFormat(((SimpleDateFormat) DateFormat.getTimeInstance(DateFormat.LONG,
+					Locale.getDefault()))
+					.toPattern().replace(":ss", ":ss.SSS")
+					.replace(".ss", ".ss.SSS"), Locale.getDefault());
+		} catch (ClassCastException e) {
+			return new SimpleDateFormat("hh:mm:ss.SSS a zzz", Locale.getDefault());
+		}
+	});
+
+	/**
+	 * Must be in subclass so that not initialized when Tools is used the first time because this is before {@code
+	 * Locale.getDefault()} works with the locale from the settings.
+	 */
+	private static class LazyDateTimeFormatter {
+
+		/**
+		 * Used for formatting values in the {@link #formatLocalTime(LocalTime)} method. Similar to
+		 * {@link #TIME_FORMAT_WITH_MILLIS} for locales that use ":" to separate hours, minutes and seconds.
+		 * {@link DateTimeFormatter} is immutable and threadsafe in contrast to {@link DateFormat} so no
+		 * {@link ThreadLocal} necessary.
+		 */
+		private static final DateTimeFormatter LOCAL_TIME_FORMAT = getSimilarTimePattern();
+	}
 
 	// ThreadLocal because DateFormat is NOT threadsafe and creating a new DateFormat is
 	// EXTREMELY expensive
@@ -444,6 +482,20 @@ public class Tools {
 	}
 
 	/**
+	 * Format date as a short time string with milliseconds if there are any.
+	 *
+	 * @param date
+	 * 		the date to format
+	 * @return the date as String
+	 * @since 9.9
+	 */
+	public static String formatTimeWithMillis(Date date) {
+		TIME_FORMAT_WITH_MILLIS.get().setTimeZone(getPreferredTimeZone());
+		//get rid of empty millis
+		return TIME_FORMAT_WITH_MILLIS.get().format(date).replace(".000", "");
+	}
+
+	/**
 	 * Format double value as a short time string. If value is NaN, returns {@value #MISSING_TIME}.
 	 *
 	 * @param value the value to be formatted as time
@@ -465,6 +517,18 @@ public class Tools {
 	public static String formatDate(Date date) {
 		DATE_FORMAT.get().setTimeZone(getPreferredTimeZone());
 		return DATE_FORMAT.get().format(date);
+	}
+
+	/**
+	 * Formats the given {@link LocalTime} for presenting it to the user.
+	 *
+	 * @param value
+	 * 		the local time
+	 * @return the formatted String representing the local time
+	 * @since 9.9
+	 */
+	public static String formatLocalTime(LocalTime value) {
+		 return LazyDateTimeFormatter.LOCAL_TIME_FORMAT.format(value);
 	}
 
 	/**
@@ -2293,5 +2357,51 @@ public class Tools {
 		editor = editor.replaceAll("%f", file.getAbsolutePath());
 		editor = editor.replaceAll("%l", line + "");
 		return Runtime.getRuntime().exec(editor);
+	}
+
+	/**
+	 * Creates a {@link DateTimeFormatter} that is similar to {@link #TIME_FORMAT} but with additional nanoseconds.
+	 */
+	private static DateTimeFormatter getSimilarTimePattern() {
+		boolean amPm = false;
+		boolean twoDigitHours = false;
+		try {
+			String pattern = ((SimpleDateFormat) DateFormat.getTimeInstance(DateFormat.LONG,
+					Locale.getDefault())).toPattern();
+			if (pattern.contains("a")) {
+				amPm = true;
+			}
+			if (pattern.contains("hh") || pattern.contains("HH")) {
+				twoDigitHours = true;
+			}
+		} catch (ClassCastException e) {
+			amPm = true;
+		}
+		DateTimeFormatterBuilder formatterBuilder = new DateTimeFormatterBuilder();
+		if (amPm) {
+			if (twoDigitHours) {
+				formatterBuilder.appendValue(CLOCK_HOUR_OF_AMPM, 2);
+			} else {
+				formatterBuilder.appendValue(CLOCK_HOUR_OF_AMPM);
+			}
+		} else {
+			if (twoDigitHours) {
+				formatterBuilder.appendValue(HOUR_OF_DAY, 2);
+			} else {
+				formatterBuilder.appendValue(HOUR_OF_DAY);
+			}
+		}
+		formatterBuilder.appendLiteral(':')
+				.appendValue(MINUTE_OF_HOUR, 2)
+				.optionalStart()
+				.appendLiteral(':')
+				.appendValue(SECOND_OF_MINUTE, 2)
+				.optionalStart()
+				.appendFraction(NANO_OF_SECOND, 0, 9, true)
+				.optionalEnd();
+		if (amPm) {
+			formatterBuilder.appendLiteral(' ').appendText(AMPM_OF_DAY);
+		}
+		return formatterBuilder.toFormatter(Locale.getDefault());
 	}
 }

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -1128,7 +1128,7 @@ public final class ProcessDrawer {
 						&& ProcessDrawUtils.canOperatorBeInsertedIntoConnection(model, draggedOp);
 				boolean portHovered = from == model.getHoveringPort() || to == model.getHoveringPort();
 
-				if (from.getMetaData() instanceof CollectionMetaData) {
+				if (from.getRawMetaData() instanceof CollectionMetaData) {
 					if (isDragTarget) {
 						g2.setStroke(CONNECTION_COLLECTION_HIGHLIGHT_STROKE);
 					} else if (isConDirectlyHovered) {
@@ -1236,7 +1236,7 @@ public final class ProcessDrawer {
 				}
 
 				g2.setColor(Color.WHITE);
-				if (from.getMetaData() instanceof CollectionMetaData) {
+				if (from.getRawMetaData() instanceof CollectionMetaData) {
 					g2.setStroke(CONNECTION_COLLECTION_LINE_BACKGROUND_STROKE);
 				} else {
 					g2.setStroke(CONNECTION_LINE_BACKGROUND_STROKE);

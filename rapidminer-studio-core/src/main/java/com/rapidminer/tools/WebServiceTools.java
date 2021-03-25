@@ -1,20 +1,20 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
  * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General
- * Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any
- * later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
- * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more
- * details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License along with this program. If not, see
- * http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.tools;
 
@@ -60,6 +60,9 @@ public class WebServiceTools {
 
 	/** The HTTP user agent request header */
 	private static final String USER_AGENT_HEADER = "User-Agent";
+	/** the HTTP x-requested-with header to signal API requests */
+	private static final String X_REQUESTED_WITH_HEADER = "X-Requested-With";
+	private static final String XML_HTTP_REQUEST_VALUE = "XMLHttpRequest";
 
 	/** the custom userAgent */
 	private static String userAgent = StringUtils.stripToNull(ParameterService.getParameterValue(RapidMiner.RAPIDMINER_DEFAULT_USER_AGENT));
@@ -150,6 +153,22 @@ public class WebServiceTools {
 				connection.setRequestProperty(USER_AGENT_HEADER, userAgentCopy);
 			}
 		}
+	}
+
+	/**
+	 * Set the {@value X_REQUESTED_WITH_HEADER} HTTP header to {@value XML_HTTP_REQUEST_VALUE} to signal an API request.
+	 * This is useful to e.g. make sure authentication systems don't redirect to a login page, and instead directly
+	 * return a 401.
+	 *
+	 * @param connection the connection, must not be {@code null}
+	 * @since 9.8.1
+	 */
+	public static void declareAsAPIRequest(URLConnection connection) {
+		if (connection == null) {
+			throw new IllegalArgumentException("connection must not be null!");
+		}
+
+		connection.setRequestProperty(X_REQUESTED_WITH_HEADER, XML_HTTP_REQUEST_VALUE);
 	}
 
 	/**

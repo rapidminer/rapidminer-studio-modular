@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -18,7 +18,7 @@
  */
 package com.rapidminer.operator;
 
-import com.rapidminer.tools.ValidationUtil;
+import com.rapidminer.tools.ValidationUtilV2;
 
 
 /**
@@ -41,7 +41,7 @@ public class UserSetupError extends UserError {
 	 * 		the source setup error; must not be {@code null}
 	 */
 	public UserSetupError(Operator operator, ProcessSetupError setupError) {
-		super(operator, 127, ValidationUtil.requireNonNull(setupError, "setup error").getMessage());
+		super(operator, 127, ValidationUtilV2.requireNonNull(setupError, "setup error").getMessage());
 		this.setupError = setupError;
 	}
 

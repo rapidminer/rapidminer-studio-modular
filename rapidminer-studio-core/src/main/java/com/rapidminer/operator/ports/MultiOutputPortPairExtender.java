@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -38,7 +38,7 @@ public class MultiOutputPortPairExtender extends MultiPortPairExtender<InputPort
 			@Override
 			public void transformMD() {
 				for (MultiPortPair mpp : getManagedPairs()) {
-					MetaData md = mpp.singlePort.getMetaData();
+					MetaData md = mpp.singlePort.getRawMetaData();
 					for (OutputPort port : mpp.multiPorts) {
 						port.deliverMD(md);
 					}

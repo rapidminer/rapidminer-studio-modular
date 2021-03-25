@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -34,8 +34,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
+import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Level;
 import javax.imageio.ImageIO;
@@ -113,7 +116,8 @@ public class SplashScreen extends JPanel implements ActionListener {
 	private Timer animationTimer;
 	private final List<Runnable> animationRenderers = new CopyOnWriteArrayList<>();
 
-	private final List<Pair<BufferedImage, Long>> extensionIcons = new ArrayList<>();
+	private final Set<String> extensionKeys = Collections.synchronizedSet(new HashSet<>());
+	private final List<Pair<BufferedImage, Long>> extensionIcons = new CopyOnWriteArrayList<>();
 	private long lastExtensionAdd = 0;
 	private License license;
 	private String productEdition;
@@ -190,7 +194,7 @@ public class SplashScreen extends JPanel implements ActionListener {
 		Graphics2D g2d = (Graphics2D) g.create();
 		drawMain(g2d);
 		// draw extensions
-		List<Pair<BufferedImage, Long>> currentExtensionIcons = getSynchronizedExtensionIcons();
+		List<Pair<BufferedImage, Long>> currentExtensionIcons = new ArrayList<>(extensionIcons);
 		if (!currentExtensionIcons.isEmpty()) {
 
 			g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
@@ -322,15 +326,13 @@ public class SplashScreen extends JPanel implements ActionListener {
 			Graphics2D graphics = bufferedImage.createGraphics();
 			graphics.drawImage(extensionIcon.getImage(), 0, 0, null);
 
-			synchronized (extensionIcons) {
-				extensionIcons.add(new Pair<>(bufferedImage, currentTimeMillis));
+			String extensionId = plugin.getExtensionId();
+			synchronized (extensionKeys) {
+				if (!extensionKeys.contains(extensionId)) {
+					extensionIcons.add(new Pair<>(bufferedImage, currentTimeMillis));
+					extensionKeys.add(extensionId);
+				}
 			}
-		}
-	}
-
-	private List<Pair<BufferedImage, Long>> getSynchronizedExtensionIcons() {
-		synchronized (extensionIcons) {
-			return new ArrayList<>(extensionIcons);
 		}
 	}
 

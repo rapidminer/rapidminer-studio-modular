@@ -1,23 +1,26 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
- * 
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.operator.collections;
 
+import java.util.List;
+
+import com.rapidminer.adaption.belt.AtPortConverter;
 import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.IOObjectCollection;
 import com.rapidminer.operator.Operator;
@@ -33,8 +36,6 @@ import com.rapidminer.operator.ports.metadata.MetaData;
 import com.rapidminer.operator.ports.metadata.SimpleMetaDataError;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeBoolean;
-
-import java.util.List;
 
 
 /**
@@ -59,7 +60,7 @@ public class CollectionOperator extends Operator {
 				boolean unfold = getParameterAsBoolean(PARAMETER_UNFOLD);
 				MetaData commonSupertype = null;
 				for (InputPort in : inExtender.getManagedPorts()) {
-					MetaData md = in.getMetaData();
+					MetaData md = in.getRawMetaData();
 					if (unfold && (md instanceof CollectionMetaData)) {
 						md = ((CollectionMetaData) md).getElementMetaDataRecursive();
 					}
@@ -69,16 +70,19 @@ public class CollectionOperator extends Operator {
 						commonSupertype = md;
 						continue;
 					} else {
-						if (commonSupertype.getObjectClass().equals(md.getObjectClass())) {
+						if (commonSupertype.getObjectClass().equals(md.getObjectClass()) ||
+								AtPortConverter.isConvertible(md.getObjectClass(), commonSupertype.getObjectClass())) {
 							continue;
-						} else if (commonSupertype.getObjectClass().isAssignableFrom(md.getObjectClass())) {
+						} else if (commonSupertype.getObjectClass().isAssignableFrom(md.getObjectClass()) ||
+								AtPortConverter.isConvertible(commonSupertype.getObjectClass(), md.getObjectClass())) {
 							commonSupertype = md;
 						} else if (md.getObjectClass().isAssignableFrom(commonSupertype.getObjectClass())) {
 							// noop, old value was ok
 							// commonSupertype = commonSupertype;
 						} else {
 							in.addError(new SimpleMetaDataError(Severity.WARNING, in, "incompatible_ioobjects",
-									commonSupertype.getObjectClass().getSimpleName(), md.getObjectClass().getSimpleName()));
+									commonSupertype.getObjectClass().getSimpleName(),
+									md.getObjectClass().getSimpleName()));
 							collectionOutput.deliverMD(new CollectionMetaData(new MetaData()));
 							return;
 						}

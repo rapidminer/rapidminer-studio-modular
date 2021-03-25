@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -503,13 +503,7 @@ public final class ProcessDrawUtils {
 			return false;
 		}
 
-		MetaData md = null;
-		try {
-			md = hoveringConnectionSource != null ? hoveringConnectionSource.getMetaData(MetaData.class) : null;
-		} catch (IncompatibleMDClassException e) {
-			// should not happen
-			return false;
-		}
+		MetaData md = hoveringConnectionSource != null ? hoveringConnectionSource.getRawMetaData() : null;
 		boolean hasFreeInput = false;
 		for (InputPort port : operator.getInputPorts().getAllPorts()) {
 			if (!port.isConnected() && (md == null || port.isInputCompatible(md, CompatibilityLevel.PRE_VERSION_5))) {

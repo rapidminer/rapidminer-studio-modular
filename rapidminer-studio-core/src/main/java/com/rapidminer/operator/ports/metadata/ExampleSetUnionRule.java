@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
- * 
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.operator.ports.metadata;
 
 import com.rapidminer.operator.ports.InputPort;
@@ -48,12 +48,12 @@ public class ExampleSetUnionRule implements MDTransformationRule {
 
 	@Override
 	public void transformMD() {
-		MetaData md1 = inputPort1.getMetaData();
-		MetaData md2 = inputPort2.getMetaData();
+		MetaData md1 = inputPort1.getRawMetaData();
+		MetaData md2 = inputPort2.getRawMetaData();
 		if ((md1 != null) && (md2 != null)) {
-			if ((md1 instanceof ExampleSetMetaData) && (md2 instanceof ExampleSetMetaData)) {
-				ExampleSetMetaData emd1 = (ExampleSetMetaData) md1;
-				ExampleSetMetaData emd2 = (ExampleSetMetaData) md2;
+			ExampleSetMetaData emd1 = inputPort1.getMetaDataAsOrNull(ExampleSetMetaData.class);
+			ExampleSetMetaData emd2 = inputPort2.getMetaDataAsOrNull(ExampleSetMetaData.class);
+			if (emd1 != null && emd2 != null) {
 				ExampleSetMetaData joinedEmd = modifyMetaData(emd1, emd2);
 				outputPort.deliverMD(joinedEmd);
 			} else {

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -56,10 +56,10 @@ import com.rapidminer.example.table.AttributeFactory;
 import com.rapidminer.example.table.NominalMapping;
 import com.rapidminer.example.utils.ExampleSetBuilder;
 import com.rapidminer.example.utils.ExampleSets;
-import com.rapidminer.hdf5.CustomDataOutput;
-import com.rapidminer.hdf5.file.ColumnInfo;
-import com.rapidminer.hdf5.file.NumericColumnInfo;
-import com.rapidminer.hdf5.file.StringColumnInfo;
+import com.rapidminer.hdf5.SeekableDataOutputByteChannel;
+import com.rapidminer.hdf5.file.ColumnDescriptor;
+import com.rapidminer.hdf5.file.NumericColumnDescriptor;
+import com.rapidminer.hdf5.file.StringColumnDescriptor;
 import com.rapidminer.hdf5.file.TableWriter;
 import com.rapidminer.hdf5.message.data.DataType;
 import com.rapidminer.hdf5.message.data.DefaultDataType;
@@ -184,18 +184,18 @@ public class WriteReadTest {
 				int allAttributeCount = attributes.allSize();
 				int rowCount = exampleSet.size();
 				Iterator<AttributeRole> iterator = attributes.allAttributeRoles();
-				ColumnInfo[] columnInfos = new ColumnInfo[allAttributeCount];
+				ColumnDescriptor[] columnInfos = new ColumnDescriptor[allAttributeCount];
 				for (int i = 0; i < columnInfos.length; i++) {
 					AttributeRole next = iterator.next();
 					Attribute attribute = next.getAttribute();
 					NominalMapping mapping = attribute.getMapping();
-					StringColumnInfo stringColumnInfo = new StringColumnInfo(attribute.getName(),
-							ColumnInfo.ColumnType.NOMINAL, null,
-							mapping.getValues(), v -> mapping.getIndex(v) >= 0, ColumnInfo.StorageType.STRING_RAW,
+					StringColumnDescriptor stringColumnDescriptor = new StringColumnDescriptor(attribute.getName(),
+							ColumnDescriptor.Hdf5ColumnType.NOMINAL, null,
+							mapping.getValues(), v -> mapping.getIndex(v) >= 0, ColumnDescriptor.StorageType.STRING_RAW,
 							i % 2 == 0);
-					stringColumnInfo.addAdditionalAttribute(ATTRIBUTE_LEGACY_TYPE, byte.class,
+					stringColumnDescriptor.addAdditionalAttribute(ATTRIBUTE_LEGACY_TYPE, byte.class,
 							(byte) attribute.getValueType());
-					columnInfos[i] = stringColumnInfo;
+					columnInfos[i] = stringColumnDescriptor;
 				}
 				write(columnInfos, exampleSet.getAnnotations(), rowCount, null, f);
 			}
@@ -254,15 +254,15 @@ public class WriteReadTest {
 				int allAttributeCount = attributes.allSize();
 				int rowCount = exampleSet.size();
 				Iterator<AttributeRole> iterator = attributes.allAttributeRoles();
-				ColumnInfo[] columnInfos = new ColumnInfo[allAttributeCount];
+				ColumnDescriptor[] columnInfos = new ColumnDescriptor[allAttributeCount];
 				for (int i = 0; i < columnInfos.length; i++) {
 					AttributeRole next = iterator.next();
 					Attribute attribute = next.getAttribute();
 					NominalMapping mapping = attribute.getMapping();
-					StringColumnInfo stringColumnInfo = new StringColumnInfo(attribute.getName(),
-							ColumnInfo.ColumnType.NOMINAL, null,
+					StringColumnDescriptor stringColumnDescriptor = new StringColumnDescriptor(attribute.getName(),
+							ColumnDescriptor.Hdf5ColumnType.NOMINAL, null,
 							mapping.getValues(), v -> mapping.getIndex(v) >= 0,
-							ColumnInfo.StorageType.STRING_DICTIONARY,
+							ColumnDescriptor.StorageType.STRING_DICTIONARY,
 							false) {
 
 						@Override
@@ -270,9 +270,9 @@ public class WriteReadTest {
 							return DefaultDataType.FIXED32;
 						}
 					};
-					stringColumnInfo.addAdditionalAttribute(ATTRIBUTE_LEGACY_TYPE, byte.class,
+					stringColumnDescriptor.addAdditionalAttribute(ATTRIBUTE_LEGACY_TYPE, byte.class,
 							(byte) attribute.getValueType());
-					columnInfos[i] = stringColumnInfo;
+					columnInfos[i] = stringColumnDescriptor;
 				}
 				write(columnInfos, exampleSet.getAnnotations(), rowCount, null, f);
 			}
@@ -331,13 +331,13 @@ public class WriteReadTest {
 				int allAttributeCount = attributes.allSize();
 				int rowCount = exampleSet.size();
 				Iterator<AttributeRole> iterator = attributes.allAttributeRoles();
-				ColumnInfo[] columnInfos = new ColumnInfo[allAttributeCount];
+				ColumnDescriptor[] columnInfos = new ColumnDescriptor[allAttributeCount];
 				for (int i = 0; i < columnInfos.length; i++) {
 					AttributeRole next = iterator.next();
 					Attribute attribute = next.getAttribute();
-					NumericColumnInfo columnInfo = new NumericColumnInfo(attribute.getName(),
-							attribute.getValueType() == Ontology.INTEGER ? ColumnInfo.ColumnType.INTEGER :
-									ColumnInfo.ColumnType.REAL, null) {
+					NumericColumnDescriptor columnInfo = new NumericColumnDescriptor(attribute.getName(),
+							attribute.getValueType() == Ontology.INTEGER ? ColumnDescriptor.Hdf5ColumnType.INTEGER :
+									ColumnDescriptor.Hdf5ColumnType.REAL, null) {
 
 						@Override
 						public DataType getDataType() {
@@ -356,7 +356,7 @@ public class WriteReadTest {
 			}
 
 			@Override
-			public void writeDoubleData(ColumnInfo columnInfo, CustomDataOutput channel) throws IOException {
+			public void writeDoubleData(ColumnDescriptor columnInfo, SeekableDataOutputByteChannel channel) throws IOException {
 				Attribute att = exampleSet.getAttributes().get(columnInfo.getName());
 				for (Example example : exampleSet) {
 					channel.writeFloat((float) example.getValue(att));
@@ -411,13 +411,13 @@ public class WriteReadTest {
 				int allAttributeCount = attributes.allSize();
 				int rowCount = exampleSet.size();
 				Iterator<AttributeRole> iterator = attributes.allAttributeRoles();
-				ColumnInfo[] columnInfos = new ColumnInfo[allAttributeCount];
+				ColumnDescriptor[] columnInfos = new ColumnDescriptor[allAttributeCount];
 				for (int i = 0; i < columnInfos.length; i++) {
 					AttributeRole next = iterator.next();
 					Attribute attribute = next.getAttribute();
-					NumericColumnInfo columnInfo = new NumericColumnInfo(attribute.getName(),
-							attribute.getValueType() == Ontology.INTEGER ? ColumnInfo.ColumnType.TIME :
-									ColumnInfo.ColumnType.REAL, null) {
+					NumericColumnDescriptor columnInfo = new NumericColumnDescriptor(attribute.getName(),
+							attribute.getValueType() == Ontology.INTEGER ? ColumnDescriptor.Hdf5ColumnType.INTEGER :
+									ColumnDescriptor.Hdf5ColumnType.REAL, null) {
 
 						@Override
 						public DataType getDataType() {
@@ -432,7 +432,7 @@ public class WriteReadTest {
 			}
 
 			@Override
-			protected void writeLongData(ColumnInfo columnInfo, CustomDataOutput channel) throws IOException {
+			protected void writeLongData(ColumnDescriptor columnInfo, SeekableDataOutputByteChannel channel) throws IOException {
 				Attribute att = exampleSet.getAttributes().get(columnInfo.getName());
 				for (Example example : exampleSet) {
 					channel.writeLong((long) example.getValue(att));
@@ -487,13 +487,13 @@ public class WriteReadTest {
 				int allAttributeCount = attributes.allSize();
 				int rowCount = exampleSet.size();
 				Iterator<AttributeRole> iterator = attributes.allAttributeRoles();
-				ColumnInfo[] columnInfos = new ColumnInfo[allAttributeCount];
+				ColumnDescriptor[] columnInfos = new ColumnDescriptor[allAttributeCount];
 				for (int i = 0; i < columnInfos.length; i++) {
 					AttributeRole next = iterator.next();
 					Attribute attribute = next.getAttribute();
-					NumericColumnInfo columnInfo = new NumericColumnInfo(attribute.getName(),
-							attribute.getValueType() == Ontology.INTEGER ? ColumnInfo.ColumnType.TIME :
-									ColumnInfo.ColumnType.REAL, null) {
+					NumericColumnDescriptor columnInfo = new NumericColumnDescriptor(attribute.getName(),
+							attribute.getValueType() == Ontology.INTEGER ? ColumnDescriptor.Hdf5ColumnType.INTEGER :
+									ColumnDescriptor.Hdf5ColumnType.REAL, null) {
 
 						@Override
 						public DataType getDataType() {
@@ -508,7 +508,7 @@ public class WriteReadTest {
 			}
 
 			@Override
-			public void writeDoubleData(ColumnInfo columnInfo, CustomDataOutput channel) throws IOException {
+			public void writeDoubleData(ColumnDescriptor columnInfo, SeekableDataOutputByteChannel channel) throws IOException {
 				Attribute att = exampleSet.getAttributes().get(columnInfo.getName());
 				for (Example example : exampleSet) {
 					channel.writeInt((int) example.getValue(att));
@@ -563,22 +563,22 @@ public class WriteReadTest {
 				int allAttributeCount = attributes.allSize();
 				int rowCount = exampleSet.size();
 				Iterator<AttributeRole> iterator = attributes.allAttributeRoles();
-				ColumnInfo[] columnInfos = new ColumnInfo[allAttributeCount];
+				ColumnDescriptor[] columnInfos = new ColumnDescriptor[allAttributeCount];
 				for (int i = 0; i < columnInfos.length; i++) {
 					AttributeRole next = iterator.next();
 					Attribute attribute = next.getAttribute();
 					NominalMapping mapping = attribute.getMapping();
-					StringColumnInfo stringColumnInfo = new StringColumnInfo(attribute.getName(),
-							ColumnInfo.ColumnType.NOMINAL, null,
+					StringColumnDescriptor stringColumnDescriptor = new StringColumnDescriptor(attribute.getName(),
+							ColumnDescriptor.Hdf5ColumnType.NOMINAL, null,
 							mapping.getValues(), v -> mapping.getIndex(v) >= 0, i % 3 == 0 ?
-							ColumnInfo.StorageType.STRING_RAW :
-							i % 3 != 1 || i % 2 != 0 ? ColumnInfo.StorageType.STRING_DICTIONARY
-									: ColumnInfo.StorageType.STRING_TINY_DICTIONARY,
+							ColumnDescriptor.StorageType.STRING_RAW :
+							i % 3 != 1 || i % 2 != 0 ? ColumnDescriptor.StorageType.STRING_DICTIONARY
+									: ColumnDescriptor.StorageType.STRING_TINY_DICTIONARY,
 							i % 2 == 0);
-					stringColumnInfo.addAdditionalAttribute(ATTRIBUTE_LEGACY_TYPE, byte.class,
+					stringColumnDescriptor.addAdditionalAttribute(ATTRIBUTE_LEGACY_TYPE, byte.class,
 							(byte) attribute.getValueType());
-					StatisticsHandler.addStatistics(stringColumnInfo, attribute, exampleSet);
-					columnInfos[i] = stringColumnInfo;
+					ExampleSetStatisticsHandler.addStatistics(stringColumnDescriptor, attribute, exampleSet);
+					columnInfos[i] = stringColumnDescriptor;
 				}
 				write(columnInfos, exampleSet.getAnnotations(), rowCount,
 						Collections.singletonMap(ATTRIBUTE_HAS_STATISTICS,
@@ -647,7 +647,7 @@ public class WriteReadTest {
 
 	}
 
-	private static ExampleSet createExampleSetNom(int columns, int rows, int values, boolean fixedLength,
+	static ExampleSet createExampleSetNom(int columns, int rows, int values, boolean fixedLength,
 												  boolean perColumn, boolean endOnNull) {
 		int valueType = values <= 2 ? Ontology.BINOMINAL : values < rows ? Ontology.NOMINAL : Ontology.STRING;
 		List<Attribute> attributes = IntStream.range(0, columns).mapToObj(i -> "att-" + i)
@@ -683,7 +683,7 @@ public class WriteReadTest {
 		return build;
 	}
 
-	private static ExampleSet createExampleSetNum(int columns, int rows, boolean allowIntegers) {
+	static ExampleSet createExampleSetNum(int columns, int rows, boolean allowIntegers) {
 		List<Attribute> attributes =
 				IntStream.range(0, columns).mapToObj(i -> "att-" + i + "-" + (allowIntegers && i % 2 == 1))
 						.map(name -> AttributeFactory.createAttribute(name, name.endsWith("true") ? Ontology.INTEGER :
@@ -701,7 +701,7 @@ public class WriteReadTest {
 		return build;
 	}
 
-	private static ExampleSet createExampleSetNumFloat(int columns, int rows, boolean allowIntegers) {
+	static ExampleSet createExampleSetNumFloat(int columns, int rows, boolean allowIntegers) {
 		List<Attribute> attributes =
 				IntStream.range(0, columns).mapToObj(i -> "att-" + i + "-" + (allowIntegers && i % 2 == 1))
 						.map(name -> AttributeFactory.createAttribute(name, name.endsWith("true") ? Ontology.INTEGER :
@@ -719,7 +719,7 @@ public class WriteReadTest {
 		return build;
 	}
 
-	private static ExampleSet createExampleSetNumNoFractions(int columns, int rows, boolean allowIntegers) {
+	static ExampleSet createExampleSetNumNoFractions(int columns, int rows, boolean allowIntegers) {
 		List<Attribute> attributes =
 				IntStream.range(0, columns).mapToObj(i -> "att-" + i + "-" + (allowIntegers && i % 2 == 1))
 						.map(name -> AttributeFactory.createAttribute(name, name.endsWith("true") ? Ontology.INTEGER :
@@ -737,23 +737,27 @@ public class WriteReadTest {
 		return build;
 	}
 
-	private static ExampleSet createExampleSetDatetime(int columns, int rows, boolean date) {
+	static ExampleSet createExampleSetDatetime(int columns, int rows, boolean date) {
 		List<Attribute> attributes = IntStream.range(0, columns).mapToObj(i -> "att-" + i + "-" + (date && i % 2 == 1))
 				.map(name -> AttributeFactory.createAttribute(name, name.endsWith("true") ? Ontology.DATE :
 						Ontology.DATE_TIME))
 				.collect(Collectors.toList());
+		Attribute time = AttributeFactory.createAttribute("time", Ontology.TIME);
+		attributes.add(time);
 		ExampleSetBuilder builder = ExampleSets.from(attributes).withBlankSize(rows);
 		IntToDoubleFunction datetimeFiller = i -> rng.nextInt() * 1000001;
 		IntToDoubleFunction dateFiller = i -> (rng.nextInt() * 1000000) / 1000 * 1000;
+		IntToDoubleFunction timeFiller = i -> WriteMDOnlyTest.randomTimeMillis();
 		attributes.forEach(att -> builder.withColumnFiller(att, att.getValueType() == Ontology.DATE_TIME ?
 				datetimeFiller : dateFiller));
+		builder.withColumnFiller(time, timeFiller);
 		ExampleSet build = builder.build();
 		build.getAnnotations().put("bla", "blup");
 		build.recalculateAllAttributeStatistics();
 		return build;
 	}
 
-	private static ExampleSet createDataSet(int rows, int columns, int numberOfValues) {
+	static ExampleSet createDataSet(int rows, int columns, int numberOfValues) {
 		List<Attribute> attributes = IntStream.range(1, columns + 1).mapToObj(i -> "att-" + i)
 				.map(name -> AttributeFactory.createAttribute(name, Ontology.NOMINAL)).collect(Collectors.toList());
 		ExampleSetBuilder builder = ExampleSets.from(attributes).withBlankSize(rows);
@@ -769,7 +773,7 @@ public class WriteReadTest {
 		return build;
 	}
 
-	private static ExampleSet createDataSetNom(int rows, int columns) {
+	static ExampleSet createDataSetNom(int rows, int columns) {
 		List<Attribute> attributes = IntStream.range(1, columns + 1).mapToObj(i -> "att-" + i)
 				.map(name -> AttributeFactory.createAttribute(name, Ontology.NOMINAL)).collect(Collectors.toList());
 		ExampleSetBuilder builder = ExampleSets.from(attributes).withBlankSize(rows);
@@ -792,7 +796,7 @@ public class WriteReadTest {
 		return build;
 	}
 
-	private static ExampleSet createAllTypes() {
+	static ExampleSet createAllTypes() {
 		List<Attribute> attributes = IntStream.range(1, Ontology.VALUE_TYPE_NAMES.length)
 				.mapToObj(i -> AttributeFactory.createAttribute("att-" + i, i)).collect(Collectors.toList());
 		ExampleSetBuilder builder = ExampleSets.from(attributes);
@@ -804,7 +808,7 @@ public class WriteReadTest {
 		return build;
 	}
 
-	private static ExampleSet createDifferentRoles() {
+	static ExampleSet createDifferentRoles() {
 		List<Attribute> attributes = IntStream.range(1, 12)
 				.mapToObj(i -> AttributeFactory.createAttribute("att-" + i, Ontology.REAL)).collect(Collectors.toList());
 		ExampleSetBuilder builder = ExampleSets.from(attributes);

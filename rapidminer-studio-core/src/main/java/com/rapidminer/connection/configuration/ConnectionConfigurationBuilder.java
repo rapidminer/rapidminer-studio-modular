@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
 
 import com.rapidminer.connection.ConnectionInformationSerializer;
 import com.rapidminer.connection.valueprovider.ValueProvider;
-import com.rapidminer.tools.ValidationUtil;
+import com.rapidminer.tools.ValidationUtilV2;
 
 
 /**
@@ -65,7 +65,7 @@ public class ConnectionConfigurationBuilder {
 	 * 		if parameter original is {@code null} or empty
 	 */
 	public ConnectionConfigurationBuilder(ConnectionConfiguration original) throws IOException {
-		ValidationUtil.requireNonNull(original, "original connection configuration");
+		ValidationUtilV2.requireNonNull(original, "original connection configuration");
 		// create a copy using jackson
 		object = ConnectionInformationSerializer.INSTANCE.createDeepCopy((ConnectionConfigurationImpl) original);
 	}
@@ -84,7 +84,7 @@ public class ConnectionConfigurationBuilder {
 	 */
 	public ConnectionConfigurationBuilder(ConnectionConfiguration original, String newName) throws IOException {
 		this(original);
-		object.name = ValidationUtil.requireNonEmptyString(newName, "new name");
+		object.name = ValidationUtilV2.requireNonEmptyString(newName, "new name");
 	}
 
 	/**
@@ -102,7 +102,7 @@ public class ConnectionConfigurationBuilder {
 	 * Set the tags for the object to be built.
 	 *
 	 * @param tags
-	 * 		the tags; will be {@link ValidationUtil#stripToEmptyList(List, java.util.function.Predicate) stripped to an empty list}
+	 * 		the tags; will be {@link ValidationUtilV2#stripToEmptyList(List, java.util.function.Predicate) stripped to an empty list}
 	 */
 	public ConnectionConfigurationBuilder withTags(List<String> tags) {
 		object.setTags(tags);
@@ -116,7 +116,7 @@ public class ConnectionConfigurationBuilder {
 	 * 		a tag to add; must be neither {@code null} nor empty
 	 */
 	public ConnectionConfigurationBuilder withTag(String tag) {
-		object.tags.add(ValidationUtil.requireNonEmptyString(tag, "tag"));
+		object.tags.add(ValidationUtilV2.requireNonEmptyString(tag, "tag"));
 		return this;
 	}
 
@@ -124,7 +124,7 @@ public class ConnectionConfigurationBuilder {
 	 * Set the value providers for the object to be built.
 	 *
 	 * @param valueProviders
-	 * 		the list of value providers; will be {@link ValidationUtil#stripToEmptyList(List) stripped to an empty list}
+	 * 		the list of value providers; will be {@link ValidationUtilV2#stripToEmptyList(List) stripped to an empty list}
 	 */
 	public ConnectionConfigurationBuilder withValueProviders(List<ValueProvider> valueProviders) {
 		object.setValueProviders(valueProviders);
@@ -138,7 +138,7 @@ public class ConnectionConfigurationBuilder {
 	 * 		a value provider to add; must not be {@code null}
 	 */
 	public ConnectionConfigurationBuilder withValueProvider(ValueProvider valueProvider) {
-		object.valueProviders.add(ValidationUtil.requireNonNull(valueProvider, "value provider"));
+		object.valueProviders.add(ValidationUtilV2.requireNonNull(valueProvider, "value provider"));
 		return this;
 	}
 
@@ -164,7 +164,7 @@ public class ConnectionConfigurationBuilder {
 	 * 		the list of keys for the given group; must not be {@code null} and contain at least one non-{@code null} element
 	 */
 	public ConnectionConfigurationBuilder withKeys(String group, List<ConfigurationParameter> keys) {
-		List<ConfigurationParameter> strippedKeys = ValidationUtil.stripToEmptyList(keys);
+		List<ConfigurationParameter> strippedKeys = ValidationUtilV2.stripToEmptyList(keys);
 		additiveCheckForDuplicates(group, strippedKeys, "keys");
 		object.keys.stream().filter(cg -> cg.getGroup().equals(group)).findFirst().ifPresent(g -> {
 			strippedKeys.addAll(g.getParameters());
@@ -193,7 +193,7 @@ public class ConnectionConfigurationBuilder {
 	 * 		the placeholder to add; must not be {@code null}
 	 */
 	public ConnectionConfigurationBuilder withPlaceholder(PlaceholderParameter placeholder) {
-		ValidationUtil.requireNonNull(placeholder, "placeholder");
+		ValidationUtilV2.requireNonNull(placeholder, "placeholder");
 		additiveCheckForDuplicates(placeholder.getGroup(), Collections.singletonList(placeholder), "placeholder");
 		object.placeholders.add(placeholder);
 		return this;
@@ -217,6 +217,6 @@ public class ConnectionConfigurationBuilder {
 	private void additiveCheckForDuplicates(String group, List<ConfigurationParameter> keys, String name) {
 		List<PlaceholderParameter> placeholderList = object.placeholders.stream().filter(p -> p.getGroup().equals(group)).collect(Collectors.toList());
 		List<ConfigurationParameter> keyList = object.keys.stream().filter(cpg -> cpg.getGroup().equals(group)).flatMap(cg -> cg.getParameters().stream()).collect(Collectors.toList());
-		ValidationUtil.noDuplicatesAllowed(keys, UNIQUE_NAME_COMPARATOR, name, placeholderList, keyList);
+		ValidationUtilV2.noDuplicatesAllowed(keys, UNIQUE_NAME_COMPARATOR, name, placeholderList, keyList);
 	}
 }

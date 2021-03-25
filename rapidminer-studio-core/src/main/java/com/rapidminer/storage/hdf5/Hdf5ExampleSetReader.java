@@ -1,20 +1,20 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
  * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General
- * Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any
- * later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
- * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more
- * details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License along with this program. If not, see
- * http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.storage.hdf5;
 
@@ -37,7 +37,7 @@ import com.rapidminer.example.table.AttributeFactory;
 import com.rapidminer.example.table.internal.ColumnarExampleTable;
 import com.rapidminer.example.utils.ExampleSetBuilder;
 import com.rapidminer.hdf5.BufferedInChannel;
-import com.rapidminer.hdf5.file.ColumnInfo;
+import com.rapidminer.hdf5.file.ColumnDescriptor;
 import com.rapidminer.hdf5.file.TableWriter;
 import com.rapidminer.operator.Annotations;
 import com.rapidminer.operator.ports.metadata.AttributeMetaData;
@@ -68,27 +68,27 @@ import io.jhdf.object.datatype.VariableLength;
  * have datasets {@code a0}, ..., {@code an} where n is specified by {@link TableWriter#ATTRIBUTE_COLUMNS}-1 and every
  * dataset must have the attribute {@link TableWriter#ATTRIBUTE_TYPE} and {@link TableWriter#ATTRIBUTE_NAME}.
  * <p>
- * Numeric data must be of type {@link com.rapidminer.hdf5.file.ColumnInfo.ColumnType#REAL} or
- * {@link com.rapidminer.hdf5.file.ColumnInfo.ColumnType#INTEGER} and can be {@code double}, {@code float}, {@code
- * int} or {@code long} values, where for long values, {@link Long#MAX_VALUE} is transformed to {@link Double#NaN} and
- * other values might loose precision.
+ * Numeric data must be of type {@link com.rapidminer.hdf5.file.ColumnDescriptor.Hdf5ColumnType#REAL} or
+ * {@link com.rapidminer.hdf5.file.ColumnDescriptor.Hdf5ColumnType#INTEGER} and can be {@code double}, {@code float},
+ * {@code int} or {@code long} values, where for long values, {@link Long#MAX_VALUE} is transformed to
+ * {@link Double#NaN} and other values might loose precision.
  * <p>
- * String data must be of type {@link com.rapidminer.hdf5.file.ColumnInfo.ColumnType#NOMINAL}. If the string dataset
- * has the attribute {@link TableWriter#ATTRIBUTE_DICTIONARY}, the attribute must either contain a String array with
- * the dictionary or a reference to a String array dataset with the dictionary. The first dictionary entry stands for
- * the missing value. The data consists of a {@code byte}, {@code short} or {@link int} array containing the category
- * indices fitting to the dictionary. If the string dataset does not have the attribute
+ * String data must be of type {@link com.rapidminer.hdf5.file.ColumnDescriptor.Hdf5ColumnType#NOMINAL}. If the string
+ * dataset has the attribute {@link TableWriter#ATTRIBUTE_DICTIONARY}, the attribute must either contain a String array
+ * with the dictionary or a reference to a String array dataset with the dictionary. The first dictionary entry stands
+ * for the missing value. The data consists of a {@code byte}, {@code short} or {@link int} array containing the
+ * category indices fitting to the dictionary. If the string dataset does not have the attribute
  * {@link TableWriter#ATTRIBUTE_DICTIONARY}, it must have the attribute {@link TableWriter#ATTRIBUTE_MISSING} which
  * specifies a String representing the missing value. The dataset is then an array of String values.
  * All String arrays can be either variable length or fixed length Strings.
  * <p>
- * Date-time data must be of type {@link com.rapidminer.hdf5.file.ColumnInfo.ColumnType#DATE_TIME} and the dataset
- * must be an array of {@code long} values specifying seconds since 1970. Additionally, the dataset can have the
+ * Date-time data must be of type {@link com.rapidminer.hdf5.file.ColumnDescriptor.Hdf5ColumnType#DATE_TIME} and the
+ * dataset must be an array of {@code long} values specifying seconds since 1970. Additionally, the dataset can have the
  * attribute {@link TableWriter#ATTRIBUTE_ADDITIONAL} which contains a reference to a dataset containing additional
  * nanoseconds.
  * <p>
- * Statistics can be included for every column, see {@link StatisticsHandler}. The statistics is only read if the
- * attribute {@link ExampleSetHdf5Writer#ATTRIBUTE_HAS_STATISTICS} exists and is {@code 1}.
+ * Statistics can be included for every column, see {@link ExampleSetStatisticsHandler}. The statistics is only read if
+ * the attribute {@link ExampleSetHdf5Writer#ATTRIBUTE_HAS_STATISTICS} exists and is {@code 1}.
  *
  * @author Gisa Meier
  * @since 9.7.0
@@ -197,7 +197,11 @@ public enum Hdf5ExampleSetReader {
 			List<AttributeMetaData> nominalMetaData = new ArrayList<>();
 			List<Dataset> nominalDatasets = new ArrayList<>();
 
-			readNumberOfRows(hdfFile, metaData, isMetaData);
+			final MDInteger numberOfRows = readNumberOfRows(hdfFile, isMetaData);
+			metaData.setNumberOfExamples(numberOfRows);
+			if (isMetaData) {
+				metaData.mergeSetRelation(getSetRelation(hdfFile));
+			}
 			readColumns(hdfFile, metaData, nominalMetaData, nominalDatasets, isMetaData);
 			addAnnotations(hdfFile, metaData.getAnnotations());
 			readMappings(hdfFile, nominalMetaData, nominalDatasets, isMetaData);
@@ -209,29 +213,28 @@ public enum Hdf5ExampleSetReader {
 		}
 	}
 
-	/** Reads the number of rows from the {@link HdfFile}. If {@code isMetaData} is {@code true}, also reads the {@link Relation} */
-	private static void readNumberOfRows(HdfFile hdfFile, ExampleSetMetaData metaData, boolean isMetaData) {
+	/** Reads the number of rows from the {@link HdfFile}. */
+	static MDInteger readNumberOfRows(HdfFile hdfFile, boolean isMetaData) {
 		int numberOfRows = getNonnegativeIntAttribute(hdfFile, TableWriter.ATTRIBUTE_ROWS);
-		metaData.setNumberOfExamples(numberOfRows);
+		final MDInteger mdInteger = new MDInteger(numberOfRows);
 		if (isMetaData) {
-			MDInteger nEx = metaData.getNumberOfExamples();
 			switch (Relation.fromDescription(getSingleAttributeValueOrNull(hdfFile,
 					ExampleSetHdf5Writer.ATTRIBUTE_ROW_RELATION, String.class))) {
 				case UNKNOWN:
-					nEx.setUnkown();
+					mdInteger.setUnkown();
 					break;
 				case AT_MOST:
-					nEx.reduceByUnknownAmount();
+					mdInteger.reduceByUnknownAmount();
 					break;
 				case AT_LEAST:
-					nEx.increaseByUnknownAmount();
+					mdInteger.increaseByUnknownAmount();
 					break;
 				case EQUAL:
 				default:
 					// noop
 			}
-			metaData.mergeSetRelation(getSetRelation(hdfFile));
 		}
+		return mdInteger;
 	}
 
 	/**
@@ -259,7 +262,7 @@ public enum Hdf5ExampleSetReader {
 				}
 			}
 			addRole(set, attribute::setRole);
-			StatisticsHandler.readStatistics(set, attribute);
+			ExampleSetStatisticsHandler.readStatistics(set, attribute);
 			metaData.addAttribute(attribute);
 		}
 	}
@@ -274,7 +277,7 @@ public enum Hdf5ExampleSetReader {
 				int index = 0;
 				for (AttributeMetaData attribute : nominalMetaData) {
 					Dataset set = nominalDatasets.get(index++);
-					int mode = StatisticsHandler.readModeIndex(set);
+					int mode = ExampleSetStatisticsHandler.readModeIndex(set);
 					SetRelation oldRelation = isMetaData ? attribute.getValueSetRelation() : SetRelation.EQUAL;
 					mappingReader.addMapping(set, attribute, mode, limit);
 					attribute.setValueSetRelation(oldRelation.merge(attribute.getValueSetRelation()));
@@ -287,7 +290,7 @@ public enum Hdf5ExampleSetReader {
 	 * Reads a root hdf5 attribute with attributeName from the hdfFile. Ensures that the value is a non-negative
 	 * number.
 	 */
-	private static int getNonnegativeIntAttribute(HdfFile hdfFile, String attributeName) {
+	static int getNonnegativeIntAttribute(HdfFile hdfFile, String attributeName) {
 		io.jhdf.api.Attribute attribute = hdfFile.getAttribute(attributeName);
 		if (attribute == null) {
 			throw new HdfReaderException(HdfReaderException.Reason.MISSING_ATTRIBUTE, attributeName + " attribute " +
@@ -311,7 +314,7 @@ public enum Hdf5ExampleSetReader {
 	 *
 	 * @see SetRelation#fromDescription(String)
 	 */
-	private static SetRelation getSetRelation(Node node) {
+	static SetRelation getSetRelation(Node node) {
 		return SetRelation.fromDescription(getSingleAttributeValueOrNull(node,
 				ExampleSetHdf5Writer.ATTRIBUTE_SET_RELATION, String.class));
 	}
@@ -332,7 +335,7 @@ public enum Hdf5ExampleSetReader {
 	 * 		the expected java type of the attribute
 	 * @return the attribute's value or {@code null} if any problem occurs
 	 */
-	private static<T> T getSingleAttributeValueOrNull(Node node, String attributeName, Class<T> clazz) {
+	static <T> T getSingleAttributeValueOrNull(Node node, String attributeName, Class<T> clazz) {
 		io.jhdf.api.Attribute attribute = node.getAttribute(attributeName);
 		if (attribute == null) {
 			return null;
@@ -346,7 +349,7 @@ public enum Hdf5ExampleSetReader {
 	/**
 	 * Reads the dataset for the given datasetIndex from the hdfFile or handles the occurring exception.
 	 */
-	private static Dataset getDatasetOrException(HdfFile hdfFile, int datasetIndex) {
+	static Dataset getDatasetOrException(HdfFile hdfFile, int datasetIndex) {
 		try {
 			return hdfFile.getDatasetByPath(DATASET_PATH_PREFIX + datasetIndex);
 		} catch (HdfInvalidPathException e) {
@@ -454,7 +457,7 @@ public enum Hdf5ExampleSetReader {
 	/**
 	 * Adds annotations if they are present.
 	 */
-	private static void addAnnotations(HdfFile hdfFile, Annotations annotations) {
+	static void addAnnotations(HdfFile hdfFile, Annotations annotations) {
 		try {
 			Dataset annotationsSet = hdfFile.getDatasetByPath("/" + TableWriter.ANNOTATIONS);
 			if (annotationsSet == null) {
@@ -502,7 +505,7 @@ public enum Hdf5ExampleSetReader {
 	 */
 	private static int makeOntologyForType(String name, String type) {
 		int ontology;
-		ColumnInfo.ColumnType cType = ColumnInfo.ColumnType.fromString(type);
+		ColumnDescriptor.Hdf5ColumnType cType = ColumnDescriptor.Hdf5ColumnType.fromString(type);
 		if (cType == null) {
 			throw new HdfReaderException(HdfReaderException.Reason.ILLEGAL_TYPE, type + " not allowed as type for " +
 					"attribute " + name);
@@ -518,7 +521,7 @@ public enum Hdf5ExampleSetReader {
 				ontology = Ontology.DATE_TIME;
 				break;
 			case TIME:
-				ontology = Ontology.INTEGER;
+				ontology = Ontology.TIME;
 				break;
 			case NOMINAL:
 			default:
@@ -531,7 +534,7 @@ public enum Hdf5ExampleSetReader {
 	/**
 	 * Checks whether {@link ExampleSetHdf5Writer#ATTRIBUTE_IS_METADATA} attribute is present and set to 1.
 	 */
-	private static boolean isMetadata(HdfFile hdfFile) {
+	static boolean isMetadata(HdfFile hdfFile) {
 		Number mdValue = getSingleAttributeValueOrNull(hdfFile, ExampleSetHdf5Writer.ATTRIBUTE_IS_METADATA, Number.class);
 		return mdValue != null && mdValue.byteValue() == 1;
 	}

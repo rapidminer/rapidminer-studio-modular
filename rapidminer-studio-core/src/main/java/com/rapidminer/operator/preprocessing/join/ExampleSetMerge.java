@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -100,9 +100,9 @@ public class ExampleSetMerge extends Operator {
 
 				@Override
 				public void makeAdditionalChecks(ExampleSetMetaData emd) throws UndefinedParameterError {
-					for (MetaData metaData : inputExtender.getMetaData(true)) {
-						if (metaData instanceof ExampleSetMetaData) {
-							MetaDataInfo result = emd.equalHeader((ExampleSetMetaData) metaData);
+					for (ExampleSetMetaData metaData : inputExtender.getMetaDataAsOrNull(ExampleSetMetaData.class, true)) {
+						if (metaData != null) {
+							MetaDataInfo result = emd.equalHeader(metaData);
 							if (result != MetaDataInfo.YES) {
 								addError(new SimpleProcessSetupError(result == MetaDataInfo.NO ? Severity.ERROR : Severity.WARNING, getPortOwner(),
 										"exampleset.sets_incompatible"));

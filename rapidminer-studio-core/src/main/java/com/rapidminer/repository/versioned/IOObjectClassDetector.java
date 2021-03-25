@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -20,6 +20,7 @@ package com.rapidminer.repository.versioned;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.AccessMode;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.logging.Level;
@@ -29,7 +30,7 @@ import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.tools.IOObjectSerializer;
 import com.rapidminer.operator.tools.SerializationType;
 import com.rapidminer.tools.LogService;
-import com.rapidminer.tools.ValidationUtil;
+import com.rapidminer.tools.ValidationUtilV2;
 import com.rapidminer.tools.io.ClassFromSerializationReader;
 
 
@@ -55,7 +56,7 @@ public enum IOObjectClassDetector {
 	 * @return the class of the serialized object; might be {@code null}
 	 */
 	public static Class<? extends IOObject> findClass(Path path) {
-		ValidationUtil.requireNonNull(path, "path");
+		ValidationUtilV2.requireNonNull(path, "path");
 		try (InputStream stream = Files.newInputStream(path)) {
 			return findClass(stream);
 		} catch (IOException e) {
@@ -75,7 +76,7 @@ public enum IOObjectClassDetector {
 	 * @see IOObjectSerializer#deserializeHeader(InputStream)
 	 */
 	public static Class<? extends IOObject> findClass(InputStream in) {
-		ValidationUtil.requireNonNull(in, "input stream");
+		ValidationUtilV2.requireNonNull(in, "input stream");
 		if (in.markSupported()) {
 			return findClassWithReset(in);
 		}
@@ -89,7 +90,7 @@ public enum IOObjectClassDetector {
 	 * @see InputStream#reset()
 	 */
 	public static Class<? extends IOObject> findClassWithReset(InputStream in) {
-		ValidationUtil.requireNonNull(in, "input stream");
+		ValidationUtilV2.requireNonNull(in, "input stream");
 		if (!in.markSupported()) {
 			return findClass(in);
 		}
@@ -114,12 +115,12 @@ public enum IOObjectClassDetector {
 	 * @see IOObjectSuffixRegistry#getIOObjectClass(String)
 	 */
 	public static Class<? extends IOObject> findClass(BasicEntry<?> repoFile) {
-		ValidationUtil.requireNonNull(repoFile, "repository file");
+		ValidationUtilV2.requireNonNull(repoFile, "repository file");
 		Class<? extends IOObject> iooClass = IOObjectSuffixRegistry.getIOObjectClass(repoFile.getSuffix());
 		if (iooClass != null && iooClass != IOObject.class) {
 			return iooClass;
 		}
-		return findClass(repoFile.getRepositoryAdapter().getRealPath(repoFile));
+		return findClass(repoFile.getRepositoryAdapter().getRealPath(repoFile, AccessMode.READ));
 	}
 
 	/**

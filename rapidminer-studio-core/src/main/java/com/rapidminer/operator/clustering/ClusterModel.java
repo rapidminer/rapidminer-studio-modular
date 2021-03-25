@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
- * 
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.operator.clustering;
 
 import java.util.ArrayList;
@@ -82,17 +82,17 @@ public class ClusterModel extends AbstractModel implements ClusterModelInterface
 			progress.setTotal(100);
 		}
 
-		exampleSet = RemappedExampleSet.create(exampleSet, getTrainingHeader(), false, true);
+		ExampleSet remappedES = RemappedExampleSet.create(exampleSet, getTrainingHeader(), false, true);
 
-		Attributes attributes = exampleSet.getAttributes();
+		Attributes attributes = remappedES.getAttributes();
 
 		// additional checks
-		this.checkCapabilities(exampleSet);
+		this.checkCapabilities(remappedES);
 
 		// creating attribute
 		Attribute targetAttribute = AttributeFactory
 				.createAttribute(isAddingAsLabel ? Attributes.LABEL_NAME : Attributes.CLUSTER_NAME, Ontology.NOMINAL);
-		exampleSet.getExampleTable().addAttribute(targetAttribute);
+		remappedES.getExampleTable().addAttribute(targetAttribute);
 		if (isAddingAsLabel) {
 			attributes.setLabel(targetAttribute);
 		} else {
@@ -104,14 +104,14 @@ public class ClusterModel extends AbstractModel implements ClusterModelInterface
 		}
 
 		// setting values
-		int[] clusterIndices = getClusterAssignments(exampleSet);
+		int[] clusterIndices = getClusterAssignments(remappedES);
 
 		if (progress != null) {
 			progress.setCompleted(INTERMEDIATE_PROGRESS_2);
 		}
 
 		int i = 0;
-		for (Example example : exampleSet) {
+		for (Example example : remappedES) {
 			if (clusterIndices[i] != ClusterModel.UNASSIGNABLE) {
 				example.setValue(targetAttribute, "cluster_" + clusterIndices[i]);
 			} else {
@@ -121,9 +121,19 @@ public class ClusterModel extends AbstractModel implements ClusterModelInterface
 
 			if (progress != null && i % OPERATOR_PROGRESS_STEPS == 0) {
 				progress.setCompleted(
-						(int) ((100.0 - INTERMEDIATE_PROGRESS_2) * i / exampleSet.size() + INTERMEDIATE_PROGRESS_2));
+						(int) ((100.0 - INTERMEDIATE_PROGRESS_2) * i / remappedES.size() + INTERMEDIATE_PROGRESS_2));
 			}
 		}
+
+		// prevent returning of RemappedES analog to PredictionModel#copyPredictedLabel in PredictionModel#apply
+		exampleSet = (ExampleSet) exampleSet.clone();
+		Attribute copyOfClusterAttribute = AttributeFactory.createAttribute(targetAttribute);
+		if (isAddingAsLabel) {
+			exampleSet.getAttributes().setLabel(copyOfClusterAttribute);
+		} else {
+			exampleSet.getAttributes().setCluster(copyOfClusterAttribute);
+		}
+
 		// removing unknown examples if desired
 		if (isRemovingUnknown) {
 			exampleSet = new ConditionedExampleSet(exampleSet,

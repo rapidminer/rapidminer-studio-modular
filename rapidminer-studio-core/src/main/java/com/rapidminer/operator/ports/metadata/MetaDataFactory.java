@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -25,6 +25,7 @@ import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.IOObjectCollection;
 import com.rapidminer.operator.Model;
 import com.rapidminer.connection.ConnectionInformationContainerIOObject;
+import com.rapidminer.operator.ports.metadata.table.TableMetaData;
 import com.rapidminer.tools.DominatingClassFinder;
 import com.rapidminer.tools.LogService;
 
@@ -58,7 +59,7 @@ public class MetaDataFactory {
 
 	static {
 		MetaDataFactory.registerIOObjectMetaData(ExampleSet.class, ExampleSetMetaData.class);
-		MetaDataFactory.registerIOObjectMetaData(IOTable.class, ExampleSetMetaData.class);
+		MetaDataFactory.registerIOObjectMetaData(IOTable.class, TableMetaData.class);
 		MetaDataFactory.registerIOObjectMetaData(IOObjectCollection.class, CollectionMetaData.class);
 		MetaDataFactory.registerIOObjectMetaData(Model.class, ModelMetaData.class);
 		MetaDataFactory.registerIOObjectMetaData(ConnectionInformationContainerIOObject.class, ConnectionInformationMetaData.class);

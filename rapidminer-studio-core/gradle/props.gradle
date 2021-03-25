@@ -31,8 +31,8 @@ task generateVersionProperties {
 	ext { versionPropFile = file("$buildDir/tmp/generateVersionProperties/version.properties") }
 
 	// configure version properties generation task input and output
-	inputs.property "version", version
-	inputs.file generateGitRevFile
+	inputs.property 'version', version
+	inputs.files(generateGitRevFile)
 	outputs.files versionPropFile
 
 	// check if file exists and create it if necessary

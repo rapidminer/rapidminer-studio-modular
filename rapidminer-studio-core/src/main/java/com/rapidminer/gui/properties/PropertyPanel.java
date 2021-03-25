@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
- * 
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.gui.properties;
 
 import java.awt.BorderLayout;
@@ -51,6 +51,8 @@ import javax.swing.event.ChangeEvent;
 import com.rapidminer.gui.look.Colors;
 import com.rapidminer.gui.properties.celleditors.value.AttributeOrderingCellEditor;
 import com.rapidminer.gui.properties.celleditors.value.AttributeValueCellEditor;
+import com.rapidminer.gui.properties.celleditors.value.AttributeSubsetValueCellEditor;
+import com.rapidminer.gui.properties.celleditors.value.AttributeValueValueCellEditor;
 import com.rapidminer.gui.properties.celleditors.value.AttributesValueCellEditor;
 import com.rapidminer.gui.properties.celleditors.value.ColorValueCellEditor;
 import com.rapidminer.gui.properties.celleditors.value.ConfigurableValueCellEditor;
@@ -76,6 +78,7 @@ import com.rapidminer.gui.properties.celleditors.value.PropertyValueCellEditor;
 import com.rapidminer.gui.properties.celleditors.value.RegexpValueCellEditor;
 import com.rapidminer.gui.properties.celleditors.value.RemoteFileValueCellEditor;
 import com.rapidminer.gui.properties.celleditors.value.RepositoryLocationValueCellEditor;
+import com.rapidminer.gui.properties.celleditors.value.CheckBoxGroupValueCellEditor;
 import com.rapidminer.gui.properties.celleditors.value.SimpleFileValueCellEditor;
 import com.rapidminer.gui.properties.celleditors.value.SimpleSuggestionBoxValueCellEditor;
 import com.rapidminer.gui.properties.celleditors.value.TextValueCellEditor;
@@ -87,6 +90,8 @@ import com.rapidminer.operator.Operator;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeAttribute;
 import com.rapidminer.parameter.ParameterTypeAttributeOrderingRules;
+import com.rapidminer.parameter.ParameterTypeAttributeSubset;
+import com.rapidminer.parameter.ParameterTypeAttributeValue;
 import com.rapidminer.parameter.ParameterTypeAttributes;
 import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.parameter.ParameterTypeCategory;
@@ -114,6 +119,7 @@ import com.rapidminer.parameter.ParameterTypeProcessLocation;
 import com.rapidminer.parameter.ParameterTypeRegexp;
 import com.rapidminer.parameter.ParameterTypeRemoteFile;
 import com.rapidminer.parameter.ParameterTypeRepositoryLocation;
+import com.rapidminer.parameter.ParameterTypeCheckBoxGroup;
 import com.rapidminer.parameter.ParameterTypeStringCategory;
 import com.rapidminer.parameter.ParameterTypeSuggestion;
 import com.rapidminer.parameter.ParameterTypeText;
@@ -283,6 +289,7 @@ public abstract class PropertyPanel extends JPanel {
 		registerPropertyValueCellEditor(ParameterTypeProcessLocation.class, ProcessLocationValueCellEditor.class);
 		registerPropertyValueCellEditor(ParameterTypeConnectionLocation.class, ConnectionLocationValueCellEditor.class);
 		registerPropertyValueCellEditor(ParameterTypeValue.class, OperatorValueValueCellEditor.class);
+		registerPropertyValueCellEditor(ParameterTypeAttributeValue.class, AttributeValueValueCellEditor.class);
 		registerPropertyValueCellEditor(ParameterTypeInnerOperator.class, InnerOperatorValueCellEditor.class);
 		registerPropertyValueCellEditor(ParameterTypeList.class, ListValueCellEditor.class);
 		registerPropertyValueCellEditor(ParameterTypeMatrix.class, MatrixValueCellEditor.class);
@@ -292,6 +299,7 @@ public abstract class PropertyPanel extends JPanel {
 		registerPropertyValueCellEditor(ParameterTypeTupel.class, ParameterTupelCellEditor.class);
 		registerPropertyValueCellEditor(ParameterTypeRegexp.class, RegexpValueCellEditor.class);
 		registerPropertyValueCellEditor(ParameterTypeAttributes.class, AttributesValueCellEditor.class);
+		registerPropertyValueCellEditor(ParameterTypeAttributeSubset.class, AttributeSubsetValueCellEditor.class);
 		registerPropertyValueCellEditor(ParameterTypeEnumeration.class, EnumerationValueCellEditor.class);
 		registerPropertyValueCellEditor(ParameterTypeDateFormat.class, DateFormatValueCellEditor.class);
 		registerPropertyValueCellEditor(ParameterTypeConfigurable.class, ConfigurableValueCellEditor.class);
@@ -303,6 +311,7 @@ public abstract class PropertyPanel extends JPanel {
 		registerPropertyValueCellEditor(ParameterTypeOAuth.class, OAuthValueCellEditor.class);
 		registerPropertyValueCellEditor(ParameterTypeRemoteFile.class, RemoteFileValueCellEditor.class);
 		registerPropertyValueCellEditor(ParameterTypeLinkButton.class, LinkButtonValueCellEditor.class);
+		registerPropertyValueCellEditor(ParameterTypeCheckBoxGroup.class, CheckBoxGroupValueCellEditor.class);
 	}
 
 	/**

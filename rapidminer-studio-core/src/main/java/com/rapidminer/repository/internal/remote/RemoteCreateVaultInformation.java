@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -18,7 +18,7 @@
  */
 package com.rapidminer.repository.internal.remote;
 
-import com.rapidminer.tools.ValidationUtil;
+import com.rapidminer.tools.ValidationUtilV2;
 
 
 /**
@@ -43,8 +43,8 @@ public class RemoteCreateVaultInformation {
 	 * 		the value to be injected
 	 */
 	public RemoteCreateVaultInformation(String group, String name, String value) {
-		this.group = ValidationUtil.requireNonNull(group, "group");
-		this.name = ValidationUtil.requireNonNull(name, "name");
+		this.group = ValidationUtilV2.requireNonNull(group, "group");
+		this.name = ValidationUtilV2.requireNonNull(name, "name");
 		this.value = value;
 	}
 
@@ -58,7 +58,7 @@ public class RemoteCreateVaultInformation {
 	}
 
 	private void setGroup(String group) {
-		this.group = ValidationUtil.requireNonNull(group, "group");
+		this.group = ValidationUtilV2.requireNonNull(group, "group");
 	}
 
 	/**
@@ -71,7 +71,7 @@ public class RemoteCreateVaultInformation {
 	}
 
 	private void setName(String name) {
-		this.name = ValidationUtil.requireNonNull(name, "name");
+		this.name = ValidationUtilV2.requireNonNull(name, "name");
 	}
 
 	/**

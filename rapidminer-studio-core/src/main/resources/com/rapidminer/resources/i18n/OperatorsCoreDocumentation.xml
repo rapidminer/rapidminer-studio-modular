@@ -1504,7 +1504,7 @@
   </operator>
 
     <operator>
-        <name>Rename</name>
+        <name>Rename (Deprecated)</name>
         <synopsis>This operator can be used to rename an attribute.</synopsis>
         <help>&lt;p&gt; This operator can be used to rename an attribute of
          the input &lt;i&gt;ExampleSet&lt;/i&gt;. Please keep in mind, that attribute names have to be unique.&lt;br /&gt;
@@ -2884,7 +2884,7 @@
     <shortName>Performance</shortName>
   </operator>
     <operator>
-        <name>Sort</name>
+        <name>Sort (Deprecated)</name>
         <synopsis>This operator sorts the given &lt;i&gt;ExampleSet&lt;/i&gt; according to a
             single attribute.</synopsis>
         <help>
@@ -4325,9 +4325,13 @@
     </tags>
   </operator>
     <operator>
-        <name>Rename by Example Values</name>
-        <synopsis>Uses the specified row as new attibute names and deletes the
-            row from the data set.</synopsis>
+        <name>Rename by Example Values (Deprecated)</name>
+        <synopsis>
+            Uses the specified row as new attibute names and deletes the
+            row from the data set.
+            This operator is deprecated.
+            Please use the Rename by Example Values operator from the blending extension instead.
+        </synopsis>
         <help>&lt;p&gt;This operators uses the values of the specified row of
             the data set as new attribute names (including both regular and
             special columns). This might be useful for example after a transpose
@@ -4943,9 +4947,13 @@
     <key>ioselector</key>
   </operator>
     <operator>
-        <name>Exchange Roles</name>
-        <synopsis>This operator can be used to exchange the attribute roles of
-            two attributes (e.g. a label with a regular attribute).</synopsis>
+        <name>Exchange Roles (Deprecated)</name>
+        <synopsis>
+            This operator can be used to exchange the attribute roles of
+            two attributes (e.g. a label with a regular attribute).
+            It is deprecated.
+            Use the Set Role operator instead.
+        </synopsis>
         <help>This operator changes the attribute roles of two input
             attributes. This could for example be useful to exchange the roles of
             a label with a regular attribute (and vice versa), or a label with a

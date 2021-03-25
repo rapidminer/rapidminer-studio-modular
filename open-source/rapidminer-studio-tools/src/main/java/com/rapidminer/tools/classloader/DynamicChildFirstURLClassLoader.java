@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -196,7 +196,7 @@ public abstract class DynamicChildFirstURLClassLoader extends URLClassLoader {
 	/**
 	 * Removes duplicates from classpath array
 	 * <p>
-	 * <strong>Note:</strong> Should be replaced with ValidationUtil#merge call in the future
+	 * <strong>Note:</strong> Should be replaced with ValidationUtilV2#merge call in the future
 	 *
 	 * @since 9.8.0
 	 */

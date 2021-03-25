@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -31,7 +31,8 @@ import com.rapidminer.connection.util.ValidationResult;
 import com.rapidminer.connection.valueprovider.ValueProvider;
 import com.rapidminer.connection.valueprovider.ValueProviderImpl;
 import com.rapidminer.connection.valueprovider.ValueProviderParameter;
-import com.rapidminer.tools.ValidationUtil;
+import com.rapidminer.tools.ValidationUtilV2;
+
 
 /**
  * Simple base implementation for {@link ValueProviderHandler}. Subclasses only have to implement
@@ -50,14 +51,14 @@ public abstract class BaseValueProviderHandler implements ValueProviderHandler {
 
 	/** Simple handler with no parameters */
 	protected BaseValueProviderHandler(String type) {
-		this.type = ValidationUtil.requireNonEmptyString(type, "type");
+		this.type = ValidationUtilV2.requireNonEmptyString(type, "type");
 		this.parameters = Collections.emptyList();
 	}
 
 	/** Handler with parameters */
 	protected BaseValueProviderHandler(String type, List<ValueProviderParameter> parameters) {
-		this.type = ValidationUtil.requireNonEmptyString(type, "type");
-		this.parameters = ValidationUtil.requireNonEmptyList(parameters, "parameters");
+		this.type = ValidationUtilV2.requireNonEmptyString(type, "type");
+		this.parameters = ValidationUtilV2.requireNonEmptyList(parameters, "parameters");
 	}
 
 	/**

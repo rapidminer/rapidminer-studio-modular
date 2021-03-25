@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Set;
 
 import com.rapidminer.RapidMiner;
+import com.rapidminer.belt.table.BeltConverter;
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.ExampleSet;
@@ -47,7 +48,11 @@ import com.rapidminer.tools.ParameterService;
  *
  * @author Gisa Schaefer
  * @since 7.3
+ * @deprecated since 9.9, use {@link com.rapidminer.belt.table.Builders} from the new Belt data core to build Belt
+ * {@link com.rapidminer.belt.table.Table Tables} instead, see <a href="https://docs.rapidminer.com/latest/developers/extensions/changes-in-9.8"
+ * target="_blank" >documentation</a>.
  */
+@Deprecated
 public final class ExampleSets {
 	
 	/** Set of primitive attribute types that are known to be thread safe for read accesses. */
@@ -151,7 +156,7 @@ public final class ExampleSets {
 		// check example table implementation
 		if (!foundUnsafeComponent) {
 			ExampleTable table = set.getExampleTable();
-			foundUnsafeComponent = table.getClass() != ColumnarExampleTable.class;
+			foundUnsafeComponent = table.getClass() != ColumnarExampleTable.class && !BeltConverter.isTableWrapper(set);
 		}
 		
 		// check attribute implementation

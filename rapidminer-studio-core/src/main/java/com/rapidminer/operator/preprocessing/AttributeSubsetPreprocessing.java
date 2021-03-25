@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
- * 
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.operator.preprocessing;
 
 import java.util.ArrayList;
@@ -44,7 +44,6 @@ import com.rapidminer.operator.ports.metadata.AttributeMetaData;
 import com.rapidminer.operator.ports.metadata.AttributeSubsetPassThroughRule;
 import com.rapidminer.operator.ports.metadata.ExampleSetMetaData;
 import com.rapidminer.operator.ports.metadata.ExampleSetPassThroughRule;
-import com.rapidminer.operator.ports.metadata.MetaData;
 import com.rapidminer.operator.ports.metadata.MetaDataInfo;
 import com.rapidminer.operator.ports.metadata.SetRelation;
 import com.rapidminer.operator.ports.metadata.SimpleMetaDataError;
@@ -205,14 +204,15 @@ public class AttributeSubsetPreprocessing extends OperatorChain {
 				if (getParameterAsBoolean(PARAMETER_KEEP_SUBSET_ONLY)) {
 					return inputMetaData;
 				} else {
-					MetaData metaData = exampleSetInput.getMetaData();
-					if (metaData instanceof ExampleSetMetaData) {
-						inputMetaData = (ExampleSetMetaData) metaData;
+					ExampleSetMetaData inputMD = exampleSetInput.getMetaDataAsOrNull(ExampleSetMetaData.class);
+					if (inputMD != null) {
+						inputMetaData = inputMD;
 						ExampleSetMetaData subsetAmd = attributeSelector.getMetaDataSubset(inputMetaData, false);
 						// restore special Attributes roles if wanted
 						if (!getParameterAsBoolean(PARAMETER_REMOVE_ROLES)) {
 							for (AttributeMetaData attribute : subsetAmd.getAllAttributes()) {
-								AttributeMetaData inputAttribute = inputMetaData.getAttributeByName(attribute.getName());
+								AttributeMetaData inputAttribute =
+										inputMetaData.getAttributeByName(attribute.getName());
 								if (inputAttribute.isSpecial()) {
 									attribute.setRole(inputAttribute.getRole());
 								}
@@ -230,9 +230,10 @@ public class AttributeSubsetPreprocessing extends OperatorChain {
 						}
 
 						// retrieving result
-						if (innerExampleSetSink.getMetaData() instanceof ExampleSetMetaData) {
-							ExampleSetMetaData resultMetaData = (ExampleSetMetaData) innerExampleSetSink.getMetaData()
-									.clone();
+						final ExampleSetMetaData innerSinkMD =
+								innerExampleSetSink.getMetaDataAsOrNull(ExampleSetMetaData.class);
+						if (innerSinkMD != null) {
+							ExampleSetMetaData resultMetaData = innerSinkMD.clone();
 
 							// merge and add unused completely
 							Iterator<AttributeMetaData> iter = unusedAttributes.iterator();

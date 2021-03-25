@@ -1,29 +1,34 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
  * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General
- * Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any
- * later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
- * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more
- * details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License along with this program. If not, see
- * http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.storage.hdf5;
 
 import static com.rapidminer.storage.hdf5.Hdf5DatasetReader.getDatasetByAddress;
+import static com.rapidminer.storage.hdf5.Hdf5DatasetReader.getMissingValue;
 import static com.rapidminer.storage.hdf5.Hdf5DatasetReader.toDataAddress;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -36,7 +41,9 @@ import com.rapidminer.example.table.NominalMapping;
 import com.rapidminer.hdf5.BufferedInChannel;
 import com.rapidminer.hdf5.file.TableWriter;
 import com.rapidminer.operator.ports.metadata.AttributeMetaData;
+import com.rapidminer.operator.ports.metadata.MetaDataInfo;
 import com.rapidminer.operator.ports.metadata.SetRelation;
+import com.rapidminer.operator.ports.metadata.table.ColumnInfoBuilder;
 
 import io.jhdf.GlobalHeap;
 import io.jhdf.HdfFile;
@@ -133,6 +140,88 @@ class Hdf5MappingReader {
 	}
 
 	/**
+	 * Reads the first dictionary values or the first values of the column into the builder.
+	 *
+	 * @param set
+	 * 		the set with the dictionary information or String values
+	 * @param builder
+	 * 		the builder to store the dictionary in
+	 * @param limit
+	 * 		the maximal number of dictionary values to read
+	 * @throws HdfReaderException
+	 * 		if the data sets are not contiguous or dictionary attributes are of wrong type
+	 * @throws IOException
+	 * 		if reading fails
+	 */
+	void addDictionary(Dataset set, ColumnInfoBuilder builder, int limit) throws IOException {
+		if (builder.isNominal() != MetaDataInfo.YES) {
+			return;
+		}
+
+		io.jhdf.api.Attribute positiveIndex = set.getAttribute(TableWriter.ATTRIBUTE_POSITVE_INDEX);
+		int positive = 0;
+		if (positiveIndex != null) {
+			final Object indexData = positiveIndex.getData();
+			if ((indexData instanceof Number)) {
+				positive = ((Number) indexData).intValue();
+				if (positive != -1 && positive != 1 && positive != 2) {
+					final int wrongPositive = positive;
+					LOGGER.warning(() -> "Inadmissible positive index " + wrongPositive + " (must be -1, 1 or 2 )");
+					positive = 0;
+				}
+			}
+		}
+		io.jhdf.api.Attribute mapping = set.getAttribute(TableWriter.ATTRIBUTE_DICTIONARY);
+		if (mapping != null) {
+			readFromSeparateDictionary(set, mapping, builder, limit, positive);
+		} else if (set.getJavaType().equals(String.class)) {
+			//No extra dictionary set, read first few
+			readFromStringData(set, builder, limit, positive);
+		} else {
+			throw new HdfReaderException(HdfReaderException.Reason.INCONSISTENT_FILE, "dictionary attribute " +
+					"missing for category indices dataset " + set.getPath());
+		}
+	}
+
+	/**
+	 * Reads the dictionary values as a linked hash set if it is present for the set.
+	 *
+	 * @param set
+	 * 		the set to check if it contains an hdf5 attribute with information about the dictionary
+	 * @return the dictionary values as set
+	 * @throws IOException
+	 * 		if reading fails
+	 * @since 9.9.0
+	 */
+	LinkedHashSet<String> getDictionary(Dataset set) throws IOException {
+		io.jhdf.api.Attribute dictionary = set.getAttribute(TableWriter.ATTRIBUTE_DICTIONARY);
+		LinkedHashSet<String> dictionarySet = new LinkedHashSet<>();
+		dictionarySet.add(null);
+		if (dictionary != null) {
+			if (dictionary.getJavaType().equals(String.class)) {
+				//only small dictionary directly in attribute -> fine to read directly
+				String[] dictionaryArray = (String[]) dictionary.getData();
+				for (int i = 1; i < dictionaryArray.length; i++) {
+					final String value = dictionaryArray[i];
+					if (dictionarySet.contains(value)) {
+						throw new HdfReaderException(HdfReaderException.Reason.DICTIONARY_NOT_UNIQUE,
+								value + " appears twice in dictionary for dataset " + set.getPath());
+					}
+					dictionarySet.add(value);
+				}
+
+			} else {
+				final String errorPath = set.getPath();
+				readMappingFromDataset(dictionary, set, value -> addDictionaryValue(dictionarySet, value, errorPath), -1);
+			}
+		} else if (!set.getJavaType().equals(String.class)) {
+			throw new HdfReaderException(HdfReaderException.Reason.INCONSISTENT_FILE, "dictionary attribute " +
+					"missing for category indices dataset " + set.getPath());
+		}
+		return dictionarySet;
+	}
+
+	/**
 	 * Reads the first limit dictionary values from the mapping attribute or the dictionary it points to. Tries to
 	 * associate the mode category index with a String value.
 	 *
@@ -174,6 +263,76 @@ class Hdf5MappingReader {
 	}
 
 	/**
+	 * Reads the first limit dictionary values from the dictionary attribute or the dictionary it points to.
+	 *
+	 * @throws IOException
+	 * 		if reading fails
+	 */
+	private void readFromSeparateDictionary(Dataset set, io.jhdf.api.Attribute dictionary,
+											ColumnInfoBuilder builder,
+											int limit, int positiveIndex) throws IOException {
+		if (dictionary.getJavaType().equals(String.class)) {
+			//only small mapping directly in attribute -> fine to read directly
+			String[] mappingArray = (String[]) dictionary.getData();
+			SetRelation relation = SetRelation.EQUAL;
+			List<String> valueSet = new ArrayList<>();
+			int length = mappingArray.length;
+			if (length > limit + 1) {
+				length = limit + 1;
+				relation = SetRelation.SUPERSET;
+			}
+			for (int i = 1; i < length; i++) {
+				valueSet.add(mappingArray[i]);
+			}
+			if (positiveIndex != 0) {
+				setBooleanValues(builder, positiveIndex, relation, valueSet);
+			} else {
+				builder.setDictionaryValues(valueSet, relation);
+			}
+		} else {
+			List<String> valueSet = new ArrayList<>();
+			boolean limited = readMappingFromDataset(dictionary, set, valueSet::add, limit + 1);
+			final SetRelation relation = limited ? SetRelation.SUPERSET : SetRelation.EQUAL;
+			if (positiveIndex != 0) {
+				setBooleanValues(builder, positiveIndex, relation, valueSet);
+			} else {
+				builder.setDictionaryValues(valueSet, relation);
+			}
+		}
+	}
+
+	/**
+	 * Sets the boolean dictionary depending on the positive index.
+	 */
+	private void setBooleanValues(ColumnInfoBuilder builder, int positiveIndex, SetRelation relation,
+								  Collection<String> valueSet) {
+		if ((positiveIndex > 0 && positiveIndex <= valueSet.size() && valueSet.size() <= 2)
+				|| (positiveIndex == -1 && valueSet.size() < 2)) {
+			String positiveValue = null;
+			String negativeValue = null;
+			int index = 0;
+			for (String s : valueSet) {
+				if (index == positiveIndex - 1) {
+					positiveValue = s;
+				} else {
+					negativeValue = s;
+				}
+				index++;
+			}
+			if (positiveValue != null || negativeValue != null) {
+				builder.setBooleanDictionaryValues(positiveValue, negativeValue);
+			} else {
+				builder.setUnknownBooleanDictionary();
+			}
+			builder.setValueSetRelation(relation);
+		} else {
+			LOGGER.warning(() -> "positive index " + positiveIndex + " does not match value set (size " +
+					valueSet.size()	+ ")");
+			builder.setDictionaryValues(valueSet, relation);
+		}
+	}
+
+	/**
 	 * Reads the first limit values from the set. Tries to associate the mode row index with a String value.
 	 *
 	 * @throws IOException
@@ -189,6 +348,34 @@ class Hdf5MappingReader {
 				attributeMetaData.setMode(modeValue);
 			}
 			attributeMetaData.setValueSetRelation(limited ? SetRelation.SUPERSET : SetRelation.EQUAL);
+		} else {
+			throw new HdfReaderException(HdfReaderException.Reason.NON_CONTIGUOUS, "non-contigous " +
+					"dataset " + set.getPath());
+		}
+	}
+
+	/**
+	 * Reads the first limit values from the set.
+	 *
+	 * @throws IOException
+	 * 		if reading fails
+	 */
+	private void readFromStringData(Dataset set, ColumnInfoBuilder builder, int limit, int positiveIndex) throws IOException {
+		if (set instanceof ContiguousDataset) {
+			final String missingValue = getMissingValue(set);
+			Set<String> valueSet = new LinkedHashSet<>();
+			boolean limited = addContiguousMapping((ContiguousDataset) set, s -> {
+						if (missingValue == null || !missingValue.equals(s)) {
+							valueSet.add(s);
+						}
+					},
+					limit + 1, false, set.getPath());
+			final SetRelation relation = limited ? SetRelation.SUPERSET : SetRelation.EQUAL;
+			if (positiveIndex != 0) {
+				setBooleanValues(builder, positiveIndex, relation, valueSet);
+			} else {
+				builder.setDictionaryValues(valueSet, relation);
+			}
 		} else {
 			throw new HdfReaderException(HdfReaderException.Reason.NON_CONTIGUOUS, "non-contigous " +
 					"dataset " + set.getPath());
@@ -403,6 +590,17 @@ class Hdf5MappingReader {
 					" dictionary for column " + attribute.getName());
 		}
 		nominalMapping.mapString(value);
+	}
+
+	/**
+	 * Adds the value to the dictionary set or throws an error if the value is already present.
+	 */
+	private static void addDictionaryValue(Set<String> dictionarySet, String value, String errorPath) {
+		if (dictionarySet.contains(value)) {
+			throw new HdfReaderException(HdfReaderException.Reason.DICTIONARY_NOT_UNIQUE, value + " appears twice in" +
+					" dictionary for dataset " + errorPath);
+		}
+		dictionarySet.add(value);
 	}
 
 }

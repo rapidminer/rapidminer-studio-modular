@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -37,6 +37,7 @@ import com.rapidminer.operator.ports.OutputPort;
 import com.rapidminer.operator.ports.metadata.AttributeMetaData;
 import com.rapidminer.operator.ports.metadata.ExampleSetMetaData;
 import com.rapidminer.operator.ports.metadata.ExampleSetPassThroughRule;
+import com.rapidminer.operator.ports.metadata.GenerateClusterModelTransformationRule;
 import com.rapidminer.operator.ports.metadata.GenerateNewMDRule;
 import com.rapidminer.operator.ports.metadata.MetaData;
 import com.rapidminer.operator.ports.metadata.SetRelation;
@@ -78,6 +79,15 @@ public abstract class AbstractClusterer extends Operator {
 				return metaData;
 			}
 		});
+
+		getTransformer().addRule(
+				new GenerateClusterModelTransformationRule(
+						exampleSetInput,
+						modelOutput,
+						getClusterModelClass(),
+						this::addsLabelAttribute
+				)
+		);
 	}
 
 	/**

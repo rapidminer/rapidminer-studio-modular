@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -38,7 +38,8 @@ import com.rapidminer.connection.valueprovider.ValueProviderParameter;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.parameter.ParameterTypeEnumeration;
 import com.rapidminer.tools.LogService;
-import com.rapidminer.tools.ValidationUtil;
+import com.rapidminer.tools.ValidationUtilV2;
+
 
 /**
  * Helps with injecting values into other value providers. Works on a single parameter that is a list separated by
@@ -105,7 +106,7 @@ public class ChainingValueProviderHandler extends BaseValueProviderHandler {
 
 	/** Creates a new provider from the given names of value providers. */
 	public ValueProvider createNewProvider(String name, List<String> vpNames) {
-		vpNames = ValidationUtil.requireNonEmptyList(vpNames, "value provider names");
+		vpNames = ValidationUtilV2.requireNonEmptyList(vpNames, "value provider names");
 		ValueProvider provider = createNewProvider(name);
 		String value = ParameterTypeEnumeration.transformEnumeration2String(vpNames);
 		ValueProviderParameter parameter = provider.getParameterMap().get(PARAMETER_CHAINED_VPS);
@@ -180,7 +181,7 @@ public class ChainingValueProviderHandler extends BaseValueProviderHandler {
 		List<String> sortedChains = Collections.emptyList();
 		// make sure there is no duplicate chain end!
 		if (lastSegmentToChain.size() == chains.size()) {
-			sortedChains = ValidationUtil.dependencySortEmptyListForLoops(dependencies::get, dependencies.keySet());
+			sortedChains = ValidationUtilV2.dependencySortEmptyListForLoops(dependencies::get, dependencies.keySet());
 		}
 		if (sortedChains.isEmpty()) {
 			chains.addAll(chainsAndNormal.get(false));

@@ -1,20 +1,20 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
  * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General
- * Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any
- * later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
- * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more
- * details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License along with this program. If not, see
- * http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.repository.versioned;
 
@@ -25,6 +25,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.AccessMode;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -65,7 +66,7 @@ import com.rapidminer.repository.RepositoryLocationBuilder;
 import com.rapidminer.repository.RepositoryLocationType;
 import com.rapidminer.repository.RepositoryManager;
 import com.rapidminer.repository.gui.RepositoryConfigurationPanel;
-import com.rapidminer.repository.versioned.IOObjectFileTypeHandler.HDF5TableHandler;
+import com.rapidminer.repository.versioned.IOObjectFileTypeHandler.HDF5DataTableHandler;
 import com.rapidminer.repository.versioned.IOObjectFileTypeHandler.LegacyIOOHandler;
 import com.rapidminer.repository.versioned.datasummary.ContentMapperStorage;
 import com.rapidminer.repository.versioned.gui.FilesystemRepositoryConfigurationPanel;
@@ -84,6 +85,7 @@ import com.rapidminer.versioning.repository.GeneralRepository;
 import com.rapidminer.versioning.repository.RepositoryChangeListener;
 import com.rapidminer.versioning.repository.RepositoryFolder;
 import com.rapidminer.versioning.repository.RepositoryUser;
+import com.rapidminer.versioning.repository.exceptions.RepositoryFileException;
 import com.rapidminer.versioning.repository.exceptions.RepositoryFolderException;
 import com.rapidminer.versioning.repository.exceptions.RepositoryFolderMissingException;
 import com.rapidminer.versioning.repository.exceptions.RepositoryImmutableException;
@@ -113,10 +115,11 @@ public class FilesystemRepositoryAdapter implements Repository, NewFilesystemRep
 		FileTypeHandlerRegistry.register(ConnectionInformationFileTypeHandler.INSTANCE.getSuffix(),
 				ConnectionInformationFileTypeHandler.INSTANCE);
 		STANDARD_SUFFIXES.add(normalizeSuffix(ConnectionInformationFileTypeHandler.INSTANCE.getSuffix()));
-		HDF5TableHandler.INSTANCE.register();
+		HDF5DataTableHandler.INSTANCE.register();
 		IOCollectionHandler.INSTANCE.register();
 
-		// we do not find legacy .blob files when looking for entries from open file from blob, need to handle them differently for compatibility
+		// we do not find legacy .blob files when looking for entries from open file from blob, need to handle them
+		// differently for compatibility
 		FileTypeHandlerRegistry.register(BlobEntry.BLOB_SUFFIX, (filename, parent) -> new BasicBinaryEntry(filename, toBasicFolder(parent)) {
 			@Override
 			public String getName() {
@@ -493,6 +496,22 @@ public class FilesystemRepositoryAdapter implements Repository, NewFilesystemRep
 	 */
 	public Path getRoot() {
 		return repository.getBaseDir();
+	}
+
+	/**
+	 * Access the real {@link Path} on the filesystem of a {@link BasicEntry}.
+	 *
+	 * @param dataEntry that needs to be accessed completely
+	 * @param accessMode optional optimization hints for READ or WRITE only
+	 * @return File of the BasicDataEntry
+	 */
+	public Path getRealPath(BasicEntry<?> dataEntry, AccessMode accessMode) {
+		try {
+			return repository.getFilePath(dataEntry, accessMode);
+		} catch (RepositoryFileException e) {
+			LogService.getRoot().log(Level.SEVERE, e.getMessage(), e);
+			return repository.getFilePath(dataEntry);
+		}
 	}
 
 	/**

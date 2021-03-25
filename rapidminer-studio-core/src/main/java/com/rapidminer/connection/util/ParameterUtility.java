@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -27,7 +27,7 @@ import com.rapidminer.connection.configuration.PlaceholderParameter;
 import com.rapidminer.connection.configuration.PlaceholderParameterImpl;
 import com.rapidminer.connection.valueprovider.ValueProviderParameter;
 import com.rapidminer.connection.valueprovider.ValueProviderParameterImpl;
-import com.rapidminer.tools.ValidationUtil;
+import com.rapidminer.tools.ValidationUtilV2;
 
 
 /**
@@ -157,7 +157,7 @@ public final class ParameterUtility {
 	 * otherwise
 	 */
 	public static boolean isValueSet(ConfigurationParameter parameter) {
-		ValidationUtil.requireNonNull(parameter, "parameter");
+		ValidationUtilV2.requireNonNull(parameter, "parameter");
 		return parameter.isInjected() || parameter.getValue() != null && !parameter.getValue().trim().isEmpty();
 	}
 

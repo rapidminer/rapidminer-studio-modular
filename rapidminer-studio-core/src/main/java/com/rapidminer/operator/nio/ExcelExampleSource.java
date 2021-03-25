@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -22,7 +22,6 @@ import java.text.NumberFormat;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 import com.rapidminer.core.io.data.DataSetException;
 import com.rapidminer.core.io.data.source.DataSource;
@@ -45,7 +44,6 @@ import com.rapidminer.parameter.ParameterTypeInt;
 import com.rapidminer.parameter.ParameterTypeString;
 import com.rapidminer.parameter.conditions.EqualStringCondition;
 import com.rapidminer.parameter.conditions.NonEqualStringCondition;
-import com.rapidminer.tools.Tools;
 import com.rapidminer.tools.io.Encoding;
 
 
@@ -66,46 +64,48 @@ import com.rapidminer.tools.io.Encoding;
  * </p>
  *
  * @author Ingo Mierswa, Tobias Malbrecht, Sebastian Loh, Sebastian Land, Marco Boeck, Marcel Seifert
+ * @deprecated since 9.9, use {@link ExcelTableSource} instead
  */
+@Deprecated
 public class ExcelExampleSource extends AbstractDataResultSetReader {
 
 	private static final String XLSX = "xlsx";
 	private static final String XLS = "xls";
-	public static final OperatorVersion CHANGE_5_0_4 = new OperatorVersion(5, 0, 4);
-	public static final OperatorVersion CHANGE_5_0_11_NAME_SCHEMA = new OperatorVersion(5, 0, 11);
+	public static final OperatorVersion CHANGE_5_0_4 = ExcelTableSource.CHANGE_5_0_4;
+	public static final OperatorVersion CHANGE_5_0_11_NAME_SCHEMA = ExcelTableSource.CHANGE_5_0_11_NAME_SCHEMA;
 
 	/** Last version that used the old POI XLSX import */
-	public static final OperatorVersion CHANGE_6_2_0_OLD_XLSX_IMPORT = new OperatorVersion(6, 2, 0);
+	public static final OperatorVersion CHANGE_6_2_0_OLD_XLSX_IMPORT = ExcelTableSource.CHANGE_6_2_0_OLD_XLSX_IMPORT;
 
 	/**
 	 * The parameter name for &quot;The Excel spreadsheet file which should be loaded.&quot;
 	 */
-	public static final String PARAMETER_EXCEL_FILE = "excel_file";
+	public static final String PARAMETER_EXCEL_FILE = ExcelTableSource.PARAMETER_EXCEL_FILE;
 
 	/**
 	 * The parameter name for &quot;The sheet selection mode.&quot;
 	 */
-	public static final String PARAMETER_SHEET_SELECTION = "sheet_selection";
+	public static final String PARAMETER_SHEET_SELECTION = ExcelTableSource.PARAMETER_SHEET_SELECTION;
 
 	/**
 	 * The parameter name for &quot;The number of the sheet which should be imported.&quot;
 	 */
-	public static final String PARAMETER_SHEET_NUMBER = "sheet_number";
+	public static final String PARAMETER_SHEET_NUMBER = ExcelTableSource.PARAMETER_SHEET_NUMBER;
 
 	/**
 	 * The parameter name for &quot;The name of the sheet which should be imported.&quot;
 	 */
-	public static final String PARAMETER_SHEET_NAME = "sheet_name";
+	public static final String PARAMETER_SHEET_NAME = ExcelTableSource.PARAMETER_SHEET_NAME;
 
 	/**
 	 * {@link #SHEET_SELECTION_MODES} index - select by number
 	 */
-	public static final int SHEET_SELECT_BY_INDEX = 0;
+	public static final int SHEET_SELECT_BY_INDEX = ExcelTableSource.SHEET_SELECT_BY_INDEX;
 
 	/**
 	 * {@link #SHEET_SELECTION_MODES} index - select by name
 	 */
-	public static final int SHEET_SELECT_BY_NAME = 1;
+	public static final int SHEET_SELECT_BY_NAME = ExcelTableSource.SHEET_SELECT_BY_NAME;
 
 	/**
 	 * Selection modes for sheets
@@ -136,7 +136,7 @@ public class ExcelExampleSource extends AbstractDataResultSetReader {
 	@Deprecated
 	public static final String PARAMETER_CREATE_ID = "create_id";
 
-	public static final String PARAMETER_IMPORTED_CELL_RANGE = "imported_cell_range";
+	public static final String PARAMETER_IMPORTED_CELL_RANGE = ExcelTableSource.PARAMETER_IMPORTED_CELL_RANGE;
 
 	static {
 		AbstractReader.registerReaderDescription(new ReaderDescription(XLS, ExcelExampleSource.class, PARAMETER_EXCEL_FILE));
@@ -244,47 +244,7 @@ public class ExcelExampleSource extends AbstractDataResultSetReader {
 	@Override
 	public void configure(DataSource dataSource) throws DataSetException {
 		// set sheet and cell range
-		Map<String, String> configParameters = dataSource.getConfiguration().getParameters();
-
-		setParameter(PARAMETER_EXCEL_FILE, configParameters.get(ExcelResultSetConfiguration.EXCEL_FILE_LOCATION));
-
-
-		String sheetSelectionMode = configParameters.get(ExcelResultSetConfiguration.EXCEL_SHEET_SELECTION_MODE);
-		String sheetName = configParameters.get(ExcelResultSetConfiguration.EXCEL_SHEET_NAME);
-		int sheet = Integer.parseInt(configParameters.get(ExcelResultSetConfiguration.EXCEL_SHEET));
-		int columnOffset = Integer.parseInt(configParameters.get(ExcelResultSetConfiguration.EXCEL_COLUMN_OFFSET));
-		int columnLast = Integer.parseInt(configParameters.get(ExcelResultSetConfiguration.EXCEL_COLUMN_LAST));
-		int rowOffset = Integer.parseInt(configParameters.get(ExcelResultSetConfiguration.EXCEL_ROW_OFFSET));
-		int rowLast = Integer.parseInt(configParameters.get(ExcelResultSetConfiguration.EXCEL_ROW_LAST));
-		int headerRowIndex = Integer.parseInt(configParameters.get(ExcelResultSetConfiguration.EXCEL_HEADER_ROW_INDEX));
-
-		if (rowOffset < 0) {
-			rowOffset = 0;
-		}
-
-		String range = Tools.getExcelColumnName(columnOffset) + (rowOffset + 1);
-
-		// only add end range to cell range parameter if user has specified it explicitly
-		if (Integer.MAX_VALUE != columnLast && Integer.MAX_VALUE != rowOffset) {
-			range += ":" + Tools.getExcelColumnName(columnLast) + (rowLast + 1);
-		}
-
-		setParameter(PARAMETER_IMPORTED_CELL_RANGE, range);
-
-		if (ExcelResultSetConfiguration.SheetSelectionMode.valueOf(sheetSelectionMode) == ExcelResultSetConfiguration.SheetSelectionMode.BY_NAME) {
-			setParameter(PARAMETER_SHEET_SELECTION, SHEET_SELECTION_MODES[SHEET_SELECT_BY_NAME]);
-			setParameter(PARAMETER_SHEET_NAME, sheetName);
-		} else {
-			setParameter(PARAMETER_SHEET_SELECTION, SHEET_SELECTION_MODES[SHEET_SELECT_BY_INDEX]);
-			setParameter(PARAMETER_SHEET_NUMBER, String.valueOf(sheet + 1));
-		}
-
-		// should be set to true when header row belongs is the first row of the selected content
-		String firstRowAsNames = Boolean.toString(headerRowIndex == rowOffset);
-		setParameter(PARAMETER_FIRST_ROW_AS_NAMES, firstRowAsNames);
-
-		// set meta data
-		ImportWizardUtils.setMetaData(dataSource, this);
+		ExcelTableSource.configure(dataSource, this);
 	}
 
 }

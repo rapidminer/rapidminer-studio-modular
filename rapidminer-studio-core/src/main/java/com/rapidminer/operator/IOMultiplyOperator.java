@@ -1,23 +1,29 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
- * 
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.operator;
 
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
+
+import com.rapidminer.adaption.belt.AtPortConverter;
 import com.rapidminer.operator.ports.InputPort;
 import com.rapidminer.operator.ports.OutputPort;
 import com.rapidminer.operator.ports.metadata.MetaData;
@@ -27,11 +33,6 @@ import com.rapidminer.parameter.ParameterTypeCategory;
 import com.rapidminer.parameter.ParameterTypeInt;
 import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.tools.OperatorService;
-
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
 
 
 /**
@@ -74,7 +75,6 @@ public class IOMultiplyOperator extends Operator {
 	 * For MULTIPLY_ONE, brings the given output port to the front of the stack. For MULTIPLAY_ALL,
 	 * creates as many input ports as IOObjects of the correct type are present in the input.
 	 */
-	@SuppressWarnings("deprecation")
 	@Override
 	protected LinkedList<OutputPort> preAutoWire(LinkedList<OutputPort> readyOutputs) throws OperatorException {
 		getInputPorts().removeAll();
@@ -91,8 +91,9 @@ public class IOMultiplyOperator extends Operator {
 					Iterator<OutputPort> i = readyOutputs.descendingIterator();
 					while (i.hasNext()) {
 						OutputPort port = i.next();
-						MetaData md = port.getMetaData();
-						if ((md != null) && desiredClass.isAssignableFrom(md.getObjectClass())) {
+						MetaData md = port.getRawMetaData();
+						if ((md != null) && (desiredClass.isAssignableFrom(md.getObjectClass())
+								|| AtPortConverter.isConvertible(md.getObjectClass(), desiredClass))) {
 							hits++;
 							if (hits == number) {
 								getInputPorts().createPort("input_1", desiredClass);
@@ -111,8 +112,9 @@ public class IOMultiplyOperator extends Operator {
 					i = readyOutputs.descendingIterator();
 					while (i.hasNext()) {
 						OutputPort port = i.next();
-						MetaData md = port.getMetaData();
-						if ((md != null) && desiredClass.isAssignableFrom(md.getObjectClass())) {
+						MetaData md = port.getRawMetaData();
+						if ((md != null) && (desiredClass.isAssignableFrom(md.getObjectClass())
+								|| AtPortConverter.isConvertible(md.getObjectClass(), desiredClass))) {
 							hits++;
 							InputPort inPort = getInputPorts().createPort("input_" + hits, false);
 							getLogger().info("IOMultiplier created temporary input: input_" + hits);

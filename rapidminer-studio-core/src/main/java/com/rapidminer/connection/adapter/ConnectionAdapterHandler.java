@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -83,7 +83,7 @@ import com.rapidminer.tools.ConsumerWithThrowable;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.ProcessTools;
-import com.rapidminer.tools.ValidationUtil;
+import com.rapidminer.tools.ValidationUtilV2;
 import com.rapidminer.tools.config.AbstractConfigurator;
 import com.rapidminer.tools.config.Configurable;
 import com.rapidminer.tools.config.ConfigurableConnectionHandler;
@@ -323,7 +323,7 @@ public abstract class ConnectionAdapterHandler<T extends ConnectionAdapter>
 	 */
 	protected ConnectionAdapterHandler(String namespace) {
 		if (namespace != null) {
-			this.namespace = ValidationUtil.requireNonEmptyString(namespace, "namespace");
+			this.namespace = ValidationUtilV2.requireNonEmptyString(namespace, "namespace");
 		} else {
 			this.namespace = null;
 		}
@@ -458,7 +458,7 @@ public abstract class ConnectionAdapterHandler<T extends ConnectionAdapter>
 				// ignore
 			}
 		}
-		ConnectionConfiguration configuration = ValidationUtil.requireNonNull(connection, "connection").getConfiguration();
+		ConnectionConfiguration configuration = ValidationUtilV2.requireNonNull(connection, "connection").getConfiguration();
 		Map<String, ConfigurationParameter> keyMap = configuration.getKeyMap();
 
 		Map<String, String> valueMap = ValueProviderHandlerRegistry.getInstance().injectValues(connection, operator, false);
@@ -716,7 +716,7 @@ public abstract class ConnectionAdapterHandler<T extends ConnectionAdapter>
 	 * @see ConnectionHandlerRegistry#registerHandler(GenericHandler)
 	 */
 	public static synchronized <T extends ConnectionAdapter> void registerHandler(ConnectionAdapterHandler<T> handler) {
-		String typeId = ValidationUtil.requireNonNull(handler, "handler").getTypeId();
+		String typeId = ValidationUtilV2.requireNonNull(handler, "handler").getTypeId();
 		ConnectionAdapterHandler<T> registeredHandler = getHandler(typeId, false);
 		if (registeredHandler != null) {
 			Level severity = Level.INFO;
@@ -786,7 +786,7 @@ public abstract class ConnectionAdapterHandler<T extends ConnectionAdapter>
 	 * @see ConnectionSelectionProvider
 	 */
 	public static List<ParameterType> getConnectionParameters(Operator operator, String typeId, ParameterTypeConfigurable oldParameter) {
-		ValidationUtil.requireNonNull(oldParameter, "configurable parameter type");
+		ValidationUtilV2.requireNonNull(oldParameter, "configurable parameter type");
 
 		List<ParameterType> parameters = new ArrayList<>(3);
 		parameters.add(oldParameter);
@@ -898,7 +898,7 @@ public abstract class ConnectionAdapterHandler<T extends ConnectionAdapter>
 	public static <T extends Configurable> T getAdapter(Operator operator, String oldParameterKey, String oldTypeID, RepositoryAccessor accessor)
 			throws UserError, ConfigurationException {
 		String connectionSource;
-		if (ValidationUtil.requireNonNull(operator, "operator").isParameterSet(PARAMETER_CONNECTION_SOURCE)) {
+		if (ValidationUtilV2.requireNonNull(operator, "operator").isParameterSet(PARAMETER_CONNECTION_SOURCE)) {
 			connectionSource = operator.getParameter(PARAMETER_CONNECTION_SOURCE);
 		} else {
 			connectionSource = null;
@@ -965,7 +965,7 @@ public abstract class ConnectionAdapterHandler<T extends ConnectionAdapter>
 	 */
 	@SuppressWarnings("unchecked")
 	private static synchronized <T extends ConnectionAdapter> ConnectionAdapterHandler<T> getHandler(String typeId, boolean logNullHandler) {
-		int separator = ValidationUtil.requireNonEmptyString(typeId, "type ID").indexOf(':');
+		int separator = ValidationUtilV2.requireNonEmptyString(typeId, "type ID").indexOf(':');
 		if (separator >= 0) {
 			typeId = typeId.substring(separator + 1);
 		}

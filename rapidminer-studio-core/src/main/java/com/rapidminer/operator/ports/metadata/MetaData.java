@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
- * 
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.operator.ports.metadata;
 
 import java.io.IOException;
@@ -37,6 +37,7 @@ import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.ProcessSetupError.Severity;
 import com.rapidminer.operator.ports.InputPort;
 import com.rapidminer.operator.ports.OutputPort;
+import com.rapidminer.operator.ports.metadata.table.FromTableMetaDataConverter;
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.RMUrlHandler;
 import com.rapidminer.versioning.repository.DataSummary;
@@ -61,7 +62,7 @@ public class MetaData implements DataSummary, Serializable {
 	private transient LinkedList<OutputPort> generationHistory = new LinkedList<OutputPort>();
 
 	/** Maps keys (MD_KEY_...) to values. */
-	private final Map<String, Object> keyValueMap = new HashMap<String, Object>();
+	protected transient Map<String, Object> keyValueMap = new HashMap<>();
 
 	private Class<? extends IOObject> dataClass;
 
@@ -84,6 +85,9 @@ public class MetaData implements DataSummary, Serializable {
 		}
 		if (annotations == null) {
 			annotations = new Annotations();
+		}
+		if (keyValueMap == null) {
+			keyValueMap = new HashMap<>();
 		}
 		return this;
 	}
@@ -175,7 +179,7 @@ public class MetaData implements DataSummary, Serializable {
 	 */
 	@Deprecated
 	public Object getAdditionalData(String key) {
-		LogService.getRoot().log(Level.WARNING, "com.rapidminer.operator.ports.metadata.MetaData.deprecated_additional_data");
+		additionalDataDeprecationWarning();
 		return keyValueMap.get(key);
 	}
 
@@ -195,7 +199,7 @@ public class MetaData implements DataSummary, Serializable {
 	 */
 	@Deprecated
 	public Object addAdditionalData(String key, Object value) {
-		LogService.getRoot().log(Level.WARNING, "com.rapidminer.operator.ports.metadata.MetaData.deprecated_additional_data");
+		additionalDataDeprecationWarning();
 		return keyValueMap.put(key, value);
 	}
 
@@ -260,7 +264,7 @@ public class MetaData implements DataSummary, Serializable {
 
 	@Override
 	public String toString() {
-		return getObjectClass().getSimpleName() + (keyValueMap.isEmpty() ? "" : (" hints: " + keyValueMap.toString()));
+		return getObjectClass().getSimpleName();
 	}
 
 	@Override
@@ -274,10 +278,6 @@ public class MetaData implements DataSummary, Serializable {
 			name = dataClass.getSimpleName();
 		}
 		StringBuilder desc = new StringBuilder(name);
-		if (!keyValueMap.isEmpty()) {
-			desc.append("; ");
-			desc.append(keyValueMap);
-		}
 		if ((annotations != null) && !annotations.isEmpty()) {
 			desc.append("<ul>");
 			for (String key : annotations.getKeys()) {
@@ -371,6 +371,20 @@ public class MetaData implements DataSummary, Serializable {
 					amd.shrinkValueSet();
 				}
 			}
+		}
+	}
+
+	/**
+	 * Adds a warning to the log when the call to {@link #addAdditionalData(String, Object)} or {@link
+	 * #getAdditionalData(String)} is not coming from belt conversion code.
+	 */
+	private void additionalDataDeprecationWarning() {
+		final String className = Thread.currentThread().getStackTrace()[3].getClassName();
+		if (!FromTableMetaDataConverter.class.getName().equals(className) &&
+				!ToTableMetaDataConverter.class.getName().equals(className) &&
+				!ExampleSetMetaData.class.getName().equals(className)) {
+			LogService.getRoot().log(Level.WARNING, "com.rapidminer.operator.ports.metadata.MetaData" +
+					".deprecated_additional_data");
 		}
 	}
 }

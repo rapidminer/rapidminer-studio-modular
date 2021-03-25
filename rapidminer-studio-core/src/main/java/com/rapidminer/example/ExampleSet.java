@@ -1,40 +1,44 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
- * 
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.example;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 
+import com.rapidminer.adaption.belt.IODataTable;
 import com.rapidminer.example.table.ExampleTable;
 import com.rapidminer.operator.ResultObject;
 
 
 /**
- * Interface definition for all example sets. Usually, example sets do not contain any data but are
- * only views on an example table (for example for sampling or feature selection purposes). It
- * should be possible to create a layered view on the data, hence the name multi-layered data view.
- * ExampleSet implementation should support this view concept.
+ * Interface definition for all example sets. Usually, example sets do not contain any data but are only views on an
+ * example table (for example for sampling or feature selection purposes). It should be possible to create a layered
+ * view on the data, hence the name multi-layered data view. ExampleSet implementation should support this view
+ * concept.
  *
  * @author Ingo Mierswa
+ * @deprecated since 9.9, use {@link com.rapidminer.belt.table.Table} from the new Belt data core instead, see <a
+ * href="https://docs.rapidminer.com/latest/developers/extensions/changes-in-9.8" target="_blank" >documentation</a>.
  */
-public interface ExampleSet extends ResultObject, Cloneable, Iterable<Example> {
+@Deprecated
+public interface ExampleSet extends ResultObject, Cloneable, Iterable<Example>, IODataTable {
 
 	/** necessary since default method was added */
 	static final long serialVersionUID = 4100925167567270064L;

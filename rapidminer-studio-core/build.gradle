@@ -4,8 +4,8 @@ buildscript {
         maven { url 'https://maven.rapidminer.com/content/groups/public/' }
     }
     dependencies {
-        classpath 'com.rapidminer.gradle:java-basics:0.4.0'
-        classpath 'com.rapidminer.gradle:java-publishing:0.2.1'
+        classpath 'com.rapidminer.gradle:java-basics:0.4.3'
+        classpath 'com.rapidminer.gradle:java-publishing:0.2.2'
     }
 }
 
@@ -31,12 +31,13 @@ dependencies {
 	compile project(':rapidminer-studio-tools')
 	compile project(':rapidminer-studio-encryption')
     compile project(':rapidminer-studio-globalsearch')
+    compile project(':rapidminer-studio-math')
 
 	// belt project for new data core
-	compile 'com.rapidminer:belt:1.0.0-BETA6'
+	compile 'com.rapidminer:belt:1.0.0'
 
 	// belt adapter for conversion between old and new core
-	compile ('com.rapidminer:belt-adapter:0.8'){
+	compile ('com.rapidminer:belt-adapter:1.0'){
 		exclude group: 'com.rapidminer.studio', module: 'rapidminer-studio-core'
 		exclude group: 'com.rapidminer', module: 'belt'
 	}
@@ -48,7 +49,7 @@ dependencies {
 	compile 'com.rapidminer:rapidminer-api:0.2.2'
 
 	// RapidMiner HDF5 Writer library
-	compile 'com.rapidminer:rapidminer-hdf5-writer:0.5.1'
+	compile 'com.rapidminer:rapidminer-hdf5-writer:0.5.2'
 
 	// Alphanumeric sorting
 	compile 'com.rapidminer.external:alphanumeric-sorting:1.0.1'
@@ -57,7 +58,7 @@ dependencies {
 	compile 'com.rapidminer.external:vldocking:9.0.2'
 
 	// repository supporting versioning
-	compile('com.rapidminer.repository:versioned-repository:0.2.0') {
+	compile('com.rapidminer.repository:versioned-repository:1.0.0') {
 		exclude group: 'org.bouncycastle', module: 'bcprov-jdk15on'
 		exclude group: 'commons-io', module: 'commons-io'
 		exclude group: 'org.apache.commons', module: 'commons-lang3'
@@ -91,6 +92,9 @@ dependencies {
 	compile 'org.apache.poi:poi-ooxml:3.17'
 	compile 'org.apache.poi:poi-scratchpad:3.17'
 
+	// GSON is needed by H2O, and up until now only came as a 4th-level transitive dependency via the versioned repository
+	compile 'com.google.code.gson:gson:2.8.6'
+
 	// JGoodies Looks for TODO (http://www.jgoodies.com/freeware/libraries/looks/)
 	compile 'com.jgoodies:looks:2.2.2'
 
@@ -116,9 +120,6 @@ dependencies {
 	// JAMA for matrix calculations (http://math.nist.gov/javanumerics/jama/)
 	compile 'gov.nist.math:jama:1.0.3'
 
-	// commons-math for matrix calculations (http://commons.apache.org/proper/commons-math/)
-	compile 'org.apache.commons:commons-math3:3.3'
-
 	// commons-email for sending emails (https://commons.apache.org/proper/commons-email/)
 	compile 'org.apache.commons:commons-email:1.5'
 
@@ -135,7 +136,7 @@ dependencies {
 	compile 'org.slf4j:slf4j-api:1.7.13'
 
 	// add testing suite to compile because it is required to compare IOObjects
-	compile 'junit:junit:4.12'
+	compile 'junit:junit:4.13.1'
 
 	// JGraphx for automatic operator arrangement (https://github.com/jgraph/jgraphx)
 	compile 'com.rapidminer.external:jgraphx:3.9.4'
@@ -180,13 +181,7 @@ dependencies {
 
 	// Proxy handling (https://github.com/JetBrains/intellij-deps-proxy-vole)
 	compile 'org.jetbrains.intellij.deps:proxy-vole:1.0.5-jb.2'
-
-	// tests require mockito
-	testCompile 'org.mockito:mockito-core:2.13.0'
-
 }
-
-task wrapper(type: Wrapper) { gradleVersion = '4.10.3' }
 
 apply from: 'gradle/props.gradle'
 apply from: 'gradle/tutorial.gradle'

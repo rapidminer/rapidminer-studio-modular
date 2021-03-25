@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -131,6 +131,12 @@ public class ExtensibleResourceBundle extends ResourceBundle {
 		}
 		bundles.addAll(0, flattenResourceBundle(bundle));
 		bundles.sort(CURRENT_LANG_DESC);
+	}
+
+	@Override
+	public String getBaseBundleName() {
+		// this is overridden because of java.util.logging.Logger not taking a bundle with a null basename
+		return "extensibleResourceBundleBase";
 	}
 
 	@Override

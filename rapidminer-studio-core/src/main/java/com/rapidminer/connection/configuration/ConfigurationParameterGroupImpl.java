@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -28,7 +28,7 @@ import org.apache.commons.collections4.CollectionUtils;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.rapidminer.tools.ValidationUtil;
+import com.rapidminer.tools.ValidationUtilV2;
 
 
 /**
@@ -60,7 +60,7 @@ public class ConfigurationParameterGroupImpl implements ConfigurationParameterGr
 	 * must not be {@code null} or empty and must not contain a dot.
 	 */
 	private void setGroup(String group) {
-		this.group = ValidationUtil.requireNoDot(ValidationUtil.requireNonEmptyString(group, "group"), "group");
+		this.group = ValidationUtilV2.requireNoDot(ValidationUtilV2.requireNonEmptyString(group, "group"), "group");
 	}
 
 	@Override
@@ -73,8 +73,8 @@ public class ConfigurationParameterGroupImpl implements ConfigurationParameterGr
 	 * The list must not be {@code null}, or only filled with {@code null} elements.
 	 */
 	private void setParameters(List<ConfigurationParameter> parameters) {
-		parameters = ValidationUtil.stripToEmptyList(parameters);
-		ValidationUtil.noDuplicatesAllowed(parameters, UNIQUE_NAME_COMPARATOR, "parameters");
+		parameters = ValidationUtilV2.stripToEmptyList(parameters);
+		ValidationUtilV2.noDuplicatesAllowed(parameters, UNIQUE_NAME_COMPARATOR, "parameters");
 		this.parameters = parameters;
 	}
 

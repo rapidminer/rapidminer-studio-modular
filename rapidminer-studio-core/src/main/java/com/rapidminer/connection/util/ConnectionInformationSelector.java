@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -174,7 +174,7 @@ public class ConnectionInformationSelector {
 		if (input == null || !input.isConnected()) {
 			return handler.getParameters().isSet(getParameterKey());
 		}
-		return input.getMetaData() instanceof ConnectionInformationMetaData;
+		return input.getRawMetaData() instanceof ConnectionInformationMetaData;
 	}
 
 	/**
@@ -200,7 +200,7 @@ public class ConnectionInformationSelector {
 	 */
 	public ConnectionInformationMetaData getMetaDataOrThrow() throws RepositoryException {
 		if (input != null && input.isConnected()) {
-			MetaData md = input.getMetaData();
+			MetaData md = input.getRawMetaData();
 			if (md instanceof ConnectionInformationMetaData) {
 				return (ConnectionInformationMetaData) md;
 			}

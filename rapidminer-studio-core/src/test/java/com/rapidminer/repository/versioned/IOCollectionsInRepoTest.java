@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -20,7 +20,7 @@ package com.rapidminer.repository.versioned;
 
 import static com.rapidminer.repository.versioned.ExampleSetsInRepoTest.createDataSet;
 import static com.rapidminer.repository.versioned.IOObjectFileTypeHandler.COLLECTION_SUFFIX;
-import static com.rapidminer.repository.versioned.datasummary.IOCollectionDataSummarySerializerTest.EMD_COMPARATOR;
+import static com.rapidminer.repository.versioned.datasummary.IOCollectionDataSummarySerializerTest.TMD_COMPARATOR;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -28,7 +28,6 @@ import java.nio.file.Path;
 import java.util.UUID;
 
 import org.apache.commons.io.FileUtils;
-import org.junit.Test;
 
 import com.rapidminer.RapidMiner;
 import com.rapidminer.example.ExampleSet;
@@ -37,8 +36,9 @@ import com.rapidminer.operator.IOObjectCollection;
 import com.rapidminer.operator.performance.AbsoluteError;
 import com.rapidminer.operator.ports.metadata.CollectionMetaData;
 import com.rapidminer.operator.ports.metadata.ExampleSetMetaData;
-import com.rapidminer.operator.ports.metadata.MetaData;
 import com.rapidminer.operator.ports.metadata.MetaDataFactory;
+import com.rapidminer.operator.ports.metadata.ToTableMetaDataConverter;
+import com.rapidminer.operator.ports.metadata.table.TableMetaData;
 import com.rapidminer.repository.DataEntry;
 import com.rapidminer.repository.Folder;
 import com.rapidminer.repository.IOObjectEntry;
@@ -140,7 +140,7 @@ public class IOCollectionsInRepoTest extends TestCase {
 		IOObjectCollection<ExampleSet> collection = createCollection(10, 20);
 		IOObjectEntry entry1 = nestedFolder.createIOObjectEntry("firstCol", collection, null, null);
 		RepositoryManager.getInstance(null).copy(entry1.getLocation(), myFolder, "secondCol", null);
-		assertTrue(myFolder.containsData("secondCol", BasicExampleSetEntry.class));
+		assertTrue(myFolder.containsData("secondCol", BasicIODataTableEntry.class));
 		DataEntry secondEntry =
 				myFolder.getDataEntries().stream().filter(d -> "secondCol".equals(d.getName())).findFirst().get();
 		assertTrue(secondEntry instanceof IOObjectEntry);
@@ -159,7 +159,7 @@ public class IOCollectionsInRepoTest extends TestCase {
 		Folder newFolder = legacyTestRepository.createFolder("newFolder");
 
 		RepositoryManager.getInstance(null).copy(entry1.getLocation(), newFolder, "secondCol", null);
-		assertTrue(newFolder.containsData("secondCol", BasicExampleSetEntry.class));
+		assertTrue(newFolder.containsData("secondCol", BasicIODataTableEntry.class));
 		DataEntry secondEntry =
 				newFolder.getDataEntries().stream().filter(d -> "secondCol".equals(d.getName())).findFirst().get();
 		assertTrue(secondEntry instanceof IOObjectEntry);
@@ -179,7 +179,7 @@ public class IOCollectionsInRepoTest extends TestCase {
 		Folder newFolder = newTestRepository.createFolder("newFolder");
 
 		RepositoryManager.getInstance(null).copy(entry1.getLocation(), newFolder, "secondCol", null);
-		assertTrue(newFolder.containsData("secondCol", BasicExampleSetEntry.class));
+		assertTrue(newFolder.containsData("secondCol", BasicIODataTableEntry.class));
 		DataEntry secondEntry =
 				newFolder.getDataEntries().stream().filter(d -> "secondCol".equals(d.getName())).findFirst().get();
 		assertTrue(secondEntry instanceof IOObjectEntry);
@@ -196,7 +196,7 @@ public class IOCollectionsInRepoTest extends TestCase {
 		IOObjectCollection<ExampleSet> collection = createCollection(10, 20);
 		IOObjectEntry entry1 = nestedFolder.createIOObjectEntry("firstCol", collection, null, null);
 		RepositoryManager.getInstance(null).move(entry1.getLocation(), myFolder, "secondCol", null);
-		assertTrue(myFolder.containsData("secondCol", BasicExampleSetEntry.class));
+		assertTrue(myFolder.containsData("secondCol", BasicIODataTableEntry.class));
 		DataEntry secondEntry =
 				myFolder.getDataEntries().stream().filter(d -> "secondCol".equals(d.getName())).findFirst().get();
 		assertTrue(secondEntry instanceof IOObjectEntry);
@@ -215,7 +215,7 @@ public class IOCollectionsInRepoTest extends TestCase {
 		Folder newFolder = legacyTestRepository.createFolder("newFolder");
 
 		RepositoryManager.getInstance(null).move(entry1.getLocation(), newFolder, "secondCol", null);
-		assertTrue(newFolder.containsData("secondCol", BasicExampleSetEntry.class));
+		assertTrue(newFolder.containsData("secondCol", BasicIODataTableEntry.class));
 		DataEntry secondEntry =
 				newFolder.getDataEntries().stream().filter(d -> "secondCol".equals(d.getName())).findFirst().get();
 		assertTrue(secondEntry instanceof IOObjectEntry);
@@ -235,7 +235,7 @@ public class IOCollectionsInRepoTest extends TestCase {
 		Folder newFolder = newTestRepository.createFolder("newFolder");
 
 		RepositoryManager.getInstance(null).move(entry1.getLocation(), newFolder, "secondCol", null);
-		assertTrue(newFolder.containsData("secondCol", BasicExampleSetEntry.class));
+		assertTrue(newFolder.containsData("secondCol", BasicIODataTableEntry.class));
 		DataEntry secondEntry =
 				newFolder.getDataEntries().stream().filter(d -> "secondCol".equals(d.getName())).findFirst().get();
 		assertTrue(secondEntry instanceof IOObjectEntry);
@@ -304,18 +304,22 @@ public class IOCollectionsInRepoTest extends TestCase {
 		innerCollection.getAnnotations().setAnnotation("anno", "inner");
 		IOObjectCollection<IOObject> collection = new IOObjectCollection<>(new IOObject[]{innerCollection});
 		collection.getAnnotations().setAnnotation("anno", "outer");
-		CollectionMetaData originalMD = (CollectionMetaData) MetaDataFactory.getInstance().createMetaDataforIOObject(collection, false);
+		CollectionMetaData originalMD =
+				(CollectionMetaData) MetaDataFactory.getInstance().createMetaDataforIOObject(collection, false);
 		assertEquals(collection.getAnnotations(), originalMD.getAnnotations());
-		assertEquals(collection.getObjects().get(0).getAnnotations(), originalMD.getElementMetaData().getAnnotations());
+		assertEquals(collection.getObjects().get(0).getAnnotations(),
+				originalMD.getElementMetaData().getAnnotations());
 
 		Folder myFolder = newTestRepository.createFolder("myFolder");
 		IOObjectEntry entry1 = myFolder.createIOObjectEntry("firstCol", collection, null, null);
 
 		CollectionMetaData loadedMetaData = (CollectionMetaData) entry1.retrieveMetaData();
 		assertEquals(originalMD.getAnnotations(), loadedMetaData.getAnnotations());
-		assertEquals(originalMD.getElementMetaData().getAnnotations(), loadedMetaData.getElementMetaData().getAnnotations());
-		assertEquals(0, EMD_COMPARATOR.compare((ExampleSetMetaData) originalMD.getElementMetaDataRecursive(),
-				(ExampleSetMetaData) loadedMetaData.getElementMetaDataRecursive()));
+		assertEquals(originalMD.getElementMetaData().getAnnotations(),
+				loadedMetaData.getElementMetaData().getAnnotations());
+		assertEquals(0,
+				TMD_COMPARATOR.compare(ToTableMetaDataConverter.convert((ExampleSetMetaData) originalMD.getElementMetaDataRecursive()),
+				(TableMetaData) loadedMetaData.getElementMetaDataRecursive()));
 	}
 
 	public void testDataSummaryWithCache() throws RepositoryException {
@@ -333,9 +337,11 @@ public class IOCollectionsInRepoTest extends TestCase {
 
 		CollectionMetaData loadedMetaData = (CollectionMetaData) entry1.retrieveMetaData();
 		assertEquals(originalMD.getAnnotations(), loadedMetaData.getAnnotations());
-		assertEquals(originalMD.getElementMetaData().getAnnotations(), loadedMetaData.getElementMetaData().getAnnotations());
-		assertEquals(0, EMD_COMPARATOR.compare((ExampleSetMetaData) originalMD.getElementMetaDataRecursive(),
-				(ExampleSetMetaData) loadedMetaData.getElementMetaDataRecursive()));
+		assertEquals(originalMD.getElementMetaData().getAnnotations(),
+				loadedMetaData.getElementMetaData().getAnnotations());
+		assertEquals(0,
+				TMD_COMPARATOR.compare(ToTableMetaDataConverter.convert((ExampleSetMetaData) originalMD.getElementMetaDataRecursive()),
+				(TableMetaData) loadedMetaData.getElementMetaDataRecursive()));
 	}
 
 	static IOObjectCollection<ExampleSet> createCollection(int i, int i2) {

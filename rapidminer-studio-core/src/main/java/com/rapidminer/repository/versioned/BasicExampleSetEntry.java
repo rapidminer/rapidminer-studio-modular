@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -20,8 +20,10 @@ package com.rapidminer.repository.versioned;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.AccessMode;
 import java.nio.file.Path;
 
+import com.rapidminer.adaption.belt.TableViewingTools;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.Operator;
@@ -42,7 +44,9 @@ import com.rapidminer.versioning.repository.exceptions.RepositoryImmutableExcept
  *
  * @author Gisa Meier
  * @since 9.7
+ * @deprecated since 9.9.0, use {@link BasicIODataTableEntry} instead
  */
+@Deprecated
 public class BasicExampleSetEntry extends AbstractIOObjectEntry<ExampleSet> {
 
     /**
@@ -61,13 +65,13 @@ public class BasicExampleSetEntry extends AbstractIOObjectEntry<ExampleSet> {
 
     @Override
     protected ExampleSet read(InputStream load) throws IOException {
-        Path filePath = getParent().getRepository().getFilePath(this);
+        Path filePath = getRepositoryAdapter().getRealPath(this, AccessMode.READ);
         return Hdf5ExampleSetReader.read(filePath);
     }
 
     @Override
     protected void write(ExampleSet exampleSet) throws IOException, RepositoryImmutableException {
-        Path filePath = getParent().getRepository().getFilePath(this);
+        Path filePath = getRepositoryAdapter().getRealPath(this, AccessMode.WRITE);
         exampleSet.recalculateAllAttributeStatistics();
         new ExampleSetHdf5Writer(exampleSet).write(filePath);
     }
@@ -75,6 +79,7 @@ public class BasicExampleSetEntry extends AbstractIOObjectEntry<ExampleSet> {
     @Override
     protected void setIOObjectData(IOObject data) throws RepositoryFileException, RepositoryImmutableException,
             RepositoryException {
+        data = TableViewingTools.replaceTable(data);
         if (!(data instanceof ExampleSet)) {
             throw new RepositoryException("Data must be ExampleSet!");
         }

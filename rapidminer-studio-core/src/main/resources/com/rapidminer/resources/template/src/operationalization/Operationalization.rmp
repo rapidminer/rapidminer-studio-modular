@@ -1,11 +1,10 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<process version="6.6.000-SNAPSHOT">
+<?xml version="1.0" encoding="UTF-8"?><process version="9.6.000-SNAPSHOT">
   <context>
     <input/>
     <output/>
     <macros/>
   </context>
-  <operator activated="true" class="process" compatibility="6.6.000-SNAPSHOT" expanded="true" name="Process">
+  <operator activated="true" class="process" compatibility="9.4.000" expanded="true" name="Process" origin="GENERATED_SAMPLE">
     <parameter key="logverbosity" value="init"/>
     <parameter key="random_seed" value="2001"/>
     <parameter key="send_mail" value="never"/>
@@ -13,10 +12,10 @@
     <parameter key="process_duration_for_mail" value="30"/>
     <parameter key="encoding" value="SYSTEM"/>
     <process expanded="true">
-      <operator activated="true" class="retrieve" compatibility="6.6.000-SNAPSHOT" expanded="true" height="68" name="Data source 1" width="90" x="45" y="442">
+      <operator activated="true" class="retrieve" compatibility="9.6.000-SNAPSHOT" expanded="true" height="68" name="Data source 1" origin="GENERATED_SAMPLE" width="90" x="45" y="442">
         <parameter key="repository_entry" value="//Samples/Templates/Operationalization/data"/>
       </operator>
-      <operator activated="true" class="filter_examples" compatibility="6.6.000-SNAPSHOT" expanded="true" height="103" name="Filter Examples" width="90" x="246" y="442">
+      <operator activated="true" class="filter_examples" compatibility="9.6.000-SNAPSHOT" expanded="true" height="103" name="Filter Examples" origin="GENERATED_SAMPLE" width="90" x="246" y="442">
         <parameter key="parameter_expression" value=""/>
         <parameter key="condition_class" value="custom_filters"/>
         <parameter key="invert_filter" value="false"/>
@@ -32,10 +31,10 @@
         <parameter key="target_role" value="label"/>
         <list key="set_additional_roles"/>
       </operator>
-      <operator activated="true" class="retrieve" compatibility="6.6.000-SNAPSHOT" expanded="true" height="68" name="Read Model" width="90" x="45" y="187">
+      <operator activated="true" class="retrieve" compatibility="9.6.000-SNAPSHOT" expanded="true" height="68" name="Read Model" origin="GENERATED_SAMPLE" width="90" x="45" y="187">
         <parameter key="repository_entry" value="//Samples/Templates/Operationalization/model"/>
       </operator>
-      <operator activated="true" class="retrieve" compatibility="6.6.000-SNAPSHOT" expanded="true" height="68" name="Data source 2" width="90" x="45" y="544">
+      <operator activated="true" class="retrieve" compatibility="9.6.000-SNAPSHOT" expanded="true" height="68" name="Data source 2" origin="GENERATED_SAMPLE" width="90" x="45" y="544">
         <parameter key="repository_entry" value="//Samples/Templates/Operationalization/data2"/>
       </operator>
       <operator activated="true" class="set_role" compatibility="6.6.000-SNAPSHOT" expanded="true" height="82" name="Set Role n2" width="90" x="380" y="544">
@@ -43,11 +42,12 @@
         <parameter key="target_role" value="label"/>
         <list key="set_additional_roles"/>
       </operator>
-      <operator activated="true" class="append" compatibility="6.6.000-SNAPSHOT" expanded="true" height="103" name="Append" width="90" x="514" y="442">
+      <operator activated="true" class="append" compatibility="9.6.000-SNAPSHOT" expanded="true" height="103" name="Append" origin="GENERATED_SAMPLE" width="90" x="514" y="442">
         <parameter key="datamanagement" value="double_array"/>
+        <parameter key="data_management" value="auto"/>
         <parameter key="merge_type" value="all"/>
       </operator>
-      <operator activated="true" class="apply_model" compatibility="6.6.000-SNAPSHOT" expanded="true" height="82" name="Apply Model" width="90" x="246" y="187">
+      <operator activated="true" class="apply_model" compatibility="7.1.001" expanded="true" height="82" name="Apply Model" origin="GENERATED_SAMPLE" width="90" x="246" y="187">
         <list key="application_parameters"/>
         <parameter key="create_view" value="false"/>
       </operator>
@@ -56,17 +56,17 @@
         <parameter key="target_role" value="label"/>
         <list key="set_additional_roles"/>
       </operator>
-      <operator activated="true" class="performance" compatibility="6.6.000-SNAPSHOT" expanded="true" height="82" name="Performance" width="90" x="514" y="187">
+      <operator activated="true" class="performance" compatibility="9.6.000-SNAPSHOT" expanded="true" height="82" name="Performance" origin="GENERATED_SAMPLE" width="90" x="514" y="187">
         <parameter key="use_example_weights" value="true"/>
       </operator>
-      <operator activated="true" class="branch" compatibility="6.6.000-SNAPSHOT" expanded="true" height="103" name="What now?" width="90" x="715" y="238">
+      <operator activated="true" class="branch" compatibility="9.6.000-SNAPSHOT" expanded="true" height="103" name="What now?" origin="GENERATED_SAMPLE" width="90" x="715" y="238">
         <parameter key="condition_type" value="min_performance_value"/>
         <parameter key="condition_value" value=".99"/>
         <parameter key="expression" value=""/>
         <parameter key="io_object" value="ANOVAMatrix"/>
         <parameter key="return_inner_output" value="true"/>
         <process expanded="true">
-          <operator activated="true" class="store" compatibility="6.6.000-SNAPSHOT" expanded="true" height="68" name="Store Results" width="90" x="45" y="85">
+          <operator activated="true" class="store" compatibility="9.6.000-SNAPSHOT" expanded="true" height="68" name="Store Results" origin="GENERATED_SAMPLE" width="90" x="45" y="85">
             <parameter key="repository_entry" value="results"/>
             <description align="center" color="blue" colored="true" width="126">Regularly store the results</description>
           </operator>
@@ -82,7 +82,7 @@
           <description align="center" color="yellow" colored="false" height="50" resized="true" width="344" x="10" y="10">If performance was OK, then just store the results (or publish in your CRM or send a mail or...)</description>
         </process>
         <process expanded="true">
-          <operator activated="false" class="productivity:execute_process" compatibility="6.6.000-SNAPSHOT" expanded="true" height="68" name="Execute Process" width="90" x="45" y="289">
+          <operator activated="false" class="productivity:execute_process" compatibility="9.6.000-SNAPSHOT" expanded="true" height="68" name="Execute Process" origin="GENERATED_SAMPLE" width="90" x="45" y="289">
             <parameter key="use_input" value="true"/>
             <parameter key="store_output" value="false"/>
             <parameter key="propagate_metadata_recursively" value="true"/>
@@ -91,19 +91,19 @@
             <parameter key="fail_for_unknown_macros" value="true"/>
             <description align="center" color="yellow" colored="true" width="126">... or directly re-train the model (enable and configure the training process)</description>
           </operator>
-          <operator activated="false" class="productivity:execute_program" compatibility="6.6.000-SNAPSHOT" expanded="true" height="103" name="Execute Program" width="90" x="179" y="289">
+          <operator activated="false" class="productivity:execute_program" compatibility="9.6.000-SNAPSHOT" expanded="true" height="103" name="Execute Program" origin="GENERATED_SAMPLE" width="90" x="179" y="289">
             <parameter key="log_stdout" value="true"/>
             <parameter key="log_stderr" value="true"/>
             <list key="env_variables"/>
             <description align="center" color="purple" colored="true" width="126">... or call some other tool&lt;br&gt;(enable and configure the operator)</description>
           </operator>
-          <operator activated="false" class="send_mail" compatibility="6.6.000-SNAPSHOT" expanded="true" height="68" name="Send Mail" width="90" x="313" y="289">
+          <operator activated="false" class="send_mail" compatibility="9.4.000" expanded="true" height="82" name="Send Mail" origin="GENERATED_SAMPLE" width="90" x="313" y="289">
             <parameter key="use_html" value="false"/>
             <list key="headers"/>
             <parameter key="ignore_errors" value="false"/>
             <description align="center" color="green" colored="true" width="126">... or alert someone (enable and configure text and address)</description>
           </operator>
-          <operator activated="true" class="store" compatibility="6.6.000-SNAPSHOT" expanded="true" height="68" name="Store Bad Results" width="90" x="45" y="85">
+          <operator activated="true" class="store" compatibility="9.6.000-SNAPSHOT" expanded="true" height="68" name="Store Bad Results" origin="GENERATED_SAMPLE" width="90" x="45" y="85">
             <parameter key="repository_entry" value="bad_results"/>
             <description align="center" color="blue" colored="true" width="126">Either just write something somewhere so you can use this as a trigger</description>
           </operator>
@@ -144,7 +144,7 @@
       <description align="left" color="blue" colored="true" height="285" resized="true" width="150" x="20" y="360">Step 1:&lt;br&gt;Data from various sources is read (could be DBs, files, Hive...)</description>
       <description align="left" color="gray" colored="true" height="540" resized="true" width="150" x="685" y="105">Now what?&lt;br&gt;If performance falls below a threshold, we have to react! Double-click on the operator to see more&lt;br&gt;</description>
       <description align="left" color="yellow" colored="false" height="70" resized="true" width="815" x="20" y="25">OPERATIONALIZATION&lt;br&gt;Embed Predictive Analytics into your business processes: Operationalize predictive results and trigger actions automatically upon fulfillment of conditions.</description>
-	  <description align="left" color="yellow" colored="false" height="35" resized="true" width="813" x="21" y="657">Outputs: model performance, data set with predictions</description>
+      <description align="left" color="yellow" colored="false" height="35" resized="true" width="813" x="21" y="657">Outputs: model performance, data set with predictions</description>
     </process>
   </operator>
 </process>

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -23,7 +23,7 @@ import java.util.Map;
 
 import com.rapidminer.connection.valueprovider.handler.MacroValueProviderGUI;
 import com.rapidminer.connection.valueprovider.handler.MacroValueProviderHandler;
-import com.rapidminer.tools.ValidationUtil;
+import com.rapidminer.tools.ValidationUtilV2;
 
 
 /**
@@ -62,8 +62,8 @@ public enum ValueProviderGUIRegistry {
 	 * @return {@code false} if another provider is already registered for the valueProviderType
 	 */
 	public boolean registerGUIProvider(ValueProviderGUIProvider provider, String valueProviderType) {
-		ValidationUtil.requireNonNull(provider, "provider");
-		ValidationUtil.requireNonNull(valueProviderType, "valueProviderType");
+		ValidationUtilV2.requireNonNull(provider, "provider");
+		ValidationUtilV2.requireNonNull(valueProviderType, "valueProviderType");
 		return null == providers.putIfAbsent(valueProviderType, provider);
 	}
 
@@ -77,8 +77,8 @@ public enum ValueProviderGUIRegistry {
 	 * @return {@code true} if the handler was successfully unregistered
 	 */
 	public boolean unregisterGUIProvider(ValueProviderGUIProvider provider, String valueProviderType) {
-		ValidationUtil.requireNonNull(provider, "provider");
-		ValidationUtil.requireNonNull(valueProviderType, "valueProviderType");
+		ValidationUtilV2.requireNonNull(provider, "provider");
+		ValidationUtilV2.requireNonNull(valueProviderType, "valueProviderType");
 		return providers.remove(valueProviderType, provider);
 	}
 

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -68,7 +68,7 @@ import com.rapidminer.repository.RepositoryLocation;
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.NonClosingZipInputStream;
 import com.rapidminer.tools.SecurityTools;
-import com.rapidminer.tools.ValidationUtil;
+import com.rapidminer.tools.ValidationUtilV2;
 import com.rapidminer.tools.encryption.EncryptionProvider;
 
 
@@ -140,7 +140,7 @@ public final class ConnectionInformationSerializer {
 	 * @param objectMapper The preconfigured objectMapper
 	 */
 	private ConnectionInformationSerializer(ObjectMapper objectMapper) {
-		ValidationUtil.requireNonNull(objectMapper, "objectMapper");
+		ValidationUtilV2.requireNonNull(objectMapper, "objectMapper");
 		this.objectMapper = objectMapper;
 		this.objectWriter = objectMapper.writer();
 		ObjectReader reader = objectMapper.reader();

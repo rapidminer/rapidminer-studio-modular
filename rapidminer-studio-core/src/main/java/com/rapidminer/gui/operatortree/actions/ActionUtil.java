@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -12,7 +12,7 @@
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
  */
@@ -85,12 +85,7 @@ public final class ActionUtil {
 	private static void reconnectPorts(List<OutputPort> sources, List<InputPort> destinations) {
 		for (OutputPort source : sources) {
 			for (InputPort destination : destinations) {
-				MetaData metaData = null;
-				try {
-					metaData = source.getMetaData(MetaData.class);
-				} catch (IncompatibleMDClassException e) {
-					// so it is null and ignored
-				}
+				MetaData metaData = source.getRawMetaData();
 				if (metaData != null && destination.isInputCompatible(metaData, CompatibilityLevel.PRE_VERSION_5)) {
 					source.connectTo(destination);
 					destinations.remove(destination);

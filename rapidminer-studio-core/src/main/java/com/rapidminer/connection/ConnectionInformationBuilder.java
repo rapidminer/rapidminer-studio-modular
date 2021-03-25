@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -27,9 +27,9 @@ import java.util.stream.Collectors;
 
 import com.rapidminer.connection.configuration.ConnectionConfiguration;
 import com.rapidminer.connection.configuration.ConnectionConfigurationBuilder;
-import com.rapidminer.tools.ValidationUtil;
 import com.rapidminer.operator.Annotations;
 import com.rapidminer.repository.Repository;
+import com.rapidminer.tools.ValidationUtilV2;
 
 
 /**
@@ -54,7 +54,7 @@ public class ConnectionInformationBuilder {
 	 * Create a builder based on an existing {@link ConnectionInformation}
 	 */
 	public ConnectionInformationBuilder(ConnectionInformation original) throws IOException {
-		ValidationUtil.requireNonNull(original, "original connection information");
+		ValidationUtilV2.requireNonNull(original, "original connection information");
 		isUpdatable = true;
 		this.configuration = new ConnectionConfigurationBuilder(original.getConfiguration()).build();
 		this.statistics = new ConnectionStatisticsBuilder(original.getStatistics()).build();
@@ -71,7 +71,7 @@ public class ConnectionInformationBuilder {
 	 * 		the original configuration; must not be {@code null}
 	 */
 	public ConnectionInformationBuilder(ConnectionConfiguration configuration) {
-		this.configuration = ValidationUtil.requireNonNull(configuration, "configuration");
+		this.configuration = ValidationUtilV2.requireNonNull(configuration, "configuration");
 	}
 
 	/**
@@ -84,7 +84,7 @@ public class ConnectionInformationBuilder {
 		if (!isUpdatable) {
 			throw new IllegalArgumentException("Cannot update a new Connection Information object");
 		}
-		this.configuration = ValidationUtil.requireNonNull(configuration, "configuration");
+		this.configuration = ValidationUtilV2.requireNonNull(configuration, "configuration");
 		return this;
 	}
 
@@ -95,7 +95,7 @@ public class ConnectionInformationBuilder {
 	 * 		the repository, must not be {@code null}
 	 */
 	public ConnectionInformationBuilder inRepository(Repository repository) {
-		this.repository = ValidationUtil.requireNonNull(repository, "repository");
+		this.repository = ValidationUtilV2.requireNonNull(repository, "repository");
 		return this;
 	}
 
@@ -106,7 +106,7 @@ public class ConnectionInformationBuilder {
 	 * 		the statistics; must not be {@code null}
 	 */
 	public ConnectionInformationBuilder withStatistics(ConnectionStatistics statistics) {
-		this.statistics = ValidationUtil.requireNonNull(statistics, "statistics");
+		this.statistics = ValidationUtilV2.requireNonNull(statistics, "statistics");
 		return this;
 	}
 
@@ -117,7 +117,7 @@ public class ConnectionInformationBuilder {
 	 * 		the list of library files; can be {@code null} or empty; all non-{@code null} elements must exist
 	 */
 	public ConnectionInformationBuilder withLibraryFiles(List<Path> libraryFiles) {
-		libraryFiles = ValidationUtil.stripToEmptyList(libraryFiles);
+		libraryFiles = ValidationUtilV2.stripToEmptyList(libraryFiles);
 		List<Path> nonExistent = libraryFiles.stream().filter(path -> !Files.exists(path)).collect(Collectors.toList());
 		if (!nonExistent.isEmpty()) {
 			throw new IllegalArgumentException("Non-existing paths found: " + nonExistent);
@@ -133,7 +133,7 @@ public class ConnectionInformationBuilder {
 	 * 		the list of other files; can be {@code null} or empty; all non-{@code null} elements must exist
 	 */
 	public ConnectionInformationBuilder withOtherFiles(List<Path> otherFiles) {
-		otherFiles = ValidationUtil.stripToEmptyList(otherFiles);
+		otherFiles = ValidationUtilV2.stripToEmptyList(otherFiles);
 		List<Path> nonExistent = otherFiles.stream().filter(path -> !Files.exists(path)).collect(Collectors.toList());
 		if (!nonExistent.isEmpty()) {
 			throw new IllegalArgumentException("Non-existing paths found: " + nonExistent);

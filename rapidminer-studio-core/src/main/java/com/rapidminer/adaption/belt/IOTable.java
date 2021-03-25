@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -40,7 +40,7 @@ import com.rapidminer.tools.Tools;
  * @author Gisa Meier
  * @since 9.0.0
  */
-public final class IOTable extends ResultObjectAdapter {
+public final class IOTable extends ResultObjectAdapter implements IODataTable {
 
 	private static final long serialVersionUID = -6999955402797722996L;
 

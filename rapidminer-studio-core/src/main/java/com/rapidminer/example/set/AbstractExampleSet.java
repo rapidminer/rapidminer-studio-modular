@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -67,7 +67,10 @@ import com.rapidminer.tools.XMLException;
  * to call the superclass method.
  *
  * @author Ingo Mierswa, Simon Fischer
+ * @deprecated since 9.9, use {@link com.rapidminer.belt.table.Table} from the new Belt data core instead, see <a
+ *  href="https://docs.rapidminer.com/latest/developers/extensions/changes-in-9.8" target="_blank" >documentation</a>.
  */
+@Deprecated
 public abstract class AbstractExampleSet extends ResultObjectAdapter implements ExampleSet {
 
 	private static final long serialVersionUID = 8596141056047402798L;

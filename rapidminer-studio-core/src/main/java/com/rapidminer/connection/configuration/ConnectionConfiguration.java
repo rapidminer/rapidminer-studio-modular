@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -64,7 +64,7 @@ public interface ConnectionConfiguration {
 	 * Sets the list of tags
 	 *
 	 * @param tags
-	 * 		the tags; will be {@link com.rapidminer.tools.ValidationUtil#stripToEmptyList(List, java.util.function.Predicate) stripped to an empty list}
+	 * 		the tags; will be {@link com.rapidminer.tools.ValidationUtilV2#stripToEmptyList(List, java.util.function.Predicate) stripped to an empty list}
 	 */
 	void setTags(List<String> tags);
 

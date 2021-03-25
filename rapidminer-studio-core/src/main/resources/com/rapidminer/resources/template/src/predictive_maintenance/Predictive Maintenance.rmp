@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><process version="9.0.003">
+<?xml version="1.0" encoding="UTF-8"?><process version="9.5.000-SNAPSHOT">
   <context>
     <input/>
     <output/>
@@ -17,7 +17,7 @@
       </macro>
     </macros>
   </context>
-  <operator activated="true" class="process" compatibility="9.0.003" expanded="true" name="Process" origin="GENERATED_TEMPLATE">
+  <operator activated="true" class="process" compatibility="9.5.000-SNAPSHOT" expanded="true" name="Process" origin="GENERATED_TEMPLATE">
     <parameter key="logverbosity" value="init"/>
     <parameter key="random_seed" value="2001"/>
     <parameter key="send_mail" value="never"/>
@@ -25,67 +25,67 @@
     <parameter key="process_duration_for_mail" value="30"/>
     <parameter key="encoding" value="SYSTEM"/>
     <process expanded="true">
-      <operator activated="true" class="retrieve" compatibility="9.0.003" expanded="true" height="68" name="Retrieve Reference Data" origin="GENERATED_TEMPLATE" width="90" x="45" y="187">
+      <operator activated="true" class="retrieve" compatibility="9.5.000-SNAPSHOT" expanded="true" height="68" name="Retrieve Reference Data" origin="GENERATED_TEMPLATE" width="90" x="45" y="187">
         <parameter key="repository_entry" value="//Samples/Templates/Predictive Maintenance/Reference Data"/>
       </operator>
-      <operator activated="true" class="multiply" compatibility="9.0.003" expanded="true" height="103" name="Multiply" origin="GENERATED_TEMPLATE" width="90" x="179" y="187"/>
-      <operator activated="true" class="subprocess" compatibility="9.0.003" expanded="true" height="82" name="Determine influence factors" origin="GENERATED_TEMPLATE" width="90" x="447" y="187">
+      <operator activated="true" class="multiply" compatibility="9.5.000-SNAPSHOT" expanded="true" height="103" name="Multiply" origin="GENERATED_TEMPLATE" width="90" x="179" y="187"/>
+      <operator activated="true" class="subprocess" compatibility="9.5.000-SNAPSHOT" expanded="true" height="82" name="Determine influence factors" origin="GENERATED_TEMPLATE" width="90" x="447" y="187">
         <process expanded="true">
-          <operator activated="true" class="weight_by_correlation" compatibility="9.0.003" expanded="true" height="82" name="Weight by Correlation" origin="GENERATED_TEMPLATE" width="90" x="45" y="34">
+          <operator activated="true" class="weight_by_correlation" compatibility="9.5.000-SNAPSHOT" expanded="true" height="82" name="Weight by Correlation" origin="GENERATED_TEMPLATE" width="90" x="45" y="34">
             <parameter key="normalize_weights" value="false"/>
             <parameter key="sort_weights" value="true"/>
             <parameter key="sort_direction" value="ascending"/>
             <parameter key="squared_correlation" value="false"/>
           </operator>
-          <operator activated="true" class="weights_to_data" compatibility="9.0.003" expanded="true" height="68" name="Weights to Data" origin="GENERATED_TEMPLATE" width="90" x="179" y="34"/>
+          <operator activated="true" class="weights_to_data" compatibility="9.5.000-SNAPSHOT" expanded="true" height="68" name="Weights to Data" origin="GENERATED_TEMPLATE" width="90" x="179" y="34"/>
           <operator activated="true" class="generate_attributes" compatibility="6.4.000" expanded="true" height="82" name="Generate Attributes (2)" origin="GENERATED_TEMPLATE" width="90" x="313" y="34">
             <list key="function_descriptions">
               <parameter key="Method" value="&quot;Correlation&quot;"/>
             </list>
             <parameter key="keep_all" value="true"/>
           </operator>
-          <operator activated="true" class="weight_by_gini_index" compatibility="9.0.003" expanded="true" height="82" name="Weight by Gini Index" origin="GENERATED_TEMPLATE" width="90" x="45" y="120">
+          <operator activated="true" class="weight_by_gini_index" compatibility="9.5.000-SNAPSHOT" expanded="true" height="82" name="Weight by Gini Index" origin="GENERATED_TEMPLATE" width="90" x="45" y="120">
             <parameter key="normalize_weights" value="false"/>
             <parameter key="sort_weights" value="true"/>
             <parameter key="sort_direction" value="ascending"/>
           </operator>
-          <operator activated="true" class="weight_by_information_gain" compatibility="9.0.003" expanded="true" height="82" name="Weight by Information Gain" origin="GENERATED_TEMPLATE" width="90" x="45" y="210">
+          <operator activated="true" class="weight_by_information_gain" compatibility="9.5.000-SNAPSHOT" expanded="true" height="82" name="Weight by Information Gain" origin="GENERATED_TEMPLATE" width="90" x="45" y="210">
             <parameter key="normalize_weights" value="false"/>
             <parameter key="sort_weights" value="true"/>
             <parameter key="sort_direction" value="ascending"/>
           </operator>
-          <operator activated="true" class="weight_by_information_gain_ratio" compatibility="9.0.003" expanded="true" height="82" name="Weight by Information Gain Ratio" origin="GENERATED_TEMPLATE" width="90" x="45" y="300">
+          <operator activated="true" class="weight_by_information_gain_ratio" compatibility="9.5.000-SNAPSHOT" expanded="true" height="82" name="Weight by Information Gain Ratio" origin="GENERATED_TEMPLATE" width="90" x="45" y="300">
             <parameter key="normalize_weights" value="false"/>
             <parameter key="sort_weights" value="true"/>
             <parameter key="sort_direction" value="ascending"/>
           </operator>
-          <operator activated="true" class="weights_to_data" compatibility="9.0.003" expanded="true" height="68" name="Weights to Data (2)" origin="GENERATED_TEMPLATE" width="90" x="179" y="120"/>
-          <operator activated="true" class="generate_attributes" compatibility="9.0.003" expanded="true" height="82" name="Generate Attributes (3)" origin="GENERATED_TEMPLATE" width="90" x="313" y="136">
+          <operator activated="true" class="weights_to_data" compatibility="9.5.000-SNAPSHOT" expanded="true" height="68" name="Weights to Data (2)" origin="GENERATED_TEMPLATE" width="90" x="179" y="120"/>
+          <operator activated="true" class="generate_attributes" compatibility="9.5.000-SNAPSHOT" expanded="true" height="82" name="Generate Attributes (3)" origin="GENERATED_TEMPLATE" width="90" x="313" y="136">
             <list key="function_descriptions">
               <parameter key="Method" value="&quot;Gini&quot;"/>
             </list>
             <parameter key="keep_all" value="true"/>
           </operator>
-          <operator activated="true" class="weights_to_data" compatibility="9.0.003" expanded="true" height="68" name="Weights to Data (3)" origin="GENERATED_TEMPLATE" width="90" x="179" y="210"/>
-          <operator activated="true" class="generate_attributes" compatibility="9.0.003" expanded="true" height="82" name="Generate Attributes (4)" origin="GENERATED_TEMPLATE" width="90" x="313" y="210">
+          <operator activated="true" class="weights_to_data" compatibility="9.5.000-SNAPSHOT" expanded="true" height="68" name="Weights to Data (3)" origin="GENERATED_TEMPLATE" width="90" x="179" y="210"/>
+          <operator activated="true" class="generate_attributes" compatibility="9.5.000-SNAPSHOT" expanded="true" height="82" name="Generate Attributes (4)" origin="GENERATED_TEMPLATE" width="90" x="313" y="210">
             <list key="function_descriptions">
               <parameter key="Method" value="&quot;InfoGain&quot;"/>
             </list>
             <parameter key="keep_all" value="true"/>
           </operator>
-          <operator activated="true" class="weights_to_data" compatibility="9.0.003" expanded="true" height="68" name="Weights to Data (4)" origin="GENERATED_TEMPLATE" width="90" x="179" y="300"/>
-          <operator activated="true" class="generate_attributes" compatibility="9.0.003" expanded="true" height="82" name="Generate Attributes (5)" origin="GENERATED_TEMPLATE" width="90" x="313" y="300">
+          <operator activated="true" class="weights_to_data" compatibility="9.5.000-SNAPSHOT" expanded="true" height="68" name="Weights to Data (4)" origin="GENERATED_TEMPLATE" width="90" x="179" y="300"/>
+          <operator activated="true" class="generate_attributes" compatibility="9.5.000-SNAPSHOT" expanded="true" height="82" name="Generate Attributes (5)" origin="GENERATED_TEMPLATE" width="90" x="313" y="300">
             <list key="function_descriptions">
               <parameter key="Method" value="&quot;InfoGainRatio&quot;"/>
             </list>
             <parameter key="keep_all" value="true"/>
           </operator>
-          <operator activated="true" class="append" compatibility="9.0.003" expanded="true" height="145" name="Append" origin="GENERATED_TEMPLATE" width="90" x="447" y="34">
+          <operator activated="true" class="append" compatibility="9.5.000-SNAPSHOT" expanded="true" height="145" name="Append" origin="GENERATED_TEMPLATE" width="90" x="447" y="34">
             <parameter key="datamanagement" value="double_array"/>
             <parameter key="data_management" value="auto"/>
             <parameter key="merge_type" value="all"/>
           </operator>
-          <operator activated="true" class="aggregate" compatibility="9.0.003" expanded="true" height="82" name="Aggregate" width="90" x="581" y="34">
+          <operator activated="true" class="aggregate" compatibility="9.5.000-SNAPSHOT" expanded="true" height="82" name="Aggregate" origin="GENERATED_TEMPLATE" width="90" x="581" y="34">
             <parameter key="use_default_aggregation" value="false"/>
             <parameter key="attribute_filter_type" value="all"/>
             <parameter key="attribute" value=""/>
@@ -108,10 +108,12 @@
             <parameter key="only_distinct" value="false"/>
             <parameter key="ignore_missings" value="true"/>
           </operator>
-          <operator activated="true" class="rename" compatibility="9.0.003" expanded="true" height="82" name="Rename" width="90" x="715" y="34">
-            <parameter key="old_name" value="average(Weight)"/>
-            <parameter key="new_name" value="Importance"/>
-            <list key="rename_additional_attributes"/>
+          <operator activated="true" class="blending:rename" compatibility="9.5.000-SNAPSHOT" expanded="true" height="82" name="Rename" width="90" x="715" y="34">
+            <list key="rename attributes">
+              <parameter key="average(Weight)" value="Importance"/>
+            </list>
+            <parameter key="from_attribute" value=""/>
+            <parameter key="to_attribute" value=""/>
           </operator>
           <operator activated="true" class="normalize" compatibility="7.5.003" expanded="true" height="103" name="Normalize" origin="GENERATED_TEMPLATE" width="90" x="849" y="34">
             <parameter key="return_preprocessing_model" value="false"/>
@@ -133,11 +135,12 @@
             <parameter key="max" value="1.0"/>
             <parameter key="allow_negative_values" value="false"/>
           </operator>
-          <operator activated="true" class="sort" compatibility="9.0.003" expanded="true" height="82" name="Sort (2)" origin="GENERATED_TEMPLATE" width="90" x="581" y="120">
-            <parameter key="attribute_name" value="Importance"/>
-            <parameter key="sorting_direction" value="decreasing"/>
+          <operator activated="true" class="blending:sort" compatibility="9.5.000-SNAPSHOT" expanded="true" height="82" name="Sort" width="90" x="581" y="120">
+            <list key="sort_by">
+              <parameter key="Importance" value="descending"/>
+            </list>
           </operator>
-          <operator activated="true" class="order_attributes" compatibility="9.0.003" expanded="true" height="82" name="Reorder Attributes (3)" origin="GENERATED_TEMPLATE" width="90" x="715" y="120">
+          <operator activated="true" class="order_attributes" compatibility="9.5.000-SNAPSHOT" expanded="true" height="82" name="Reorder Attributes (3)" origin="GENERATED_TEMPLATE" width="90" x="715" y="120">
             <parameter key="sort_mode" value="user specified"/>
             <parameter key="attribute_ordering" value="Attribute|Importance"/>
             <parameter key="use_regular_expressions" value="false"/>
@@ -163,8 +166,8 @@
           <connect from_op="Append" from_port="merged set" to_op="Aggregate" to_port="example set input"/>
           <connect from_op="Aggregate" from_port="example set output" to_op="Rename" to_port="example set input"/>
           <connect from_op="Rename" from_port="example set output" to_op="Normalize" to_port="example set input"/>
-          <connect from_op="Normalize" from_port="example set output" to_op="Sort (2)" to_port="example set input"/>
-          <connect from_op="Sort (2)" from_port="example set output" to_op="Reorder Attributes (3)" to_port="example set input"/>
+          <connect from_op="Normalize" from_port="example set output" to_op="Sort" to_port="example set input"/>
+          <connect from_op="Sort" from_port="example set output" to_op="Reorder Attributes (3)" to_port="example set input"/>
           <connect from_op="Reorder Attributes (3)" from_port="example set output" to_port="out 1"/>
           <portSpacing port="source_in 1" spacing="0"/>
           <portSpacing port="source_in 2" spacing="0"/>
@@ -172,7 +175,7 @@
           <portSpacing port="sink_out 2" spacing="0"/>
         </process>
       </operator>
-      <operator activated="true" class="retrieve" compatibility="9.0.003" expanded="true" height="68" name="Retrieve New Data" origin="GENERATED_TEMPLATE" width="90" x="447" y="442">
+      <operator activated="true" class="retrieve" compatibility="9.5.000-SNAPSHOT" expanded="true" height="68" name="Retrieve New Data" origin="GENERATED_TEMPLATE" width="90" x="447" y="442">
         <parameter key="repository_entry" value="//Samples/Templates/Predictive Maintenance/New Data"/>
       </operator>
       <operator activated="true" class="concurrency:optimize_parameters_grid" compatibility="8.2.000" expanded="true" height="124" name="Optimize Parameters (Grid)" origin="GENERATED_TEMPLATE" width="90" x="45" y="340">
@@ -194,7 +197,7 @@
             <parameter key="local_random_seed" value="1992"/>
             <parameter key="enable_parallel_execution" value="true"/>
             <process expanded="true">
-              <operator activated="true" class="k_nn" compatibility="9.0.003" expanded="true" height="82" name="k-NN" origin="GENERATED_TEMPLATE" width="90" x="112" y="34">
+              <operator activated="true" class="k_nn" compatibility="9.5.000-SNAPSHOT" expanded="true" height="82" name="k-NN" origin="GENERATED_TEMPLATE" width="90" x="112" y="34">
                 <parameter key="k" value="50"/>
                 <parameter key="weighted_vote" value="false"/>
                 <parameter key="measure_types" value="MixedMeasures"/>
@@ -219,11 +222,11 @@
               <portSpacing port="sink_through 1" spacing="0"/>
             </process>
             <process expanded="true">
-              <operator activated="true" class="apply_model" compatibility="9.0.003" expanded="true" height="82" name="Apply model" origin="GENERATED_TEMPLATE" width="90" x="45" y="34">
+              <operator activated="true" class="apply_model" compatibility="9.5.000-SNAPSHOT" expanded="true" height="82" name="Apply model" origin="GENERATED_TEMPLATE" width="90" x="45" y="34">
                 <list key="application_parameters"/>
                 <parameter key="create_view" value="false"/>
               </operator>
-              <operator activated="true" class="performance" compatibility="9.0.003" expanded="true" height="82" name="Performance" origin="GENERATED_TEMPLATE" width="90" x="179" y="34">
+              <operator activated="true" class="performance" compatibility="9.5.000-SNAPSHOT" expanded="true" height="82" name="Performance" origin="GENERATED_TEMPLATE" width="90" x="179" y="34">
                 <parameter key="use_example_weights" value="true"/>
               </operator>
               <connect from_port="model" to_op="Apply model" to_port="model"/>
@@ -238,7 +241,7 @@
               <portSpacing port="sink_performance 2" spacing="0"/>
             </process>
           </operator>
-          <operator activated="true" class="log" compatibility="9.0.003" expanded="true" height="82" name="Log" origin="GENERATED_TEMPLATE" width="90" x="380" y="136">
+          <operator activated="true" class="log" compatibility="9.5.000-SNAPSHOT" expanded="true" height="82" name="Log" origin="GENERATED_TEMPLATE" width="90" x="380" y="136">
             <list key="log">
               <parameter key="k" value="operator.k-NN.parameter.k"/>
               <parameter key="Accuracy" value="operator.Validate model.value.performance main criterion"/>
@@ -259,18 +262,19 @@
           <portSpacing port="sink_output 1" spacing="0"/>
         </process>
       </operator>
-      <operator activated="true" class="log_to_data" compatibility="9.0.003" expanded="true" height="103" name="Log to Data" origin="GENERATED_TEMPLATE" width="90" x="179" y="340"/>
-      <operator activated="true" class="apply_model" compatibility="9.0.003" expanded="true" height="82" name="Apply Model" origin="GENERATED_TEMPLATE" width="90" x="581" y="391">
+      <operator activated="true" class="log_to_data" compatibility="9.5.000-SNAPSHOT" expanded="true" height="103" name="Log to Data" origin="GENERATED_TEMPLATE" width="90" x="179" y="340"/>
+      <operator activated="true" class="apply_model" compatibility="9.5.000-SNAPSHOT" expanded="true" height="82" name="Apply Model" origin="GENERATED_TEMPLATE" width="90" x="581" y="391">
         <list key="application_parameters"/>
         <parameter key="create_view" value="false"/>
       </operator>
-      <operator activated="true" class="subprocess" compatibility="9.0.003" expanded="true" height="82" name="Subprocess" origin="GENERATED_TEMPLATE" width="90" x="715" y="340">
+      <operator activated="true" class="subprocess" compatibility="9.5.000-SNAPSHOT" expanded="true" height="82" name="Subprocess" origin="GENERATED_TEMPLATE" width="90" x="715" y="340">
         <process expanded="true">
-          <operator activated="true" class="sort" compatibility="9.0.003" expanded="true" height="82" name="Sort" origin="GENERATED_TEMPLATE" width="90" x="45" y="34">
-            <parameter key="attribute_name" value="confidence(yes)"/>
-            <parameter key="sorting_direction" value="decreasing"/>
+          <operator activated="true" class="blending:sort" compatibility="9.5.000-SNAPSHOT" expanded="true" height="82" name="sort" width="90" x="45" y="34">
+            <list key="sort_by">
+              <parameter key="confidence(yes)" value="descending"/>
+            </list>
           </operator>
-          <operator activated="true" class="select_attributes" compatibility="9.0.003" expanded="true" height="82" name="Select Attributes" origin="GENERATED_TEMPLATE" width="90" x="179" y="34">
+          <operator activated="true" class="select_attributes" compatibility="9.5.000-SNAPSHOT" expanded="true" height="82" name="Select Attributes" origin="GENERATED_TEMPLATE" width="90" x="179" y="34">
             <parameter key="attribute_filter_type" value="all"/>
             <parameter key="attribute" value=""/>
             <parameter key="attributes" value=""/>
@@ -284,8 +288,8 @@
             <parameter key="invert_selection" value="true"/>
             <parameter key="include_special_attributes" value="false"/>
           </operator>
-          <connect from_port="in 1" to_op="Sort" to_port="example set input"/>
-          <connect from_op="Sort" from_port="example set output" to_op="Select Attributes" to_port="example set input"/>
+          <connect from_port="in 1" to_op="sort" to_port="example set input"/>
+          <connect from_op="sort" from_port="example set output" to_op="Select Attributes" to_port="example set input"/>
           <connect from_op="Select Attributes" from_port="example set output" to_port="out 1"/>
           <portSpacing port="source_in 1" spacing="0"/>
           <portSpacing port="source_in 2" spacing="0"/>

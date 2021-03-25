@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -87,6 +87,19 @@ public interface BaseServerClient {
      * @throws RepositoryException in case the repository could not fulfill the request
      */
     List<String> checkProcessCompatibility(String location) throws IOException, RepositoryException;
+
+    /**
+     * Check if the process at the given project location would be compatible with AI Hub the project is on.
+     *
+     * @param fullRepoPath the full path of this process, including the git:// section
+     * @param relativePath the relative path of a process within a project (including the .rmp suffix)
+     * @param branch       the branch on which to check
+     * @return an empty list if there are no errors or a list of errors
+     * @throws IOException         in case accessing the server failed technically
+     * @throws RepositoryException in case the repository could not fulfill the request
+     * @since 9.9
+     */
+    List<String> checkProcessCompatibilityInProject(String fullRepoPath, String relativePath, String branch) throws IOException, RepositoryException;
 
     /**
      * Gets the available queues for the current user.

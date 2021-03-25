@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -26,9 +26,15 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.logging.Level;
 
+import com.rapidminer.RapidMiner;
+import com.rapidminer.license.LicenseEvent;
+import com.rapidminer.license.LicenseManagerListener;
+import com.rapidminer.license.LicenseManagerRegistry;
 import com.rapidminer.studio.internal.ParameterServiceRegistry;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.LogService;
+import com.rapidminer.tools.ParameterService;
+import com.rapidminer.tools.parameter.ParameterChangeListener;
 
 
 /**
@@ -45,6 +51,45 @@ class LazyPool {
 	 * create pools with greater than the maximum number result in IllegalArgumentException.
 	 */
 	private static final int FJPOOL_MAXIMAL_PARALLELISM = 32767;
+
+	private static volatile int foregroundDesiredParallelism;
+	private static volatile int backgroundDesiredParallelism;
+
+	static {
+		LicenseManagerRegistry.INSTANCE.get().registerLicenseManagerListener(new LicenseManagerListener() {
+
+			@Override
+			public <S, C> void handleLicenseEvent(LicenseEvent<S, C> event) {
+				if (event.getType() == LicenseEvent.LicenseEventType.ACTIVE_LICENSE_CHANGED) {
+					foregroundDesiredParallelism =
+							parseDesiredParallelismLevel(RapidMiner.PROPERTY_RAPIDMINER_GENERAL_NUMBER_OF_THREADS);
+					backgroundDesiredParallelism =
+							parseDesiredParallelismLevel(RapidMiner.PROPERTY_RAPIDMINER_GENERAL_NUMBER_OF_THREADS_BACKGROUND);
+				}
+			}
+		});
+		ParameterService.registerParameterChangeListener(new ParameterChangeListener() {
+			@Override
+			public void informParameterChanged(String key, String value) {
+				if (RapidMiner.PROPERTY_RAPIDMINER_GENERAL_NUMBER_OF_THREADS.equals(key)) {
+					foregroundDesiredParallelism =
+							parseDesiredParallelismLevel(RapidMiner.PROPERTY_RAPIDMINER_GENERAL_NUMBER_OF_THREADS);
+				} else if (RapidMiner.PROPERTY_RAPIDMINER_GENERAL_NUMBER_OF_THREADS_BACKGROUND.equals(key)) {
+					backgroundDesiredParallelism =
+							parseDesiredParallelismLevel(RapidMiner.PROPERTY_RAPIDMINER_GENERAL_NUMBER_OF_THREADS_BACKGROUND);
+				}
+			}
+
+			@Override
+			public void informParameterSaved() {
+				//ignore
+			}
+		});
+		foregroundDesiredParallelism =
+				parseDesiredParallelismLevel(RapidMiner.PROPERTY_RAPIDMINER_GENERAL_NUMBER_OF_THREADS);
+		backgroundDesiredParallelism =
+				parseDesiredParallelismLevel(RapidMiner.PROPERTY_RAPIDMINER_GENERAL_NUMBER_OF_THREADS_BACKGROUND);
+	}
 
 	/**
 	 * Locks to handle access from different threads
@@ -179,31 +224,41 @@ class LazyPool {
 		 */
 		@Override
 		public int getDesiredParallelismLevel() {
-			String numberOfThreads = ParameterServiceRegistry.INSTANCE.getParameterValue(key);
-
-			int userLevel = 0;
-
-			if (numberOfThreads != null) {
-				try {
-					userLevel = Integer.parseInt(numberOfThreads);
-					LogService.getRoot().log(Level.FINE, "com.rapidminer.concurrency.concurrency_context.parse_success",
-							new Object[]{userLevel, I18N.getSettingsMessage(key, I18N.SettingsType.TITLE)});
-				} catch (NumberFormatException e) {
-					// ignore and use default value
-					LogService.getRoot().log(Level.FINE, "com.rapidminer.concurrency.concurrency_context.parse_failure",
-							new Object[]{numberOfThreads, I18N.getSettingsMessage(key, I18N.SettingsType.TITLE)});
-				}
+			if (RapidMiner.PROPERTY_RAPIDMINER_GENERAL_NUMBER_OF_THREADS.equals(key)) {
+				return foregroundDesiredParallelism;
+			} else if (RapidMiner.PROPERTY_RAPIDMINER_GENERAL_NUMBER_OF_THREADS_BACKGROUND.equals(key)) {
+				return backgroundDesiredParallelism;
+			} else {
+				return parseDesiredParallelismLevel(key);
 			}
-
-			if (userLevel <= 0) {
-				userLevel = Math.max(1, Runtime.getRuntime().availableProcessors() - 1);
-			}
-
-			// should not happen, but we want to avoid any exception during pool creation
-			if (userLevel > FJPOOL_MAXIMAL_PARALLELISM) {
-				userLevel = FJPOOL_MAXIMAL_PARALLELISM;
-			}
-			return userLevel;
 		}
+	}
+
+	private static int parseDesiredParallelismLevel(String key) {
+		String numberOfThreads = ParameterServiceRegistry.INSTANCE.getParameterValue(key);
+
+		int userLevel = 0;
+
+		if (numberOfThreads != null) {
+			try {
+				userLevel = Integer.parseInt(numberOfThreads);
+				LogService.getRoot().log(Level.FINE, "com.rapidminer.concurrency.concurrency_context.parse_success",
+						new Object[]{userLevel, I18N.getSettingsMessage(key, I18N.SettingsType.TITLE)});
+			} catch (NumberFormatException e) {
+				// ignore and use default value
+				LogService.getRoot().log(Level.FINE, "com.rapidminer.concurrency.concurrency_context.parse_failure",
+						new Object[]{numberOfThreads, I18N.getSettingsMessage(key, I18N.SettingsType.TITLE)});
+			}
+		}
+
+		if (userLevel <= 0) {
+			userLevel = Math.max(1, Runtime.getRuntime().availableProcessors() - 1);
+		}
+
+		// should not happen, but we want to avoid any exception during pool creation
+		if (userLevel > FJPOOL_MAXIMAL_PARALLELISM) {
+			userLevel = FJPOOL_MAXIMAL_PARALLELISM;
+		}
+		return userLevel;
 	}
 }

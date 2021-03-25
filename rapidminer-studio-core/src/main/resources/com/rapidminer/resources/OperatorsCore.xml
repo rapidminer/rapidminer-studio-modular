@@ -176,6 +176,46 @@
 				<class>com.rapidminer.operator.features.transformation.GHA</class>
 				<replaces>GHA</replaces>
 			</operator>
+			<operator>
+				<deprecatedSince>9.9</deprecatedSince>
+				<key>rename</key>
+				<class>com.rapidminer.operator.preprocessing.filter.ChangeAttributeName
+				</class>
+				<replaces>ChangeAttributeName</replaces>				
+			</operator>
+			<operator>
+				<deprecatedSince>9.9</deprecatedSince>
+				<key>sort</key>
+				<class>com.rapidminer.operator.preprocessing.filter.Sorting
+				</class>
+				<replaces>Sorting</replaces>
+			</operator>
+			<operator>
+				<deprecatedSince>9.9</deprecatedSince>
+				<key>rename_by_example_values</key>
+				<class>com.rapidminer.operator.preprocessing.UseRowAsAttributeNames
+				</class>
+				<replaces>UseRowAsAttributeNames</replaces>
+			</operator>
+			<operator>
+				<deprecatedSince>9.9</deprecatedSince>
+				<key>exchange_roles</key>
+				<class>com.rapidminer.operator.preprocessing.filter.ExchangeAttributeRoles
+				</class>
+				<replaces>ExchangeAttributeRoles</replaces>
+			</operator>
+			<operator>
+				<!-- keep as deprecated so that one can still ask the OperatorService for the class-->
+				<deprecatedSince>9.9</deprecatedSince>
+				<key>legacy_read_csv</key>
+				<class>com.rapidminer.operator.nio.CSVExampleSource</class>
+			</operator>
+			<operator>
+				<!-- keep as deprecated so that one can still ask the OperatorService for the class-->
+				<deprecatedSince>9.9</deprecatedSince>
+				<key>legacy_read_excel</key>
+				<class>com.rapidminer.operator.nio.ExcelExampleSource</class>
+			</operator>
 		</group>
 		<group key="data_access">
 			<operator>
@@ -219,12 +259,12 @@
 					<icon>inbox_into.png</icon>
 					<operator>
 						<key>read_csv</key>
-						<class>com.rapidminer.operator.nio.CSVExampleSource</class>
+						<class>com.rapidminer.operator.nio.CSVTableSource</class>
 						<replaces>CSVExampleSource</replaces>
 					</operator>
 					<operator>
 						<key>read_excel</key>
-						<class>com.rapidminer.operator.nio.ExcelExampleSource</class>
+						<class>com.rapidminer.operator.nio.ExcelTableSource</class>
 						<replaces>ExcelExampleSource</replaces>
 					</operator>
 					<operator>
@@ -267,16 +307,11 @@
 				<group key="names_and_roles">
 					<icon>table_selection_column_edit.png</icon>
 					<operator>
-						<key>rename</key>
-						<class>com.rapidminer.operator.preprocessing.filter.ChangeAttributeName
-						</class>
-						<replaces>ChangeAttributeName</replaces>
-					</operator>
-					<operator>
 						<key>rename_by_replacing</key>
 						<class>com.rapidminer.operator.preprocessing.filter.ChangeAttributeNamesReplace
 						</class>
 						<replaces>ChangeAttributeNamesReplace</replaces>
+						<priority>80</priority>
 					</operator>
 					<operator>
 						<key>rename_by_generic_names</key>
@@ -291,23 +326,11 @@
 						<replaces>Construction2Names</replaces>
 					</operator>
 					<operator>
-						<key>rename_by_example_values</key>
-						<class>com.rapidminer.operator.preprocessing.UseRowAsAttributeNames
-						</class>
-						<replaces>UseRowAsAttributeNames</replaces>
-					</operator>
-					<operator>
 						<key>set_role</key>
 						<class>com.rapidminer.operator.preprocessing.filter.ChangeAttributeRole
 						</class>
 						<replaces>ChangeAttributeType</replaces>
 						<replaces>ChangeAttributeRole</replaces>
-					</operator>
-					<operator>
-						<key>exchange_roles</key>
-						<class>com.rapidminer.operator.preprocessing.filter.ExchangeAttributeRoles
-						</class>
-						<replaces>ExchangeAttributeRoles</replaces>
 					</operator>
 				</group>
 				<group key="types">
@@ -604,12 +627,6 @@
 				</group>
 				<group key="sort">
 					<icon>sort_az_descending.png</icon>
-					<operator>
-						<key>sort</key>
-						<class>com.rapidminer.operator.preprocessing.filter.Sorting
-						</class>
-						<replaces>Sorting</replaces>
-					</operator>
 					<operator>
 						<key>sort_by_pareto_rank</key>
 						<class>com.rapidminer.operator.preprocessing.filter.NonDominatedSorting

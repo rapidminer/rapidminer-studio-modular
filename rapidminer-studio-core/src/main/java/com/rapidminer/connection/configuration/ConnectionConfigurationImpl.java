@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -33,8 +33,8 @@ import org.apache.commons.lang.StringUtils;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.rapidminer.tools.ValidationUtil;
 import com.rapidminer.connection.valueprovider.ValueProvider;
+import com.rapidminer.tools.ValidationUtilV2;
 import com.rapidminer.tools.container.Pair;
 
 
@@ -83,7 +83,7 @@ public class ConnectionConfigurationImpl implements ConnectionConfiguration {
 	 * must not be {@code null} or empty.
 	 */
 	private void setName(String name) {
-		this.name = ValidationUtil.requireNonEmptyString(name, "name");
+		this.name = ValidationUtilV2.requireNonEmptyString(name, "name");
 	}
 
 	@Override
@@ -103,7 +103,7 @@ public class ConnectionConfigurationImpl implements ConnectionConfiguration {
 
 	@Override
 	public void setTags(List<String> tags) {
-		this.tags = ValidationUtil.stripToEmptyList(tags, s -> !s.isEmpty());
+		this.tags = ValidationUtilV2.stripToEmptyList(tags, s -> !s.isEmpty());
 	}
 
 	@Override
@@ -116,7 +116,7 @@ public class ConnectionConfigurationImpl implements ConnectionConfiguration {
 	 * must not be {@code null} or empty.
 	 */
 	private void setType(String type) {
-		this.type = ValidationUtil.requireNonEmptyString(type, "type");
+		this.type = ValidationUtilV2.requireNonEmptyString(type, "type");
 	}
 
 	@Override
@@ -129,7 +129,7 @@ public class ConnectionConfigurationImpl implements ConnectionConfiguration {
 	 * must not be {@code null} or empty.
 	 */
 	private void setId(String id) {
-		this.id = ValidationUtil.requireNonEmptyString(id, "id");
+		this.id = ValidationUtilV2.requireNonEmptyString(id, "id");
 	}
 
 	@Override
@@ -155,7 +155,7 @@ public class ConnectionConfigurationImpl implements ConnectionConfiguration {
 	 * Sets the list of value providers. Is only used during creation (either programmatically or when parsing from Json).
 	 */
 	void setValueProviders(List<ValueProvider> valueProviders) {
-		this.valueProviders = ValidationUtil.stripToEmptyList(valueProviders);
+		this.valueProviders = ValidationUtilV2.stripToEmptyList(valueProviders);
 	}
 
 	@Override
@@ -185,7 +185,7 @@ public class ConnectionConfigurationImpl implements ConnectionConfiguration {
 	 * Sets the list of parameter groups. Is only used during creation (either programmatically or when parsing from Json).
 	 */
 	void setKeys(List<ConfigurationParameterGroup> keys) {
-		keys = ValidationUtil.stripToEmptyList(keys);
+		keys = ValidationUtilV2.stripToEmptyList(keys);
 		checkKeysForDuplicates(keys, placeholders, "keys");
 		this.keys = keys;
 		this.keyMap.clear();
@@ -218,7 +218,7 @@ public class ConnectionConfigurationImpl implements ConnectionConfiguration {
 	 * Sets the list of placeholder parameters. Is only used during creation (either programmatically or when parsing from Json).
 	 */
 	void setPlaceholders(List<PlaceholderParameter> placeholders) {
-		placeholders = ValidationUtil.stripToEmptyList(placeholders);
+		placeholders = ValidationUtilV2.stripToEmptyList(placeholders);
 		checkKeysForDuplicates(keys, placeholders, "placeholders");
 		this.placeholders = placeholders;
 		this.placeholderKeyMap.clear();
@@ -278,7 +278,7 @@ public class ConnectionConfigurationImpl implements ConnectionConfiguration {
 		List<Pair<String, String>> allParameters = new ArrayList<>();
 		keys.forEach(group -> group.getParameters().forEach(p -> allParameters.add(new Pair<>(group.getGroup(), p.getName()))));
 		placeholders.stream().map(p -> new Pair<>(p.getGroup(), p.getName())).forEach(allParameters::add);
-		ValidationUtil.noDuplicatesAllowed(allParameters, PAIR_COMPARATOR, name);
+		ValidationUtilV2.noDuplicatesAllowed(allParameters, PAIR_COMPARATOR, name);
 	}
 
 }

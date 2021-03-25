@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
- * 
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.gui.tools;
 
 import java.awt.GridBagConstraints;
@@ -960,6 +960,8 @@ public class ProcessGUITools {
 					// open process which caused the error
 					Operator op = error.getUserError().getOperator();
 					final Process causingProcess = op.getProcess();
+					// without this, null results could be part of it, causing NPEs as IOContainers on root level are not expected to contain null results
+					causingProcess.setOmitNullResults(true);
 					RapidMinerGUI.getMainFrame().setOpenedProcess(causingProcess);
 
 					// show new error bubble in the newly opened process

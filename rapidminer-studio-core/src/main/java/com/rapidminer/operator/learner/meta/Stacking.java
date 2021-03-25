@@ -1,22 +1,25 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
- * 
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.operator.learner.meta;
+
+import java.util.Iterator;
+import java.util.List;
 
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.ExecutionUnit;
@@ -35,9 +38,6 @@ import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.math.container.Range;
-
-import java.util.Iterator;
-import java.util.List;
 
 
 /**
@@ -63,19 +63,22 @@ public class Stacking extends AbstractStacking {
 	public Stacking(OperatorDescription description) {
 		super(description, "Base Learner", "Stacking Model Learner");
 		getTransformer().addRule(() -> {
-			MetaData metaData = exampleSetInput.getMetaData();
+			MetaData metaData = exampleSetInput.getRawMetaData();
 			if (metaData != null) {
-				MetaData clonedMetaData = metaData.clone();
-				if (clonedMetaData instanceof ExampleSetMetaData) {
-					ExampleSetMetaData exampleSetMetaData = (ExampleSetMetaData) clonedMetaData;
+				MetaData clonedMetaData;
+				final ExampleSetMetaData esMD =
+						exampleSetInput.getMetaDataAsOrNull(ExampleSetMetaData.class);
+				if (esMD != null) {
+					ExampleSetMetaData exampleSetMetaData = esMD.clone();
+					clonedMetaData = exampleSetMetaData;
 					if (!keepOldAttributes()) {
 						exampleSetMetaData.clearRegular();
 					}
 					// constructing new meta attributes
-					List<MetaData> metaDatas = baseModelExtender.getMetaData(true);
+					List<MetaData> metaDatas = baseModelExtender.getMetaDataAsOrNull(MetaData.class, true);
 					int numberOfModels = 0;
 					for (MetaData md : metaDatas) {
-						if (PredictionModel.class.isAssignableFrom(md.getObjectClass())) {
+						if (md != null && PredictionModel.class.isAssignableFrom(md.getObjectClass())) {
 							numberOfModels++;
 						}
 					}
@@ -88,10 +91,11 @@ public class Stacking extends AbstractStacking {
 							newRegular.setName("base_prediction" + i);
 							exampleSetMetaData.addAttribute(newRegular);
 							if (label.isNominal() && keepConfidences()) {
-								AttributeMetaData confidence = new AttributeMetaData("base_confidence" + i, Ontology.REAL);
+								AttributeMetaData confidence =
+										new AttributeMetaData("base_confidence" + i, Ontology.REAL);
 								confidence.setValueRange(new Range(0, 1), SetRelation.SUBSET);
 								Iterator<String> values = label.getValueSet().iterator();
-								int valuesAdded  = 0;
+								int valuesAdded = 0;
 								while (values.hasNext() && valuesAdded < MD_MAX_CONFIDENCE_ATTRIBUTES) {
 									newRegular = confidence.copy();
 									newRegular.setName("base_confidence_" + values.next() + i);
@@ -101,6 +105,8 @@ public class Stacking extends AbstractStacking {
 							}
 						}
 					}
+				} else {
+					clonedMetaData = exampleSetInput.getRawMetaData().clone();
 				}
 				stackingExamplesInnerSource.deliverMD(clonedMetaData);
 			} else {

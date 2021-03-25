@@ -1,10 +1,10 @@
-<?xml version="1.0" encoding="UTF-8"?><process version="7.6.001">
+<?xml version="1.0" encoding="UTF-8"?><process version="9.6.000-SNAPSHOT">
   <context>
     <input/>
     <output/>
     <macros/>
   </context>
-  <operator activated="true" class="process" compatibility="7.6.001" expanded="true" name="Process">
+  <operator activated="true" class="process" compatibility="9.4.000" expanded="true" name="Process" origin="GENERATED_SAMPLE">
     <parameter key="logverbosity" value="init"/>
     <parameter key="random_seed" value="2001"/>
     <parameter key="send_mail" value="never"/>
@@ -12,15 +12,15 @@
     <parameter key="process_duration_for_mail" value="30"/>
     <parameter key="encoding" value="SYSTEM"/>
     <process expanded="true">
-      <operator activated="true" class="retrieve" compatibility="7.6.001" expanded="true" height="68" name="Retrieve Customer Data" width="90" x="45" y="289">
-           <parameter key="repository_entry" value="//Samples/Templates/Churn Modeling/Customer Data"/>
+      <operator activated="true" class="retrieve" compatibility="9.6.000-SNAPSHOT" expanded="true" height="68" name="Retrieve Customer Data" origin="GENERATED_SAMPLE" width="90" x="45" y="289">
+        <parameter key="repository_entry" value="//Samples/Templates/Churn Modeling/Customer Data"/>
       </operator>
       <operator activated="true" class="set_role" compatibility="7.6.001" expanded="true" height="82" name="Set Role" width="90" x="313" y="289">
         <parameter key="attribute_name" value="ChurnIndicator"/>
         <parameter key="target_role" value="label"/>
         <list key="set_additional_roles"/>
       </operator>
-      <operator activated="true" class="numerical_to_binominal" compatibility="7.6.001" expanded="true" height="82" name="Numerical to Binominal" width="90" x="447" y="289">
+      <operator activated="true" class="numerical_to_binominal" compatibility="9.6.000-SNAPSHOT" expanded="true" height="82" name="Numerical to Binominal" origin="GENERATED_SAMPLE" width="90" x="447" y="289">
         <parameter key="attribute_filter_type" value="single"/>
         <parameter key="attribute" value="ChurnIndicator"/>
         <parameter key="attributes" value=""/>
@@ -36,7 +36,7 @@
         <parameter key="min" value="0.0"/>
         <parameter key="max" value="0.5"/>
       </operator>
-      <operator activated="true" class="concurrency:cross_validation" compatibility="7.6.001" expanded="true" height="145" name="Cross Validation" width="90" x="648" y="289">
+      <operator activated="true" class="concurrency:cross_validation" compatibility="8.2.000" expanded="true" height="145" name="Cross Validation" origin="GENERATED_SAMPLE" width="90" x="648" y="289">
         <parameter key="split_on_batch_attribute" value="false"/>
         <parameter key="leave_one_out" value="false"/>
         <parameter key="number_of_folds" value="10"/>
@@ -45,7 +45,7 @@
         <parameter key="local_random_seed" value="1992"/>
         <parameter key="enable_parallel_execution" value="true"/>
         <process expanded="true">
-          <operator activated="true" class="sample" compatibility="7.6.001" expanded="true" height="82" name="Sample" width="90" x="45" y="34">
+          <operator activated="true" class="sample" compatibility="9.6.000-SNAPSHOT" expanded="true" height="82" name="Sample" origin="GENERATED_SAMPLE" width="90" x="45" y="34">
             <parameter key="sample" value="relative"/>
             <parameter key="balance_data" value="true"/>
             <parameter key="sample_size" value="100"/>
@@ -63,7 +63,7 @@
             <parameter key="use_local_random_seed" value="false"/>
             <parameter key="local_random_seed" value="1992"/>
           </operator>
-          <operator activated="true" class="concurrency:parallel_decision_tree" compatibility="7.6.001" expanded="true" height="82" name="Decision Tree" width="90" x="313" y="34">
+          <operator activated="true" class="concurrency:parallel_decision_tree" compatibility="9.4.000" expanded="true" height="82" name="Decision Tree" origin="GENERATED_SAMPLE" width="90" x="313" y="34">
             <parameter key="criterion" value="gain_ratio"/>
             <parameter key="maximal_depth" value="20"/>
             <parameter key="apply_pruning" value="true"/>
@@ -84,11 +84,12 @@
           <description align="left" color="green" colored="true" height="395" resized="true" width="234" x="242" y="10">&lt;br&gt; &lt;br&gt; &lt;br&gt; &lt;br&gt; &lt;br&gt; &lt;br&gt; &lt;br&gt; &lt;br&gt; &lt;br&gt; Let's now add a model trainer, like a Decision Tree.&lt;br&gt;&lt;br&gt;Try different values for the parameters, in particular, the 'minimal gain'. The 'Wisdom of the Crowds' recommendation helps you find reasonable values.</description>
         </process>
         <process expanded="true">
-          <operator activated="true" class="apply_model" compatibility="7.6.001" expanded="true" height="82" name="Apply Model" width="90" x="112" y="34">
+          <operator activated="true" class="apply_model" compatibility="9.6.000-SNAPSHOT" expanded="true" height="82" name="Apply Model" origin="GENERATED_SAMPLE" width="90" x="112" y="34">
             <list key="application_parameters"/>
             <parameter key="create_view" value="false"/>
           </operator>
-          <operator activated="true" class="performance_binominal_classification" compatibility="7.6.001" expanded="true" height="82" name="Performance (Binominal Classification)" width="90" x="246" y="34">
+          <operator activated="true" class="performance_binominal_classification" compatibility="9.6.000-SNAPSHOT" expanded="true" height="82" name="Performance (Binominal Classification)" origin="GENERATED_SAMPLE" width="90" x="246" y="34">
+            <parameter key="manually_set_positive_class" value="false"/>
             <parameter key="main_criterion" value="first"/>
             <parameter key="accuracy" value="true"/>
             <parameter key="classification_error" value="false"/>

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -39,10 +39,13 @@ import com.rapidminer.operator.ports.quickfix.QuickFix;
  */
 interface PortBase {
 	/**
-	 * Returns the meta data of the desired class or throws an UserError if available meta data
-	 * cannot be cast to the desired class. If no meta data is present at all, <code>null</code> is
-	 * returned.
+	 * Returns the meta data of the desired class or throws an UserError if available meta data cannot be cast to the
+	 * desired class. If no meta data is present at all, <code>null</code> is returned.
 	 *
+	 * If the desired class is {@link MetaData}, then
+	 * {@link com.rapidminer.operator.ports.metadata.table.TableMetaData}
+	 * is converted to {@link com.rapidminer.operator.ports.metadata.ExampleSetMetaData} for compatibility reasons. Use
+	 * {@link Port#getRawMetaData()} instead of {@code getMetaData(MetaData.class)}.
 	 */
 	<T extends MetaData> T getMetaData(Class<T> desiredClass) throws IncompatibleMDClassException;
 
@@ -76,6 +79,22 @@ interface PortBase {
 		try {
 			return getDataOrNull(desiredClass);
 		} catch (UserError userError) {
+			return null;
+		}
+	}
+
+	/**
+	 * This method returns the object of the desired class or {@link null} if no metadata is
+	 * present or it cannot be cast or converted to the desiredClass. Never throws an exception.
+	 *
+	 * @return the metadata cast or converted to the desired class or {@code null}
+	 * @since 9.9
+	 */
+	default <T extends MetaData> T getMetaDataAsOrNull(Class<T> desiredClass){
+		// default method for compatibility, overwritten by {@link AbstractPort}
+		try {
+			return getMetaData(desiredClass);
+		} catch (IncompatibleMDClassException userError) {
 			return null;
 		}
 	}

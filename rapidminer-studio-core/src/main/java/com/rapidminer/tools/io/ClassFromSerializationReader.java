@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -25,7 +25,7 @@ import java.io.ObjectStreamClass;
 import java.util.logging.Level;
 
 import com.rapidminer.tools.LogService;
-import com.rapidminer.tools.ValidationUtil;
+import com.rapidminer.tools.ValidationUtilV2;
 import com.rapidminer.tools.plugin.Plugin;
 
 /**
@@ -93,8 +93,8 @@ public final class ClassFromSerializationReader extends ObjectInputStream {
 	 */
 	@SuppressWarnings("unchecked")
 	public static <T> Class<? extends T> readClass(InputStream in, Class<T> superClass) {
-		ValidationUtil.requireNonNull(in, "input stream");
-		ValidationUtil.requireNonNull(superClass, "super class");
+		ValidationUtilV2.requireNonNull(in, "input stream");
+		ValidationUtilV2.requireNonNull(superClass, "super class");
 		try {
 			new ClassFromSerializationReader(in).readObject();
 		} catch (ClassFoundException e) {

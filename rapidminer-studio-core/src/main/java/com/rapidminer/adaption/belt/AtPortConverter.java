@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -18,13 +18,25 @@
  */
 package com.rapidminer.adaption.belt;
 
+import java.util.Optional;
+
+import com.rapidminer.belt.column.ColumnType;
 import com.rapidminer.belt.table.BeltConverter;
 import com.rapidminer.belt.table.TableViewCreator;
 import com.rapidminer.core.concurrency.ConcurrencyContext;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.IOObject;
+import com.rapidminer.operator.ProcessSetupError;
 import com.rapidminer.operator.ports.Port;
+import com.rapidminer.operator.ports.metadata.ExampleSetMetaData;
+import com.rapidminer.operator.ports.metadata.MetaData;
+import com.rapidminer.operator.ports.metadata.SimpleMetaDataError;
+import com.rapidminer.operator.ports.metadata.ToTableMetaDataConverter;
+import com.rapidminer.operator.ports.metadata.table.ColumnInfo;
+import com.rapidminer.operator.ports.metadata.table.FromTableMetaDataConverter;
+import com.rapidminer.operator.ports.metadata.table.TableMetaData;
 import com.rapidminer.studio.internal.Resources;
+import com.rapidminer.tools.belt.BeltTools;
 
 
 /**
@@ -57,6 +69,22 @@ public final class AtPortConverter {
 	}
 
 	/**
+	 * Checks if is is possible to convert the metadataClass into the desired class. Only conversion from an {@link
+	 * ExampleSetMetaData} to a {@link TableMetaData} and vice versa is possible.
+	 *
+	 * @param metadataClass
+	 * 		the actual class
+	 * @param desiredClass
+	 * 		the desired class
+	 * @return whether conversion is possible
+	 * @since 9.9
+	 */
+	public static boolean isMDConvertible(Class<? extends MetaData> metadataClass, Class<? extends MetaData> desiredClass) {
+		return (ExampleSetMetaData.class.equals(desiredClass) && TableMetaData.class.equals(metadataClass))
+				|| (TableMetaData.class.equals(desiredClass) && ExampleSetMetaData.class.isAssignableFrom(metadataClass));
+	}
+
+	/**
 	 * Converts an {@link ExampleSet} into a {@link IOTable} or vice versa.
 	 *
 	 * @param data
@@ -79,4 +107,40 @@ public final class AtPortConverter {
 		}
 	}
 
+	/**
+	 * Converts an {@link ExampleSetMetaData} into a {@link TableMetaData} or vice versa.
+	 *
+	 * @param metadata
+	 * 		the metadata to convert
+	 * @param port
+	 * 		the port at which the conversion takes place
+	 * @return the converted object
+	 * @since 9.9
+	 */
+	public static MetaData convert(MetaData metadata, Port port) {
+		if (metadata instanceof ExampleSetMetaData) {
+			return ToTableMetaDataConverter.convert((ExampleSetMetaData) metadata);
+		} else if (metadata instanceof TableMetaData) {
+			if (port != null && hasAdvanced((TableMetaData) metadata)) {
+				port.addError(new SimpleMetaDataError(ProcessSetupError.Severity.WARNING, port, "metadata_conversion" +
+						".advanced_columns"));
+			}
+			return FromTableMetaDataConverter.convert((TableMetaData) metadata);
+		} else {
+			throw new UnsupportedOperationException("Conversion not supported");
+		}
+	}
+
+	/**
+	 * Checks the table meta data for advanced types.
+	 */
+	private static boolean hasAdvanced(TableMetaData tmd) {
+		for (ColumnInfo column : tmd.getColumns()) {
+			final Optional<ColumnType<?>> type = column.getType();
+			if (type.isPresent() && BeltTools.isAdvanced(type.get())) {
+				return true;
+			}
+		}
+		return false;
+	}
 }

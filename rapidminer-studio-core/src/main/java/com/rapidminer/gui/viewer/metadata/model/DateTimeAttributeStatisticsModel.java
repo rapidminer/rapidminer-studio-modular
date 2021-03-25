@@ -1,25 +1,26 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
- * 
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.gui.viewer.metadata.model;
 
 import java.awt.Color;
 import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Locale;
@@ -59,7 +60,7 @@ public class DateTimeAttributeStatisticsModel extends AbstractAttributeStatistic
 	/** used to color the chart background invisible */
 	private static final Color COLOR_INVISIBLE = new Color(255, 255, 255, 0);
 
-	/** @{value */
+	/** {@value} */
 	private static final String WHITESPACE = " ";
 
 	/** short symbol for day: {@value} */
@@ -87,13 +88,13 @@ public class DateTimeAttributeStatisticsModel extends AbstractAttributeStatistic
 	private static final double H_IN_D = 24.0d;
 
 	/** the formatter for date_time values */
-	private final DateFormat FORMAT_DATE = DateFormat.getDateInstance(DateFormat.MEDIUM, Locale.getDefault());
+	private final DateFormat dateFormat = DateFormat.getDateInstance(DateFormat.MEDIUM, Locale.getDefault());
 
 	/** the formatter for date_time values */
-	private final DateFormat FORMAT_TIME = DateFormat.getTimeInstance(DateFormat.MEDIUM, Locale.getDefault());
+	private final DateFormat timeFormat;
 
 	/** the formatter for date_time values */
-	private final DateFormat FORMAT_DATE_TIME = DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT,
+	private final DateFormat dateTimeFormat = DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT,
 			Locale.getDefault());
 
 	/** the duration of the date_time values */
@@ -116,7 +117,15 @@ public class DateTimeAttributeStatisticsModel extends AbstractAttributeStatistic
 	 */
 	public DateTimeAttributeStatisticsModel(final ExampleSet exampleSet, final Attribute attribute) {
 		super(exampleSet, attribute);
-
+		DateFormat tempFormat;
+		try {
+			tempFormat = new SimpleDateFormat(((SimpleDateFormat) DateFormat.getTimeInstance(DateFormat.MEDIUM,
+					Locale.getDefault())).toPattern().replace(":ss", ":ss.SSS")
+					.replace(".ss", ".ss.SSS"), Locale.getDefault());
+		} catch (ClassCastException e) {
+			tempFormat = new SimpleDateFormat("hh:mm:ss.SSS a", Locale.getDefault());
+		}
+		this.timeFormat = tempFormat;
 		chartsArray = new JFreeChart[1];
 	}
 
@@ -162,14 +171,14 @@ public class DateTimeAttributeStatisticsModel extends AbstractAttributeStatistic
 		String minResult = null;
 		String maxResult = null;
 		if (getAttribute().getValueType() == Ontology.DATE) {
-			minResult = FORMAT_DATE.format(new Date(minMilliseconds));
-			maxResult = FORMAT_DATE.format(new Date(maxMilliseconds));
+			minResult = dateFormat.format(new Date(minMilliseconds));
+			maxResult = dateFormat.format(new Date(maxMilliseconds));
 		} else if (getAttribute().getValueType() == Ontology.TIME) {
-			minResult = FORMAT_TIME.format(new Date(minMilliseconds));
-			maxResult = FORMAT_TIME.format(new Date(maxMilliseconds));
+			minResult = timeFormat.format(new Date(minMilliseconds)).replace(".000", "");
+			maxResult = timeFormat.format(new Date(maxMilliseconds)).replace(".000", "");
 		} else if (getAttribute().getValueType() == Ontology.DATE_TIME) {
-			minResult = FORMAT_DATE_TIME.format(new Date(minMilliseconds));
-			maxResult = FORMAT_DATE_TIME.format(new Date(maxMilliseconds));
+			minResult = dateTimeFormat.format(new Date(minMilliseconds));
+			maxResult = dateTimeFormat.format(new Date(maxMilliseconds));
 		}
 		missing = exampleSet.getStatistics(getAttribute(), Statistics.UNKNOWN);
 		from = minResult;

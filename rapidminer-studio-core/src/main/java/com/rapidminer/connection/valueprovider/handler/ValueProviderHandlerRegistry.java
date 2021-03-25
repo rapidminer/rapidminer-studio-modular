@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -52,7 +52,7 @@ import com.rapidminer.connection.util.GenericRegistrationEventListener;
 import com.rapidminer.connection.valueprovider.ValueProvider;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.tools.LogService;
-import com.rapidminer.tools.ValidationUtil;
+import com.rapidminer.tools.ValidationUtilV2;
 import com.rapidminer.tools.usagestats.ActionStatisticsCollector;
 
 
@@ -234,7 +234,7 @@ public final class ValueProviderHandlerRegistry extends GenericHandlerRegistry<V
 
 		// check for circular dependencies and sort injectables by dependencies
 		try {
-			keyPlaceholderMap = ValidationUtil.dependencySortNoLoops(
+			keyPlaceholderMap = ValidationUtilV2.dependencySortNoLoops(
 					(key, phws) -> phws.stream().map(PlaceholderWrapper::get).filter(Objects::nonNull).collect(Collectors.toSet()),
 					keyPlaceholderMap);
 		} catch (IllegalArgumentException e) {

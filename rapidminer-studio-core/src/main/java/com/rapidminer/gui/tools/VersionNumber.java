@@ -1,18 +1,18 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
- * 
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
  */
@@ -241,6 +241,22 @@ public class VersionNumber implements Comparable<VersionNumber> {
 		return !isAtMost(other);
 	}
 
+	/**
+	 * Checks if this version is at least one minor version above the given version. In other words, 9.8.0 is above
+	 * 9.7.1, but 9.8.1 is not above 9.8.0 for this method.
+	 *
+	 * @param other the other version, must not be {@code null}
+	 * @return {@code true} if this version number has at least 1 minor or major version difference; {@code false}
+	 * otherwise
+	 * @since 9.9.0
+	 */
+	public boolean isAtLeastMinorVersionAbove(VersionNumber other) {
+		VersionNumber thisVersion = new VersionNumber(getMajorNumber(), getMinorNumber());
+		VersionNumber otherVersion = new VersionNumber(other.getMajorNumber(), other.getMinorNumber());
+
+		return thisVersion.isAbove(otherVersion);
+	}
+
 	@Override
 	public int compareTo(VersionNumber o) {
 		if(o == null) {
@@ -388,4 +404,5 @@ public class VersionNumber implements Comparable<VersionNumber> {
 		}
 		return false;
 	}
+
 }

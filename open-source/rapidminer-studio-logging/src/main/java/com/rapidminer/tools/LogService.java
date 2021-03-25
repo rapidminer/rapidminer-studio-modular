@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  * 
  * Complete list of developers available at our web site:
  * 
@@ -19,7 +19,9 @@
 package com.rapidminer.tools;
 
 import java.io.IOException;
+import java.util.Locale;
 import java.util.Objects;
+import java.util.ResourceBundle;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
@@ -115,8 +117,15 @@ public class LogService extends WrapperLoggingHandler {
 	private static final LogService GLOBAL_LOGGING;
 
 	static {
-		GLOBAL_LOGGER = Logger.getLogger("com.rapidminer", Settings.getSetting(SettingsConstants.LOGGING_RESOURCE_FILE));
+		GLOBAL_LOGGER = Logger.getLogger("com.rapidminer");
 		GLOBAL_LOGGING = new LogService(GLOBAL_LOGGER);
+
+		Level previousLevel = GLOBAL_LOGGER.getLevel();
+		GLOBAL_LOGGER.setLevel(Level.OFF);
+		// this triggers I18N class init, which would log something, making it impossible to actually disable logging right from the start
+		// therefore, we disable logging for this call, and resume afterwards again
+		updateLoggerResourceBundle();
+		GLOBAL_LOGGER.setLevel(previousLevel);
 	}
 
 	private FileHandler logFileHandler;
@@ -135,29 +144,19 @@ public class LogService extends WrapperLoggingHandler {
 			}
 		});
 
+		// add listener to be notified about changes to the setting -> register logging bundle again
+		Settings.addSettingsListener((context, key, value) -> {
+			if (SettingsConstants.I18N_LOCALE.equals(key)) {
+				updateLoggerResourceBundle();
+			}
+		});
+
 		// add listener to be notified about changes to the setting -> update console handler on the fly
 		Settings.addSettingsListener((context, key, value) -> {
 			if (SettingsConstants.LOGGING_TO_CONSOLE.equals(key) || SettingsConstants.LOGGING_CONSOLE_LEVEL.equals(key)) {
 				updateConsoleLogger();
 			}
 		});
-	}
-
-	/**
-	 * Returns the global logging.
-	 */
-	public static Logger getRoot() {
-		return GLOBAL_LOGGER;
-	}
-
-	/**
-	 * Returns the global logging.
-	 *
-	 * @deprecated use {@link #getRoot()} instead
-	 */
-	@Deprecated
-	public static LogService getGlobal() {
-		return GLOBAL_LOGGING;
 	}
 
 	/**
@@ -175,14 +174,6 @@ public class LogService extends WrapperLoggingHandler {
 		if (consoleHandler != null) {
 			consoleHandler.setLevel(newLevel);
 		}
-	}
-
-	/**
-	 * The methods in {@link Logger} do not provide a means to pass an exception AND I18N arguments,
-	 * so this method provides a shortcut for this.
-	 */
-	public static void log(Logger logger, Level level, Throwable exception, String i18NKey, Object... arguments) {
-		logger.log(level, I18N.getMessage(logger.getResourceBundle(), i18NKey, arguments), exception);
 	}
 
 	/**
@@ -254,5 +245,40 @@ public class LogService extends WrapperLoggingHandler {
 				consoleHandler = null;
 			}
 		}
+	}
+
+	/**
+	 * The methods in {@link Logger} do not provide a means to pass an exception AND I18N arguments,
+	 * so this method provides a shortcut for this.
+	 */
+	public static void log(Logger logger, Level level, Throwable exception, String i18NKey, Object... arguments) {
+		logger.log(level, I18N.getMessage(logger.getResourceBundle(), i18NKey, arguments), exception);
+	}
+
+	/**
+	 * Returns the global logging.
+	 */
+	public static Logger getRoot() {
+		return GLOBAL_LOGGER;
+	}
+
+	/**
+	 * Returns the global logging.
+	 *
+	 * @deprecated use {@link #getRoot()} instead
+	 */
+	@Deprecated
+	public static LogService getGlobal() {
+		return GLOBAL_LOGGING;
+	}
+
+	private static void updateLoggerResourceBundle() {
+		String logResourceFile = Settings.getSetting(SettingsConstants.LOGGING_RESOURCE_FILE);
+		if (logResourceFile != null) {
+			ResourceBundle loggingBaseBundle = ResourceBundle.getBundle(logResourceFile, Locale.getDefault(),
+					LogService.class.getClassLoader());
+			I18N.registerLoggingBundle(loggingBaseBundle);
+		}
+		GLOBAL_LOGGER.setResourceBundle(I18N.getLoggingBundle());
 	}
 }

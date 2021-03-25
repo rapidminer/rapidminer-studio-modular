@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -18,6 +18,9 @@
  */
 package com.rapidminer.tools.belt;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+
 import java.util.Arrays;
 
 import org.junit.Test;
@@ -25,6 +28,8 @@ import org.junit.Test;
 import com.rapidminer.belt.execution.Context;
 import com.rapidminer.belt.table.Builders;
 import com.rapidminer.belt.table.Table;
+import com.rapidminer.belt.table.Tables;
+import com.rapidminer.belt.util.Belt;
 import com.rapidminer.belt.util.ColumnAnnotation;
 import com.rapidminer.belt.util.ColumnRole;
 import com.rapidminer.gui.processeditor.results.DisplayContext;
@@ -109,6 +114,134 @@ public class BeltErrorToolsTest {
 	public void testHasRegularFail() throws UserError {
 		Table onlySpecials = mixedTable().columns(Arrays.asList("two", "three"));
 		BeltErrorTools.hasRegularColumns(onlySpecials, null);
+	}
+
+	@Test
+	public void testCompatibleRegular() throws UserError {
+		Table table = Builders.newTableBuilder(10).addReal("one", i -> 1)
+				.addReal("two", i -> 2).addNominal("three", i -> "val" +
+						i).addText("four", i -> null).addTime("five", i -> null)
+				.addMetaData("four", ColumnRole.ID).addMetaData("five", ColumnRole.SCORE).build(Belt.defaultContext());
+		Table schema = Builders.newTableBuilder(10).addReal("one", i -> 1)
+				.addReal("two", i -> 2).addNominal("three", i -> "val" +
+						i).addTextset("four", i -> null).addMetaData("four", ColumnRole.ID)
+				.addTime("six", i -> null).addMetaData("six", ColumnRole.LABEL).build(Belt.defaultContext());
+		BeltErrorTools.requireCompatibleRegulars(null, table, schema, Tables.ColumnSetRequirement.EQUAL,
+				Tables.TypeRequirement.REQUIRE_MATCHING_TYPES, Tables.TypeRequirement.REQUIRE_SUB_DICTIONARIES);
+	}
+
+	@Test
+	public void testMissingColumn(){
+		Table table = Builders.newTableBuilder(10).addReal("one", i -> 1)
+				.addNominal("three", i -> "val" +
+						i).addText("four", i -> null).addTime("five", i -> null)
+				.addMetaData("four", ColumnRole.ID).addMetaData("five", ColumnRole.SCORE).build(Belt.defaultContext());
+		Table schema = Builders.newTableBuilder(10).addReal("one", i -> 1)
+				.addReal("two", i -> 2).addNominal("three", i -> "val" +
+						i).addTextset("four", i -> null).addMetaData("four", ColumnRole.ID)
+				.addTime("six", i -> null).addMetaData("six", ColumnRole.LABEL).build(Belt.defaultContext());
+		try {
+			BeltErrorTools.requireCompatibleRegulars(null, table, schema, Tables.ColumnSetRequirement.EQUAL,
+					Tables.TypeRequirement.REQUIRE_MATCHING_TYPES);
+			fail();
+		} catch (UserError e) {
+			assertEquals("attribute_check.missing_attribute", e.getErrorIdentifier());
+		}
+	}
+
+	@Test
+	public void testWrongColumn() {
+		Table table = Builders.newTableBuilder(10).addReal("one", i -> 1).addReal("two2", i -> 2)
+				.addReal("two", i -> 2).addNominal("three", i -> "val" +
+						i).addText("four", i -> null).addTime("five", i -> null)
+				.addMetaData("four", ColumnRole.ID).addMetaData("five", ColumnRole.SCORE).build(Belt.defaultContext());
+		Table schema = Builders.newTableBuilder(10).addReal("one", i -> 1)
+				.addReal("two", i -> 2).addNominal("three", i -> "val" +
+						i).addTextset("four", i -> null).addMetaData("four", ColumnRole.ID)
+				.addTime("six", i -> null).addMetaData("six", ColumnRole.LABEL).build(Belt.defaultContext());
+		try {
+			BeltErrorTools.requireCompatibleRegulars(null, table, schema, Tables.ColumnSetRequirement.EQUAL,
+					Tables.TypeRequirement.REQUIRE_MATCHING_TYPES);
+			fail();
+		} catch (UserError e) {
+			assertEquals("attribute_check.misfitting_for_equal", e.getErrorIdentifier());
+		}
+	}
+
+	@Test
+	public void testWrongColumnSubset() {
+		Table table = Builders.newTableBuilder(10).addReal("one", i -> 1).addReal("two2", i -> 2)
+				.addReal("two", i -> 2).addNominal("three", i -> "val" +
+						i).addText("four", i -> null).addTime("five", i -> null)
+				.addMetaData("four", ColumnRole.ID).addMetaData("five", ColumnRole.SCORE).build(Belt.defaultContext());
+		Table schema = Builders.newTableBuilder(10).addReal("one", i -> 1)
+				.addReal("two", i -> 2).addNominal("three", i -> "val" +
+						i).addTextset("four", i -> null).addMetaData("four", ColumnRole.ID)
+				.addTime("six", i -> null).addMetaData("six", ColumnRole.LABEL).build(Belt.defaultContext());
+		try {
+			BeltErrorTools.requireCompatibleRegulars(null, table, schema, Tables.ColumnSetRequirement.SUBSET,
+					Tables.TypeRequirement.REQUIRE_MATCHING_TYPES);
+			fail();
+		} catch (UserError e) {
+			assertEquals("attribute_check.wrong_for_subset", e.getErrorIdentifier());
+		}
+	}
+
+	@Test
+	public void testWrongType() throws UserError {
+		Table table = Builders.newTableBuilder(10).addReal("one", i -> 1)
+				.addInt53Bit("two", i -> 2).addNominal("three", i -> "val" +
+						i).addText("four", i -> null).addTime("five", i -> null)
+				.addMetaData("four", ColumnRole.ID).addMetaData("five", ColumnRole.SCORE).build(Belt.defaultContext());
+		Table schema = Builders.newTableBuilder(10).addReal("one", i -> 1)
+				.addReal("two", i -> 2).addNominal("three", i -> "val" +
+						i).addTextset("four", i -> null).addMetaData("four", ColumnRole.ID)
+				.addTime("six", i -> null).addMetaData("six", ColumnRole.LABEL).build(Belt.defaultContext());
+		try {
+			BeltErrorTools.requireCompatibleRegulars(null, table, schema, Tables.ColumnSetRequirement.EQUAL,
+					Tables.TypeRequirement.REQUIRE_MATCHING_TYPES);
+			fail();
+		} catch (UserError e) {
+			assertEquals("type_check.not_equal", e.getErrorIdentifier());
+		}
+	}
+
+	@Test
+	public void testWrongNumericType() {
+		Table table = Builders.newTableBuilder(10).addReal("one", i -> 1)
+				.addDateTime("two", i -> null).addNominal("three", i -> "val" +
+						i).addText("four", i -> null).addTime("five", i -> null)
+				.addMetaData("four", ColumnRole.ID).addMetaData("five", ColumnRole.SCORE).build(Belt.defaultContext());
+		Table schema = Builders.newTableBuilder(10).addReal("one", i -> 1)
+				.addReal("two", i -> 2).addNominal("three", i -> "val" +
+						i).addTextset("four", i -> null).addMetaData("four", ColumnRole.ID)
+				.addTime("six", i -> null).addMetaData("six", ColumnRole.LABEL).build(Belt.defaultContext());
+		try {
+			BeltErrorTools.requireCompatibleRegulars(null, table, schema, Tables.ColumnSetRequirement.EQUAL,
+					Tables.TypeRequirement.REQUIRE_MATCHING_TYPES, Tables.TypeRequirement.ALLOW_INT_FOR_REAL);
+			fail();
+		} catch (UserError e) {
+			assertEquals("type_check.not_subtype", e.getErrorIdentifier());
+		}
+	}
+
+	@Test
+	public void testWrongDict() {
+		Table table = Builders.newTableBuilder(10).addReal("one", i -> 1)
+				.addInt53Bit("two", i -> i).addNominal("three", i -> "val" +
+						i).addText("four", i -> null).addTime("five", i -> null)
+				.addMetaData("four", ColumnRole.ID).addMetaData("five", ColumnRole.SCORE).build(Belt.defaultContext());
+		Table schema = Builders.newTableBuilder(1).addReal("one", i -> 1)
+				.addReal("two", i -> 2).addNominal("three", i -> "val" +
+						i).addTextset("four", i -> null).addMetaData("four", ColumnRole.ID)
+				.addTime("six", i -> null).addMetaData("six", ColumnRole.LABEL).build(Belt.defaultContext());
+		try {
+			BeltErrorTools.requireCompatibleRegulars(null, table, schema, Tables.ColumnSetRequirement.EQUAL,
+					Tables.TypeRequirement.REQUIRE_MATCHING_TYPES, Tables.TypeRequirement.ALLOW_INT_FOR_REAL, Tables.TypeRequirement.REQUIRE_SUB_DICTIONARIES);
+			fail();
+		} catch (UserError e) {
+			assertEquals("type_check.require_sub_dictionary", e.getErrorIdentifier());
+		}
 	}
 
 	private static Table numericTable() {

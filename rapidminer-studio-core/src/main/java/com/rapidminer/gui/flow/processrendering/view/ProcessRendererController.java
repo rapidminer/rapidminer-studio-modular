@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -798,7 +798,6 @@ public class ProcessRendererController {
 	 * @param operator
 	 * 		the operator to be inserted
 	 */
-	@SuppressWarnings("deprecation")
 	void insertIntoHoveringConnection(final Operator operator) {
 		OutputPort hoveringConnectionSource = model.getHoveringConnectionSource();
 		if (hoveringConnectionSource == null) {
@@ -810,7 +809,7 @@ public class ProcessRendererController {
 		try {
 			// no IndexOutOfBoundsException since checked above
 			InputPort bestInputPort = null;
-			MetaData md = hoveringConnectionSource.getMetaData();
+			MetaData md = hoveringConnectionSource.getRawMetaData();
 			if (md != null) {
 				for (InputPort inCandidate : operator.getInputPorts().getAllPorts()) {
 					if (!inCandidate.isConnected() && inCandidate.isInputCompatible(md, CompatibilityLevel.PRE_VERSION_5)) {
@@ -837,7 +836,7 @@ public class ProcessRendererController {
 				OutputPort bestOutput = null;
 				for (OutputPort outCandidate : operator.getOutputPorts().getAllPorts()) {
 					if (!outCandidate.isConnected()) {
-						md = outCandidate.getMetaData();
+						md = outCandidate.getRawMetaData();
 						if (md != null && oldDest.isInputCompatible(md, CompatibilityLevel.PRE_VERSION_5)) {
 							bestOutput = outCandidate;
 							break;

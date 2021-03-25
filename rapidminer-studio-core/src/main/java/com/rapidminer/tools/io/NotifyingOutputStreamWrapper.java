@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -23,7 +23,8 @@ import java.io.OutputStream;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.rapidminer.gui.tools.SwingTools;
-import com.rapidminer.tools.ValidationUtil;
+import com.rapidminer.tools.ValidationUtilV2;
+
 
 /**
  * A wrapper {@link OutputStream} that takes a {@link Runnable} to execute on close.
@@ -59,8 +60,8 @@ public class NotifyingOutputStreamWrapper extends OutputStream {
 	 * 		whether it is necessary to execute the runnable on the EDT
 	 */
 	public NotifyingOutputStreamWrapper(OutputStream stream, Runnable onClose, boolean onEDT) {
-		this.stream = ValidationUtil.requireNonNull(stream, "stream");
-		this.onClose = ValidationUtil.requireNonNull(onClose, "onClose");
+		this.stream = ValidationUtilV2.requireNonNull(stream, "stream");
+		this.onClose = ValidationUtilV2.requireNonNull(onClose, "onClose");
 		this.onEDT = onEDT;
 	}
 

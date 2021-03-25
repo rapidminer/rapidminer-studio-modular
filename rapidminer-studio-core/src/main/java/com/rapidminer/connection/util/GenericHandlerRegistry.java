@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -27,7 +27,7 @@ import javax.swing.event.EventListenerList;
 
 import com.rapidminer.connection.util.RegistrationEvent.RegistrationEventType;
 import com.rapidminer.tools.I18N;
-import com.rapidminer.tools.ValidationUtil;
+import com.rapidminer.tools.ValidationUtilV2;
 
 
 /**
@@ -107,8 +107,8 @@ public abstract class GenericHandlerRegistry<H extends GenericHandler> {
 	 * triggers a {@link RegistrationEventType#REGISTERED REGISTERED} event.
 	 */
 	public void registerHandler(H handler) {
-		ValidationUtil.requireNonNull(handler, "handler");
-		if (registeredHandlers.putIfAbsent(ValidationUtil.requireNonEmptyString(handler.getType(), "handler type"), handler) == null) {
+		ValidationUtilV2.requireNonNull(handler, "handler");
+		if (registeredHandlers.putIfAbsent(ValidationUtilV2.requireNonEmptyString(handler.getType(), "handler type"), handler) == null) {
 			fireRegistryEvent(handler, RegistrationEventType.REGISTERED);
 		}
 	}
@@ -119,21 +119,21 @@ public abstract class GenericHandlerRegistry<H extends GenericHandler> {
 	 * triggers a {@link RegistrationEventType#UNREGISTERED UNREGISTERED} event.
 	 */
 	public void unregisterHandler(H handler) {
-		ValidationUtil.requireNonNull(handler, "handler");
-		if (registeredHandlers.remove(ValidationUtil.requireNonEmptyString(handler.getType(), "handler type"), handler)) {
+		ValidationUtilV2.requireNonNull(handler, "handler");
+		if (registeredHandlers.remove(ValidationUtilV2.requireNonEmptyString(handler.getType(), "handler type"), handler)) {
 			fireRegistryEvent(handler, RegistrationEventType.UNREGISTERED);
 		}
 	}
 
 	/** Add an event listener for {@link RegistrationEvent RegistrationEvents} */
 	public <L extends GenericRegistrationEventListener<H>> void addEventListener(L listener) {
-		ValidationUtil.requireNonNull(listener, "listener");
+		ValidationUtilV2.requireNonNull(listener, "listener");
 		eventListeners.add(getListenerClass(listener), listener);
 	}
 
 	/** Remove the specified event listener for {@link RegistrationEvent RegistrationEvents} */
 	public <L extends GenericRegistrationEventListener<H>> void removeEventListener(L listener) {
-		ValidationUtil.requireNonNull(listener, "listener");
+		ValidationUtilV2.requireNonNull(listener, "listener");
 		eventListeners.remove(getListenerClass(listener), listener);
 	}
 
@@ -149,7 +149,7 @@ public abstract class GenericHandlerRegistry<H extends GenericHandler> {
 	 * @see #isTypeKnown(String)
 	 */
 	public H getHandler(String type) throws MissingHandlerException {
-		ValidationUtil.requireNonEmptyString(type, "type");
+		ValidationUtilV2.requireNonEmptyString(type, "type");
 		H handler = registeredHandlers.get(type);
 		if (handler == null) {
 			throw new MissingHandlerException(type, getRegistryType());

@@ -1,20 +1,20 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
  * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General
- * Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any
- * later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
- * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more
- * details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License along with this program. If not, see
- * http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.repository.versioned;
 
@@ -42,6 +42,9 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.rapidminer.RapidMiner;
+import com.rapidminer.adaption.belt.IOTable;
+import com.rapidminer.belt.table.BeltConverter;
+import com.rapidminer.studio.concurrency.internal.SequentialConcurrencyContext;
 import com.rapidminer.tools.encryption.EncryptionProvider;
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.ExampleSet;
@@ -118,6 +121,19 @@ public class ExampleSetsInRepoTest {
 		myFolder.delete();
 	}
 
+	@Test
+	public void testFileEndingIOTable() throws RepositoryException {
+		Folder myFolder = newTestRepository.createFolder("myFolder");
+		Folder nestedFolder = myFolder.createFolder("nestedFolder");
+		IOTable exampleSet = BeltConverter.convert(createDataSet(10, 20), new SequentialConcurrencyContext());
+		IOTable exampleSet2 = BeltConverter.convert(createDataSet(100, 5), new SequentialConcurrencyContext());
+		IOObjectEntry entry1 = nestedFolder.createIOObjectEntry("firstES", exampleSet, null, null);
+		IOObjectEntry entry2 = myFolder.createIOObjectEntry("secondES", exampleSet2, null, null);
+		assertEquals(DATA_TABLE_FILE_ENDING, ((BasicEntry) entry1).getSuffix());
+		assertEquals(DATA_TABLE_FILE_ENDING, ((BasicEntry) entry2).getSuffix());
+		myFolder.delete();
+	}
+
 
 	@Test
 	public void testDeletion() throws RepositoryException {
@@ -156,7 +172,7 @@ public class ExampleSetsInRepoTest {
 		ExampleSet exampleSet = createDataSet(10, 20);
 		IOObjectEntry entry1 = nestedFolder.createIOObjectEntry("firstES", exampleSet, null, null);
 		RepositoryManager.getInstance(null).copy(entry1.getLocation(), myFolder, "secondES", null);
-		assertTrue(myFolder.containsData("secondES", BasicExampleSetEntry.class));
+		assertTrue(myFolder.containsData("secondES", BasicIODataTableEntry.class));
 		DataEntry secondEntry =
 				myFolder.getDataEntries().stream().filter(d -> "secondES".equals(d.getName())).findFirst().get();
 		assertTrue(secondEntry instanceof IOObjectEntry);
@@ -176,7 +192,7 @@ public class ExampleSetsInRepoTest {
 		Folder newFolder = legacyTestRepository.createFolder("newFolder");
 
 		RepositoryManager.getInstance(null).copy(entry1.getLocation(), newFolder, "secondES", null);
-		assertTrue(newFolder.containsData("secondES", BasicExampleSetEntry.class));
+		assertTrue(newFolder.containsData("secondES", BasicIODataTableEntry.class));
 		DataEntry secondEntry =
 				newFolder.getDataEntries().stream().filter(d -> "secondES".equals(d.getName())).findFirst().get();
 		assertTrue(secondEntry instanceof IOObjectEntry);
@@ -197,7 +213,7 @@ public class ExampleSetsInRepoTest {
 		Folder newFolder = newTestRepository.createFolder("newFolder");
 
 		RepositoryManager.getInstance(null).copy(entry1.getLocation(), newFolder, "secondES", null);
-		assertTrue(newFolder.containsData("secondES", BasicExampleSetEntry.class));
+		assertTrue(newFolder.containsData("secondES", BasicIODataTableEntry.class));
 		DataEntry secondEntry =
 				newFolder.getDataEntries().stream().filter(d -> "secondES".equals(d.getName())).findFirst().get();
 		assertTrue(secondEntry instanceof IOObjectEntry);
@@ -215,7 +231,7 @@ public class ExampleSetsInRepoTest {
 		ExampleSet exampleSet = createDataSet(10, 20);
 		IOObjectEntry entry1 = nestedFolder.createIOObjectEntry("firstES", exampleSet, null, null);
 		RepositoryManager.getInstance(null).move(entry1.getLocation(), myFolder, "secondES", null);
-		assertTrue(myFolder.containsData("secondES", BasicExampleSetEntry.class));
+		assertTrue(myFolder.containsData("secondES", BasicIODataTableEntry.class));
 		DataEntry secondEntry =
 				myFolder.getDataEntries().stream().filter(d -> "secondES".equals(d.getName())).findFirst().get();
 		assertTrue(secondEntry instanceof IOObjectEntry);
@@ -235,7 +251,7 @@ public class ExampleSetsInRepoTest {
 		Folder newFolder = legacyTestRepository.createFolder("newFolder");
 
 		RepositoryManager.getInstance(null).move(entry1.getLocation(), newFolder, "secondES", null);
-		assertTrue(newFolder.containsData("secondES", BasicExampleSetEntry.class));
+		assertTrue(newFolder.containsData("secondES", BasicIODataTableEntry.class));
 		DataEntry secondEntry =
 				newFolder.getDataEntries().stream().filter(d -> "secondES".equals(d.getName())).findFirst().get();
 		assertTrue(secondEntry instanceof IOObjectEntry);
@@ -256,7 +272,7 @@ public class ExampleSetsInRepoTest {
 		Folder newFolder = newTestRepository.createFolder("newFolder");
 
 		RepositoryManager.getInstance(null).move(entry1.getLocation(), newFolder, "secondES", null);
-		assertTrue(newFolder.containsData("secondES", BasicExampleSetEntry.class));
+		assertTrue(newFolder.containsData("secondES", BasicIODataTableEntry.class));
 		DataEntry secondEntry =
 				newFolder.getDataEntries().stream().filter(d -> "secondES".equals(d.getName())).findFirst().get();
 		assertTrue(secondEntry instanceof IOObjectEntry);
@@ -288,6 +304,27 @@ public class ExampleSetsInRepoTest {
 	}
 
 	@Test
+	public void testOverwriteWithIOTable() throws RepositoryException {
+		Folder myFolder = newTestRepository.createFolder("myFolder");
+		Folder nestedFolder = myFolder.createFolder("nestedFolder");
+		ExampleSet exampleSet = createDataSet(10, 20);
+		IOObjectEntry entry1 = nestedFolder.createIOObjectEntry("firstES", exampleSet, null, null);
+
+		IOObject second = BeltConverter.convert(createDataSet(22,11), new SequentialConcurrencyContext());
+		RepositoryManager.getInstance(null).store(second, entry1.getLocation(), null, null);
+
+		DataEntry secondEntry =
+				nestedFolder.getDataEntries().stream().filter(d -> "firstES".equals(d.getName())).findFirst().get();
+		assertTrue(secondEntry instanceof IOObjectEntry);
+		assertEquals(DATA_TABLE_FILE_ENDING, ((BasicEntry) secondEntry).getSuffix());
+		IOObject data = ((IOObjectEntry) secondEntry).retrieveData(null);
+		assertTrue(data instanceof IOTable);
+		RapidAssert.assertEquals(second, data);
+		myFolder.delete();
+		nestedFolder.delete();
+	}
+
+	@Test
 	public void testOverwriteIOO() throws RepositoryException {
 		Folder myFolder = newTestRepository.createFolder("myFolder");
 		Folder nestedFolder = myFolder.createFolder("nestedFolder");
@@ -302,6 +339,27 @@ public class ExampleSetsInRepoTest {
 		assertTrue(secondEntry instanceof IOObjectEntry);
 		assertEquals(DATA_TABLE_FILE_ENDING, ((BasicEntry) secondEntry).getSuffix());
 		IOObject data = ((IOObjectEntry) secondEntry).retrieveData(null);
+		RapidAssert.assertEquals(exampleSet, data);
+		myFolder.delete();
+		nestedFolder.delete();
+	}
+
+	@Test
+	public void testOverwriteIOTable() throws RepositoryException {
+		Folder myFolder = newTestRepository.createFolder("myFolder");
+		Folder nestedFolder = myFolder.createFolder("nestedFolder");
+		IOObject toOverwrite = BeltConverter.convert(createDataSet(11,17), new SequentialConcurrencyContext());
+		IOObjectEntry entry1 = nestedFolder.createIOObjectEntry("first", toOverwrite, null, null);
+
+		ExampleSet exampleSet = createDataSet(10, 20);
+		RepositoryManager.getInstance(null).store(exampleSet, entry1.getLocation(), null, null);
+
+		DataEntry secondEntry =
+				nestedFolder.getDataEntries().stream().filter(d -> "first".equals(d.getName())).findFirst().get();
+		assertTrue(secondEntry instanceof IOObjectEntry);
+		assertEquals(DATA_TABLE_FILE_ENDING, ((BasicEntry) secondEntry).getSuffix());
+		IOObject data = ((IOObjectEntry) secondEntry).retrieveData(null);
+		assertTrue(data instanceof IOTable);
 		RapidAssert.assertEquals(exampleSet, data);
 		myFolder.delete();
 		nestedFolder.delete();

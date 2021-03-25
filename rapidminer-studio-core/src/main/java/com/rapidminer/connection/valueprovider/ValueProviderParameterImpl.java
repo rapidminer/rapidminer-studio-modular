@@ -1,20 +1,20 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
  * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General
- * Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any
- * later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
- * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more
- * details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License along with this program. If not, see
- * http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.connection.valueprovider;
 
@@ -31,7 +31,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSetter;
 import com.rapidminer.connection.ConnectionInformationSerializer;
 import com.rapidminer.tools.LogService;
-import com.rapidminer.tools.ValidationUtil;
+import com.rapidminer.tools.ValidationUtilV2;
 import com.rapidminer.tools.cipher.CipherException;
 import com.rapidminer.tools.cipher.CipherTools;
 import com.rapidminer.tools.cipher.KeyGeneratorTool;
@@ -68,7 +68,7 @@ public class ValueProviderParameterImpl implements ValueProviderParameter {
 
 	/** Key/value constructor. {@code value} cannot be {@code null} or empty here. */
 	public ValueProviderParameterImpl(String name, String value) {
-		this(name, ValidationUtil.requireNonEmptyString(value, "value"), false);
+		this(name, ValidationUtilV2.requireNonEmptyString(value, "value"), false);
 	}
 
 	/** Constructor for enabled parameters. Only {@code name} is mandatory here. */
@@ -91,7 +91,7 @@ public class ValueProviderParameterImpl implements ValueProviderParameter {
 
 	/** Sets the name of this parameter. Must be neither {@code null} nor empty. */
 	private void setName(String name) {
-		this.name = ValidationUtil.requireNonEmptyString(name, "name");
+		this.name = ValidationUtilV2.requireNonEmptyString(name, "name");
 	}
 
 	@Override

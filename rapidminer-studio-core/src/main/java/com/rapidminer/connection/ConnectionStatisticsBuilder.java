@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -27,7 +27,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.rapidminer.tools.SecurityTools;
-import com.rapidminer.tools.ValidationUtil;
+import com.rapidminer.tools.ValidationUtilV2;
+
 
 /**
  * Builder for {@link ConnectionStatistics}. Can create a new instance based on an existing {@link ConnectionStatistics}
@@ -55,7 +56,7 @@ class ConnectionStatisticsBuilder {
 	 * Create a builder based on an existing {@link ConnectionStatistics}
 	 */
 	ConnectionStatisticsBuilder(ConnectionStatistics original) throws IOException {
-		ValidationUtil.requireNonNull(original, "original connection statistics");
+		ValidationUtilV2.requireNonNull(original, "original connection statistics");
 		try {
 			object = AccessController.doPrivileged((PrivilegedExceptionAction<ConnectionStatistics>)
 					() -> (ConnectionStatistics) reader.readValue(writer.writeValueAsString(original)));

@@ -2,9 +2,11 @@ apply plugin: 'java'
 
 def tutorialSrc = file('src/main/resources/com/rapidminer/resources/tutorial/src').absolutePath
 // Generate .tutorial files task
-task buildTutorials << {
-    new File(tutorialSrc).eachDir {
-        ant.zip(destfile: tutorialSrc+'/../'+it.name+'.tutorial', basedir: it.path){
+task buildTutorials {
+    doLast {
+        new File(tutorialSrc).eachDir {
+            ant.zip(destfile: tutorialSrc + '/../' + it.name + '.tutorial', basedir: it.path) {
+            }
         }
     }
 }

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -22,7 +22,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.rapidminer.tools.SecurityTools;
-import com.rapidminer.tools.ValidationUtil;
+import com.rapidminer.tools.ValidationUtilV2;
 import com.rapidminer.tools.mail.connection.MailConnectionHandler;
 import com.rapidminer.tools.mail.connection.gui.MailConnectionGUI;
 
@@ -56,8 +56,8 @@ public enum ConnectionGUIRegistry {
 	 * @return {@code false} if another provider is already registered for the connectionType
 	 */
 	public boolean registerGUIProvider(ConnectionGUIProvider provider, String connectionType) {
-		ValidationUtil.requireNonNull(provider, "provider");
-		ValidationUtil.requireNonNull(connectionType, "connectionType");
+		ValidationUtilV2.requireNonNull(provider, "provider");
+		ValidationUtilV2.requireNonNull(connectionType, "connectionType");
 		return null == providers.putIfAbsent(connectionType, provider);
 	}
 
@@ -71,8 +71,8 @@ public enum ConnectionGUIRegistry {
 	 * @return {@code true} if the handler was successfully unregistered
 	 */
 	public boolean unregisterGUIProvider(ConnectionGUIProvider provider, String connectionType) {
-		ValidationUtil.requireNonNull(provider, "provider");
-		ValidationUtil.requireNonNull(connectionType, "connectionType");
+		ValidationUtilV2.requireNonNull(provider, "provider");
+		ValidationUtilV2.requireNonNull(connectionType, "connectionType");
 		return providers.remove(connectionType, provider);
 	}
 

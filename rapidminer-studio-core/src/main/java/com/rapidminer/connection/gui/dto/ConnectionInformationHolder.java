@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -26,11 +26,11 @@ import com.rapidminer.connection.ConnectionInformationBuilder;
 import com.rapidminer.connection.ConnectionInformationContainerIOObject;
 import com.rapidminer.connection.configuration.ConnectionConfigurationBuilder;
 import com.rapidminer.repository.Repository;
-import com.rapidminer.tools.ValidationUtil;
 import com.rapidminer.repository.ConnectionEntry;
 import com.rapidminer.repository.RepositoryException;
 import com.rapidminer.repository.RepositoryLocation;
 import com.rapidminer.tools.PasswordInputCanceledException;
+import com.rapidminer.tools.ValidationUtilV2;
 
 
 /**
@@ -78,8 +78,8 @@ public final class ConnectionInformationHolder {
 	 * 		in case the connection could not be copied
 	 */
 	private ConnectionInformationHolder(ConnectionInformation connection, String name, RepositoryLocation location, boolean isEditable) throws IOException {
-		ValidationUtil.requireNonNull(connection, "connection");
-		ValidationUtil.requireNonNull(location, "repository location");
+		ValidationUtilV2.requireNonNull(connection, "connection");
+		ValidationUtilV2.requireNonNull(location, "repository location");
 		this.location = location;
 
 		ConnectionInformationBuilder builder;

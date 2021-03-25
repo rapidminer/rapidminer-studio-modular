@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -29,6 +29,7 @@ import com.rapidminer.core.io.gui.ImportWizard;
 import com.rapidminer.gui.ApplicationFrame;
 import com.rapidminer.gui.tools.dialogs.ButtonDialog;
 import com.rapidminer.operator.nio.model.AbstractDataResultSetReader;
+import com.rapidminer.operator.nio.model.ConfigurationSupporter;
 import com.rapidminer.studio.io.data.internal.file.LocalFileDataSourceFactory;
 import com.rapidminer.studio.io.gui.internal.steps.LocationSelectionStep;
 import com.rapidminer.studio.io.gui.internal.steps.StoreToRepositoryStep;
@@ -48,7 +49,7 @@ public final class DataImportWizardBuilder {
 	private FileDataSourceFactory<?> fileDataSourceFactory;
 	private String startingStepID;
 	private Path filePath;
-	private AbstractDataResultSetReader reader;
+	private ConfigurationSupporter reader;
 	private String factoryI18NKey;
 	private boolean storeData = true;
 	private DataImportWizardCallback callback = null;
@@ -143,7 +144,7 @@ public final class DataImportWizardBuilder {
 	 * @return the builder
 	 * @since 9.0.0
 	 */
-	public DataImportWizardBuilder forOperator(AbstractDataResultSetReader reader, String factoryI18NKey) {
+	public DataImportWizardBuilder forOperator(ConfigurationSupporter reader, String factoryI18NKey) {
 		this.reader = reader;
 		this.localFileDataSourceFactory = new LocalFileDataSourceFactory();
 		this.startingStepID = LocationSelectionStep.LOCATION_SELECTION_STEP_ID;

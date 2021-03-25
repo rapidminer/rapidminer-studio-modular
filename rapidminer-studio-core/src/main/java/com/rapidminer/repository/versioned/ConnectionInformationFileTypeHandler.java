@@ -1,24 +1,25 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
  * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General
- * Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any
- * later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
- * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more
- * details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License along with this program. If not, see
- * http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.repository.versioned;
 
 import java.io.IOException;
+import java.nio.file.AccessMode;
 import java.nio.file.Path;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -65,7 +66,7 @@ public enum ConnectionInformationFileTypeHandler implements FileTypeHandler<Conn
 		// read config from zip file
 		BasicConnectionEntry entry = (BasicConnectionEntry) repositoryFile;
 		FilesystemRepositoryAdapter repositoryAdapter = entry.getRepositoryAdapter();
-		Path path = repositoryAdapter.getRealPath(entry);
+		Path path = repositoryAdapter.getRealPath(entry, AccessMode.READ);
 		try (ZipFile zipFile = new ZipFile(path.toFile())) {
 			ZipEntry configEntry = zipFile.getEntry(ConnectionInformation.ENTRY_NAME_CONFIG);
 			if (configEntry != null) {

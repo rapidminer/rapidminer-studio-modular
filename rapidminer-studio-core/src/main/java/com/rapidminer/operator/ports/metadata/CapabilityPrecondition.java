@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
- * 
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.operator.ports.metadata;
 
 import java.util.Collection;
@@ -30,9 +30,9 @@ import com.rapidminer.operator.OperatorCreationException;
 import com.rapidminer.operator.ProcessSetupError.Severity;
 import com.rapidminer.operator.learner.CapabilityProvider;
 import com.rapidminer.operator.ports.InputPort;
-import com.rapidminer.operator.ports.quickfix.ChangeAttributeRoleQuickFix;
 import com.rapidminer.operator.ports.quickfix.OperatorInsertionQuickFix;
 import com.rapidminer.operator.ports.quickfix.QuickFix;
+import com.rapidminer.operator.ports.quickfix.QuickFixSupplier;
 import com.rapidminer.operator.preprocessing.discretization.AbstractDiscretizationOperator;
 import com.rapidminer.operator.preprocessing.filter.MissingValueReplenishment;
 import com.rapidminer.operator.preprocessing.filter.NominalToBinominal;
@@ -143,17 +143,17 @@ public class CapabilityPrecondition extends ExampleSetPrecondition {
 				switch (metaData.hasSpecial(Attributes.LABEL_NAME)) {
 					case UNKNOWN:
 						getInputPort().addError(
-								new SimpleMetaDataError(Severity.WARNING, getInputPort(), Collections
-										.singletonList(new ChangeAttributeRoleQuickFix(getInputPort(),
-												Attributes.LABEL_NAME, "change_attribute_role", Attributes.LABEL_NAME)),
-										"special_unknown", new Object[] { Attributes.LABEL_NAME }));
+								new SimpleMetaDataError(Severity.WARNING, getInputPort(), Collections.singletonList(
+										QuickFixSupplier.getSetRoleQuickFix(getInputPort(), Attributes.LABEL_NAME,
+												"change_attribute_role", Attributes.LABEL_NAME)),
+										"special_unknown", Attributes.LABEL_NAME));
 						break;
 					case NO:
 						getInputPort().addError(
-								new SimpleMetaDataError(Severity.ERROR, getInputPort(), Collections
-										.singletonList(new ChangeAttributeRoleQuickFix(getInputPort(),
-												Attributes.LABEL_NAME, "change_attribute_role", Attributes.LABEL_NAME)),
-										"special_missing", new Object[] { Attributes.LABEL_NAME }));
+								new SimpleMetaDataError(Severity.ERROR, getInputPort(), Collections.singletonList(
+										QuickFixSupplier.getSetRoleQuickFix(getInputPort(), Attributes.LABEL_NAME,
+												"change_attribute_role", Attributes.LABEL_NAME)),
+										"special_missing", Attributes.LABEL_NAME));
 						break;
 					case YES:
 						AttributeMetaData label = metaData.getLabelMetaData();
@@ -301,6 +301,6 @@ public class CapabilityPrecondition extends ExampleSetPrecondition {
 		if (capabilityProvider instanceof Operator) {
 			id = ((Operator) capabilityProvider).getOperatorDescription().getName();
 		}
-		createError(Severity.ERROR, list, "learner_cannot_handle", new Object[] { id, description });
+		createError(Severity.ERROR, list, "learner_cannot_handle", id, description);
 	}
 }

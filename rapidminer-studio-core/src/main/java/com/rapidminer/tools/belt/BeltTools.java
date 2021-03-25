@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -19,6 +19,7 @@
 package com.rapidminer.tools.belt;
 
 import java.util.List;
+import java.util.Map;
 
 import com.rapidminer.adaption.belt.ContextAdapter;
 import com.rapidminer.belt.column.Column;
@@ -31,6 +32,7 @@ import com.rapidminer.belt.reader.Readers;
 import com.rapidminer.belt.table.BeltConverter;
 import com.rapidminer.belt.table.ColumnSelector;
 import com.rapidminer.belt.table.Table;
+import com.rapidminer.belt.table.Tables;
 import com.rapidminer.belt.util.ColumnRole;
 import com.rapidminer.core.concurrency.ConcurrencyContext;
 import com.rapidminer.operator.Operator;
@@ -262,5 +264,27 @@ public final class BeltTools {
 		}
 		// not numeric or no non-finite value found
 		return false;
+	}
+
+	/**
+	 * Finds the regular columns in the table that are incompatible with regular columns of the schema according to the
+	 * further parameters. If {@link UserError}s in case of incompatibilities are required, use {@link
+	 * BeltErrorTools#requireCompatibleRegulars} instead.
+	 *
+	 * @param table
+	 * 		the table to check
+	 * @param schema
+	 * 		the table to compare to
+	 * @param columnSetRequirement
+	 * 		the column set requirement to check
+	 * @param typeRequirements
+	 * 		the type requirements to check, can be empty for no type check
+	 * @return a map from incompatible column name to reason for incompatibility
+	 * @since 9.9
+	 */
+	public static Map<String, Tables.Incompatibility> findIncompatibleRegulars(Table table, Table schema,
+																			   Tables.ColumnSetRequirement columnSetRequirement,
+																			   Tables.TypeRequirement... typeRequirements){
+		return Tables.findIncompatible(regularSubtable(table), regularSubtable(schema), columnSetRequirement, typeRequirements);
 	}
 }

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -74,11 +74,11 @@ public class ModelGrouper extends Operator {
 
 			@Override
 			public void transformMD() {
-				List<MetaData> metaDatas = modelInputExtender.getMetaData(true);
+				List<ModelMetaData> metaDatas = modelInputExtender.getMetaDataAsOrNull(ModelMetaData.class, true);
 				if (!metaDatas.isEmpty()) {
-					MetaData input = metaDatas.iterator().next();
-					if (input != null && input instanceof ModelMetaData) {
-						ExampleSetMetaData trainMD = ((ModelMetaData) input).getTrainingSetMetaData();
+					ModelMetaData input = metaDatas.iterator().next();
+					if (input != null) {
+						ExampleSetMetaData trainMD = input.getTrainingSetMetaData();
 						if (trainMD != null) {
 							ModelMetaData mmd = new ModelMetaData(GroupedModel.class, trainMD);
 							mmd.addToHistory(modelOutput);

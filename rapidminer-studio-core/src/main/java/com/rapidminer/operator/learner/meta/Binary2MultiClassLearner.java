@@ -1,22 +1,27 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
- * 
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.operator.learner.meta;
+
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Attributes;
@@ -40,11 +45,6 @@ import com.rapidminer.parameter.ParameterTypeDouble;
 import com.rapidminer.parameter.conditions.EqualTypeCondition;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.RandomGenerator;
-
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
 
 
 /**
@@ -122,9 +122,8 @@ public class Binary2MultiClassLearner extends AbstractMetaLearner {
 	protected MetaData modifyGeneratedModelMetaData(PredictionModelMetaData unmodifiedMetaData) {
 		for (AttributeMetaData amd : unmodifiedMetaData.getPredictionAttributeMetaData()) {
 			if (amd.getRole().equals(Attributes.PREDICTION_NAME)) {
-				MetaData mdInput = exampleSetInput.getMetaData();
-				if (mdInput instanceof ExampleSetMetaData) {
-					ExampleSetMetaData esmdInput = (ExampleSetMetaData) mdInput;
+				ExampleSetMetaData esmdInput = exampleSetInput.getMetaDataAsOrNull(ExampleSetMetaData.class);
+				if (esmdInput != null) {
 					AttributeMetaData labelAMD = esmdInput.getAttributeByRole(Attributes.LABEL_NAME);
 					if (labelAMD != null && labelAMD.isNominal()) {
 						amd.setType(labelAMD.getValueType());

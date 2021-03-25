@@ -1,26 +1,25 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
- * 
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.operator.annotation;
 
 import com.rapidminer.operator.ports.InputPort;
 import com.rapidminer.operator.ports.metadata.ExampleSetMetaData;
-import com.rapidminer.operator.ports.metadata.MetaData;
 import com.rapidminer.operator.tools.AttributeSubsetSelector;
 
 
@@ -67,12 +66,12 @@ public abstract class ExampleSetResourceConsumptionEstimator implements Resource
 	}
 
 	protected ExampleSetMetaData getExampleSet() {
-		final MetaData md = inputPort.getMetaData();
-		if (md instanceof ExampleSetMetaData) {
+		final ExampleSetMetaData emd = inputPort.getMetaDataAsOrNull(ExampleSetMetaData.class);
+		if (emd != null) {
 			if (selector != null) {
-				return selector.getMetaDataSubset((ExampleSetMetaData) md, false);
+				return selector.getMetaDataSubset(emd, false);
 			} else {
-				return (ExampleSetMetaData) md;
+				return emd;
 			}
 		} else {
 			return null;

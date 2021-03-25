@@ -1,20 +1,20 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
  * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General
- * Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any
- * later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
- * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more
- * details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License along with this program. If not, see
- * http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.storage.hdf5;
 
@@ -33,6 +33,7 @@ import java.nio.charset.Charset;
 import java.util.Map;
 import java.util.function.IntToDoubleFunction;
 
+import com.rapidminer.belt.table.BeltConverter;
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.table.NominalMapping;
 import com.rapidminer.example.table.internal.ColumnarExampleTable;
@@ -415,6 +416,35 @@ enum ColumnFillers {
 	}
 
 	/**
+	 * Column filler that reads long data from the channel representing nanos of the day and converts it to double
+	 * values representing milli-seconds. {@link Long#MAX_VALUE} will be converted to {@link Double#NaN}.
+	 */
+	private static final class LongTimeColumnFiller extends ColumnFiller {
+
+		private LongBuffer buffer;
+
+		private LongTimeColumnFiller(CustomDataInput channel) {
+			super(channel, 8);
+			buffer = byteBuffer.asLongBuffer();
+		}
+
+		@Override
+		protected double read() {
+			long value = buffer.get();
+			return value == Long.MAX_VALUE ? Double.NaN : BeltConverter.nanoOfDayToLegacyTime(value);
+		}
+
+		@Override
+		protected void ensureBuffer() throws IOException {
+			if (buffer.remaining() < 1) {
+				byteBuffer.position(byteBuffer.position() + buffer.position() * 8);
+				byteBuffer = channel.next(8);
+				buffer = byteBuffer.asLongBuffer();
+			}
+		}
+	}
+
+	/**
 	 * Column filler that reads long int from the channel representing nanoseconds and converts it to double values
 	 * representing milli-seconds. It then adds the new milli-seconds to the existing milliseconds for the attribute in
 	 * the table.
@@ -560,6 +590,18 @@ enum ColumnFillers {
 	 */
 	static LongDateColumnFiller getLongDateColumnFiller(CustomDataInput channel) {
 		return new LongDateColumnFiller(channel);
+	}
+
+	/**
+	 * Gets a column filler that reads long data from the channel representing nanos of the day and converts it to
+	 * double values representing milli-seconds. {@link Long#MAX_VALUE} will be converted to {@link Double#NaN}.
+	 *
+	 * @param channel
+	 * 		the channel to read from
+	 * @return a {@link IntToDoubleFunction}
+	 */
+	static LongTimeColumnFiller getLongTimeColumnFiller(CustomDataInput channel) {
+		return new LongTimeColumnFiller(channel);
 	}
 
 	/**

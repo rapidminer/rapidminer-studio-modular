@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -40,6 +40,7 @@ import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.UserError;
 import com.rapidminer.operator.nio.ExcelExampleSource;
 import com.rapidminer.operator.nio.ExcelSheetTableModel;
+import com.rapidminer.operator.nio.ExcelTableSource;
 import com.rapidminer.operator.nio.model.xlsx.XlsxResultSet;
 import com.rapidminer.operator.nio.model.xlsx.XlsxResultSet.XlsxReadMode;
 import com.rapidminer.operator.nio.model.xlsx.XlsxSheetTableModel;
@@ -102,48 +103,71 @@ public class ExcelResultSetConfiguration implements DataResultSetFactory, ExcelS
 	 * @throws OperatorException
 	 */
 	public ExcelResultSetConfiguration(ExcelExampleSource excelExampleSource) throws OperatorException {
-		if (excelExampleSource.isParameterSet(ExcelExampleSource.PARAMETER_IMPORTED_CELL_RANGE)) {
-			parseExcelRange(excelExampleSource.getParameterAsString(ExcelExampleSource.PARAMETER_IMPORTED_CELL_RANGE));
-		}
-		if (excelExampleSource.isParameterSet(ExcelExampleSource.PARAMETER_SHEET_SELECTION)) {
-			sheetSelectionMode = SheetSelectionMode.get(excelExampleSource.getParameterAsInt(ExcelExampleSource.PARAMETER_SHEET_SELECTION));
-		}
-		if (excelExampleSource.isParameterSet(ExcelExampleSource.PARAMETER_SHEET_NAME)) {
-			sheetName = excelExampleSource.getParameterAsString(ExcelExampleSource.PARAMETER_SHEET_NAME);
-		}
-		if (excelExampleSource.isParameterSet(ExcelExampleSource.PARAMETER_SHEET_NUMBER)) {
-			sheet = excelExampleSource.getParameterAsInt(ExcelExampleSource.PARAMETER_SHEET_NUMBER) - 1;
-		}
 		if (excelExampleSource.isFileSpecified()) {
 			this.workbookFile = excelExampleSource.getSelectedFile();
 		} else {
+			configureFromFileParameter(excelExampleSource);
+		}
 
-			String excelParamter;
-			try {
-				excelParamter = excelExampleSource.getParameter(ExcelExampleSource.PARAMETER_EXCEL_FILE);
-			} catch (UndefinedParameterError e) {
-				excelParamter = null;
+		configureFromParameters(excelExampleSource);
+	}
+
+	/**
+	 * This constructor must read in all settings from the parameters of the given operator.
+	 *
+	 * @throws OperatorException
+	 * @since 9.9.0
+	 */
+	public ExcelResultSetConfiguration(ExcelTableSource excelTableSource) throws OperatorException {
+		if (excelTableSource.isFileSpecified()) {
+			this.workbookFile = excelTableSource.getSelectedFile();
+		} else {
+			configureFromFileParameter(excelTableSource);
+		}
+
+		configureFromParameters(excelTableSource);
+	}
+
+	private void configureFromFileParameter(Operator excelSource) {
+		String excelParameter;
+		try {
+			excelParameter = excelSource.getParameter(ExcelTableSource.PARAMETER_EXCEL_FILE);
+		} catch (UndefinedParameterError e) {
+			excelParameter = null;
+		}
+		if (excelParameter != null && !excelParameter.isEmpty()) {
+			File excelFile = new File(excelParameter);
+			if (excelFile.exists()) {
+				this.workbookFile = excelFile;
 			}
-			if (excelParamter != null && !excelParamter.isEmpty()) {
-				File excelFile = new File(excelParamter);
-				if (excelFile.exists()) {
-					this.workbookFile = excelFile;
-				}
-			}
+		}
+	}
+
+	private void configureFromParameters(Operator excelSource) throws OperatorException {
+		if (excelSource.isParameterSet(ExcelTableSource.PARAMETER_IMPORTED_CELL_RANGE)) {
+			parseExcelRange(excelSource.getParameterAsString(ExcelTableSource.PARAMETER_IMPORTED_CELL_RANGE));
+		}
+		if (excelSource.isParameterSet(ExcelTableSource.PARAMETER_SHEET_SELECTION)) {
+			sheetSelectionMode = SheetSelectionMode.get(excelSource.getParameterAsInt(ExcelTableSource.PARAMETER_SHEET_SELECTION));
+		}
+		if (excelSource.isParameterSet(ExcelTableSource.PARAMETER_SHEET_NAME)) {
+			sheetName = excelSource.getParameterAsString(ExcelTableSource.PARAMETER_SHEET_NAME);
+		}
+		if (excelSource.isParameterSet(ExcelTableSource.PARAMETER_SHEET_NUMBER)) {
+			sheet = excelSource.getParameterAsInt(ExcelTableSource.PARAMETER_SHEET_NUMBER) - 1;
+		}
+		if (excelSource.isParameterSet(ParameterTypeDateFormat.PARAMETER_DATE_FORMAT)) {
+			datePattern = excelSource.getParameterAsString(ParameterTypeDateFormat.PARAMETER_DATE_FORMAT);
 		}
 
-		if (excelExampleSource.isParameterSet(ParameterTypeDateFormat.PARAMETER_DATE_FORMAT)) {
-			datePattern = excelExampleSource.getParameterAsString(ParameterTypeDateFormat.PARAMETER_DATE_FORMAT);
+		if (excelSource.isParameterSet(AbstractDataResultSetReader.PARAMETER_TIME_ZONE)) {
+			timezone = excelSource.getParameterAsString(AbstractDataResultSetReader.PARAMETER_TIME_ZONE);
 		}
 
-		if (excelExampleSource.isParameterSet(AbstractDataResultSetReader.PARAMETER_TIME_ZONE)) {
-			timezone = excelExampleSource.getParameterAsString(AbstractDataResultSetReader.PARAMETER_TIME_ZONE);
-		}
+		encoding = Encoding.getEncoding(excelSource);
 
-		encoding = Encoding.getEncoding(excelExampleSource);
-
-		isEmulatingOldNames = excelExampleSource.getCompatibilityLevel()
-				.isAtMost(ExcelExampleSource.CHANGE_5_0_11_NAME_SCHEMA);
+		isEmulatingOldNames = excelSource.getCompatibilityLevel()
+				.isAtMost(ExcelTableSource.CHANGE_5_0_11_NAME_SCHEMA);
 	}
 
 	/**
@@ -414,7 +438,7 @@ public class ExcelResultSetConfiguration implements DataResultSetFactory, ExcelS
 			throws OperatorException {
 		File file = getFile();
 		if (file == null) {
-			throw new UndefinedParameterError(ExcelExampleSource.PARAMETER_EXCEL_FILE, operator);
+			throw new UndefinedParameterError(ExcelTableSource.PARAMETER_EXCEL_FILE, operator);
 		}
 		String absolutePath = file.getAbsolutePath();
 		DataResultSet resultSet;
@@ -467,7 +491,7 @@ public class ExcelResultSetConfiguration implements DataResultSetFactory, ExcelS
 	@SuppressWarnings("deprecation")
 	private DataResultSet createExcel2007ResultSet(Operator operator, XlsxReadMode readMode, DateFormatProvider provider)
 			throws OperatorException {
-		if (operator == null || operator.getCompatibilityLevel().isAbove(ExcelExampleSource.CHANGE_6_2_0_OLD_XLSX_IMPORT)) {
+		if (operator == null || operator.getCompatibilityLevel().isAbove(ExcelTableSource.CHANGE_6_2_0_OLD_XLSX_IMPORT)) {
 			return createXLSXResultSet(operator, readMode, provider);
 		} else {
 			return new Excel2007ResultSet(operator, this);
@@ -487,7 +511,7 @@ public class ExcelResultSetConfiguration implements DataResultSetFactory, ExcelS
 	public TableModel makePreviewTableModel(ProgressListener listener) throws OperatorException {
 		File file = getFile();
 		if (file == null) {
-			throw new UserError(null, 205, ExcelExampleSource.PARAMETER_EXCEL_FILE, "");
+			throw new UserError(null, 205, ExcelTableSource.PARAMETER_EXCEL_FILE, "");
 		}
 
 		if (file.getAbsolutePath().toLowerCase(Locale.ENGLISH).endsWith(XLSX_FILE_ENDING)) {
@@ -519,11 +543,11 @@ public class ExcelResultSetConfiguration implements DataResultSetFactory, ExcelS
 			range += ":" + Tools.getExcelColumnName(columnLast) + (rowLast + 1);
 		}
 
-		source.setParameter(ExcelExampleSource.PARAMETER_IMPORTED_CELL_RANGE, range);
-		source.setParameter(ExcelExampleSource.PARAMETER_SHEET_SELECTION, String.valueOf(sheetSelectionMode.getIndex()));
-		source.setParameter(ExcelExampleSource.PARAMETER_SHEET_NUMBER, String.valueOf(sheet + 1));
-		source.setParameter(ExcelExampleSource.PARAMETER_SHEET_NAME, sheetName);
-		source.setParameter(ExcelExampleSource.PARAMETER_EXCEL_FILE, workbookFile.getAbsolutePath());
+		source.setParameter(ExcelTableSource.PARAMETER_IMPORTED_CELL_RANGE, range);
+		source.setParameter(ExcelTableSource.PARAMETER_SHEET_SELECTION, String.valueOf(sheetSelectionMode.getIndex()));
+		source.setParameter(ExcelTableSource.PARAMETER_SHEET_NUMBER, String.valueOf(sheet + 1));
+		source.setParameter(ExcelTableSource.PARAMETER_SHEET_NAME, sheetName);
+		source.setParameter(ExcelTableSource.PARAMETER_EXCEL_FILE, workbookFile.getAbsolutePath());
 	}
 
 	public void parseExcelRange(String range) throws OperatorException {
@@ -684,9 +708,9 @@ public class ExcelResultSetConfiguration implements DataResultSetFactory, ExcelS
 	 */
 	public enum SheetSelectionMode {
 		/** Selects a sheet by {@link #getSheet()} */
-		BY_INDEX(ExcelExampleSource.SHEET_SELECT_BY_INDEX, (ExcelResultSetConfiguration c) -> ExcelSheetSelection.byIndex(c.getSheet())),
+		BY_INDEX(ExcelTableSource.SHEET_SELECT_BY_INDEX, (ExcelResultSetConfiguration c) -> ExcelSheetSelection.byIndex(c.getSheet())),
 		/** Select a sheet by {@link #getSheetByName()} */
-		BY_NAME(ExcelExampleSource.SHEET_SELECT_BY_NAME, (ExcelResultSetConfiguration c) -> ExcelSheetSelection.byName(c.getSheetByName()));
+		BY_NAME(ExcelTableSource.SHEET_SELECT_BY_NAME, (ExcelResultSetConfiguration c) -> ExcelSheetSelection.byName(c.getSheetByName()));
 
 		private int index;
 		private Function<ExcelResultSetConfiguration, ExcelSheetSelection> selectionFunction;
@@ -697,7 +721,7 @@ public class ExcelResultSetConfiguration implements DataResultSetFactory, ExcelS
 		}
 
 		/**
-		 * Returns the ExcelExampleSource position of the selected method
+		 * Returns the ExcelTableSource position of the selected method
 		 *
 		 * @return
 		 */

@@ -1,0 +1,11 @@
+apply from: '../os-module.gradle'
+
+dependencies {
+    compile project(':rapidminer-studio-logging')
+    compile project(':rapidminer-studio-tools')
+
+	compile 'com.rapidminer:belt:1.0.0'
+
+    // commons-math for matrix calculations (http://commons.apache.org/proper/commons-math/)
+    compile 'org.apache.commons:commons-math3:3.3'
+}

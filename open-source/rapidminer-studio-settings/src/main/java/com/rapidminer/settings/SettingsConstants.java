@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -54,6 +54,21 @@ public final class SettingsConstants {
 	 * then on.
 	 */
 	public static final String LOGGING_CONSOLE_LEVEL = "rapidminer.logging.default-log-level";
+
+
+	/**
+	 * the default timezone id to use for date conversions.
+	 * @since 9.9
+	 */
+	public static final String DEFAULT_TIMEZONE = "rapidminer.general.timezone";
+
+
+	/**
+	 * The UI scaling factor. Defined as {@code 2.0} for High-DPI displays, or {@code 1.0} for regular displays.
+	 * @since 9.9
+	 */
+	public static final String UI_SCALE = "rapidminer.ui.scale";
+
 
 	/** whether the execution is in headless mode */
 	public static final String EXECUTION_IS_HEADLESS = "rapidminer.execution.is_headless";

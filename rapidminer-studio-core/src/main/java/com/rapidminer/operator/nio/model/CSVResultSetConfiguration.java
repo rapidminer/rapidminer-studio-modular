@@ -1,21 +1,21 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
- * 
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.operator.nio.model;
 
 import java.io.File;
@@ -27,7 +27,9 @@ import javax.swing.table.TableModel;
 
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.UserError;
 import com.rapidminer.operator.nio.CSVExampleSource;
+import com.rapidminer.operator.nio.CSVTableSource;
 import com.rapidminer.operator.ports.metadata.ExampleSetMetaData;
 import com.rapidminer.tools.ProgressListener;
 import com.rapidminer.tools.io.Encoding;
@@ -89,36 +91,51 @@ public class CSVResultSetConfiguration implements DataResultSetFactory {
 		if (csvExampleSource.isFileSpecified()) {
 			setCsvFile(csvExampleSource.getSelectedFile().getAbsolutePath());
 		}
-		setSkipComments(csvExampleSource.getParameterAsBoolean(CSVExampleSource.PARAMETER_SKIP_COMMENTS));
-		setUseQuotes(csvExampleSource.getParameterAsBoolean(CSVExampleSource.PARAMETER_USE_QUOTES));
-		setStartingRow(csvExampleSource.getParameterAsInt(CSVExampleSource.PARAMETER_STARTING_ROW));
-		setTrimLines(csvExampleSource.getParameterAsBoolean(CSVExampleSource.PARAMETER_TRIM_LINES));
-		if (csvExampleSource.isParameterSet(CSVExampleSource.PARAMETER_COLUMN_SEPARATORS)) {
-			setColumnSeparators(csvExampleSource.getParameterAsString(CSVExampleSource.PARAMETER_COLUMN_SEPARATORS));
-		}
-		if (csvExampleSource.isParameterSet(CSVExampleSource.PARAMETER_ESCAPE_CHARACTER)) {
-			setEscapeCharacter(csvExampleSource.getParameterAsChar(CSVExampleSource.PARAMETER_ESCAPE_CHARACTER));
-		}
-		if (csvExampleSource.isParameterSet(CSVExampleSource.PARAMETER_COMMENT_CHARS)) {
-			setCommentCharacters(csvExampleSource.getParameterAsString(CSVExampleSource.PARAMETER_COMMENT_CHARS));
-		}
-		if (csvExampleSource.isParameterSet(CSVExampleSource.PARAMETER_QUOTES_CHARACTER)) {
-			setQuoteCharacter(csvExampleSource.getParameterAsChar(CSVExampleSource.PARAMETER_QUOTES_CHARACTER));
-		}
-		encoding = Encoding.getEncoding(csvExampleSource);
+		setSourceParameters(csvExampleSource);
 		trimValuesForParsing = csvExampleSource.trimForGuessing();
+	}
+
+	/**
+	 * This constructor reads all settings from the parameters of the given operator.
+	 */
+	public CSVResultSetConfiguration(CSVTableSource csvTableSource) throws OperatorException {
+		if (csvTableSource.isFileSpecified()) {
+			setCsvFile(csvTableSource.getSelectedFile().getAbsolutePath());
+		}
+		setSourceParameters(csvTableSource);
+		trimValuesForParsing = csvTableSource.trimForGuessing();
+	}
+
+	private void setSourceParameters(Operator csvSource) throws UserError {
+		setSkipComments(csvSource.getParameterAsBoolean(CSVTableSource.PARAMETER_SKIP_COMMENTS));
+		setUseQuotes(csvSource.getParameterAsBoolean(CSVTableSource.PARAMETER_USE_QUOTES));
+		setStartingRow(csvSource.getParameterAsInt(CSVTableSource.PARAMETER_STARTING_ROW));
+		setTrimLines(csvSource.getParameterAsBoolean(CSVTableSource.PARAMETER_TRIM_LINES));
+		if (csvSource.isParameterSet(CSVTableSource.PARAMETER_COLUMN_SEPARATORS)) {
+			setColumnSeparators(csvSource.getParameterAsString(CSVTableSource.PARAMETER_COLUMN_SEPARATORS));
+		}
+		if (csvSource.isParameterSet(CSVTableSource.PARAMETER_ESCAPE_CHARACTER)) {
+			setEscapeCharacter(csvSource.getParameterAsChar(CSVTableSource.PARAMETER_ESCAPE_CHARACTER));
+		}
+		if (csvSource.isParameterSet(CSVTableSource.PARAMETER_COMMENT_CHARS)) {
+			setCommentCharacters(csvSource.getParameterAsString(CSVTableSource.PARAMETER_COMMENT_CHARS));
+		}
+		if (csvSource.isParameterSet(CSVTableSource.PARAMETER_QUOTES_CHARACTER)) {
+			setQuoteCharacter(csvSource.getParameterAsChar(CSVTableSource.PARAMETER_QUOTES_CHARACTER));
+		}
+		encoding = Encoding.getEncoding(csvSource);
 	}
 
 	@Override
 	public void setParameters(AbstractDataResultSetReader source) {
-		source.setParameter(CSVExampleSource.PARAMETER_CSV_FILE, getCsvFile());
-		source.setParameter(CSVExampleSource.PARAMETER_SKIP_COMMENTS, String.valueOf(isSkipComments()));
-		source.setParameter(CSVExampleSource.PARAMETER_USE_QUOTES, String.valueOf(isUseQuotes()));
-		source.setParameter(CSVExampleSource.PARAMETER_COLUMN_SEPARATORS, getColumnSeparators());
-		source.setParameter(CSVExampleSource.PARAMETER_TRIM_LINES, String.valueOf(isTrimLines()));
-		source.setParameter(CSVExampleSource.PARAMETER_QUOTES_CHARACTER, String.valueOf(getQuoteCharacter()));
-		source.setParameter(CSVExampleSource.PARAMETER_ESCAPE_CHARACTER, String.valueOf(getEscapeCharacter()));
-		source.setParameter(CSVExampleSource.PARAMETER_COMMENT_CHARS, getCommentCharacters());
+		source.setParameter(CSVTableSource.PARAMETER_CSV_FILE, getCsvFile());
+		source.setParameter(CSVTableSource.PARAMETER_SKIP_COMMENTS, String.valueOf(isSkipComments()));
+		source.setParameter(CSVTableSource.PARAMETER_USE_QUOTES, String.valueOf(isUseQuotes()));
+		source.setParameter(CSVTableSource.PARAMETER_COLUMN_SEPARATORS, getColumnSeparators());
+		source.setParameter(CSVTableSource.PARAMETER_TRIM_LINES, String.valueOf(isTrimLines()));
+		source.setParameter(CSVTableSource.PARAMETER_QUOTES_CHARACTER, String.valueOf(getQuoteCharacter()));
+		source.setParameter(CSVTableSource.PARAMETER_ESCAPE_CHARACTER, String.valueOf(getEscapeCharacter()));
+		source.setParameter(CSVTableSource.PARAMETER_COMMENT_CHARS, getCommentCharacters());
 
 		source.setParameter(Encoding.PARAMETER_ENCODING, encoding.name());
 	}

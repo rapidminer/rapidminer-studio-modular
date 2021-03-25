@@ -1,20 +1,20 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
  * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General
- * Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any
- * later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
- * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more
- * details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License along with this program. If not, see
- * http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.operator.ports;
 
@@ -64,7 +64,10 @@ public interface Port<S extends Port<S, O>, O extends Port<O, S>> extends Observ
 	String getName();
 
 	/**
-	 * Returns the meta data currently assigned to this port.
+	 * Returns the meta data currently assigned to this port. Never returns
+	 * {@link com.rapidminer.operator.ports.metadata.table.TableMetaData}
+	 * for compatibility reasons. If using {@link #getMetaData(Class)} or {@link #getMetaDataAsOrNull(Class)} is not
+	 * possible, use {@link #getRawMetaData()} (which will do no conversion) instead.
 	 *
 	 * @deprecated use {@link #getMetaData(Class)} instead
 	 */
@@ -84,9 +87,21 @@ public interface Port<S extends Port<S, O>, O extends Port<O, S>> extends Observ
 	}
 
 	/**
-	 * Returns the last object delivered to the connected {@link InputPort} or received from the
-	 * connected {@link OutputPort}. Never throws an exception. Converts {@link com.rapidminer.adaption.belt.IOTable}s
-	 * to {@link com.rapidminer.example.ExampleSet}s.
+	 * Returns meta data currently assigned to this port. Never throws an exception but instead returns {@code null} if
+	 * there is no data. Do not use this method followed by a cast but use {@link #getMetaDataAsOrNull(Class)} instead.
+	 *
+	 * @return the metadata at the port or {@code null}
+	 * @since 9.9
+	 */
+	default MetaData getRawMetaData() {
+		// default method for compatibility, overwritten by {@link AbstractInputPort} and {@link AbstractOutputPort}
+		return getMetaData();
+	}
+
+	/**
+	 * Returns the last object delivered to the connected {@link InputPort} or received from the connected {@link
+	 * OutputPort}. Never throws an exception. Converts {@link com.rapidminer.adaption.belt.IOTable}s to {@link
+	 * com.rapidminer.example.ExampleSet}s.
 	 *
 	 * @deprecated since 9.4, use {@link #getRawData()} or {@link #getDataAsOrNull(Class)} instead.
 	 */

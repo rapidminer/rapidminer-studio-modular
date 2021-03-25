@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -297,13 +297,13 @@ public interface RemoteRepository extends RemoteFolder, ConnectionRepository {
 	 */
 	default void cleanup(){}
 
-	/*
+	/**
 	 * Get a client that is compatible with the AI Hub
 	 *
-	 * @return an implementation based on {@link BaseServerClient}, methods may return
-	 * {@link com.rapidminer.repository.internal.remote.exception.NotYetSupportedServiceException}
-	 * or {@link com.rapidminer.repository.internal.remote.exception.DeprecatedServiceException}
-	 * to be able to use this information to display it to the user or react on it.
+	 * @return an implementation based on {@link BaseServerClient}, methods may return {@link
+	 * com.rapidminer.repository.internal.remote.exception.NotYetSupportedServiceException} or {@link
+	 * com.rapidminer.repository.internal.remote.exception.DeprecatedServiceException} to be able to use this
+	 * information to display it to the user or react on it.
 	 */
 	BaseServerClient getClient();
 

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -40,7 +40,7 @@ public class ExcelExampleSourceConfigurationWizardCreator extends AbstractConfig
 
 	@Override
 	public void createConfigurationWizard(ParameterType type, ConfigurationListener listener) {
-		ExcelExampleSource sourceOperator = (ExcelExampleSource) listener;
+		ExcelTableSource sourceOperator = (ExcelTableSource) listener;
 		DataImportWizardBuilder builder = new DataImportWizardBuilder();
 		JDialog wizard = builder.forOperator(sourceOperator, ExcelDataSourceFactory.EXCEL_DATA_SOURCE_FACTORY_I18N_KEY).build(RapidMinerGUI.getMainFrame()).getDialog();
 		wizard.setVisible(true);

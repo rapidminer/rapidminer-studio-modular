@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -617,8 +617,6 @@ public class RapidMiner {
 		return Settings.isSettingProtected(key);
 	}
 
-	private static InputHandler inputHandler = new ConsoleInputHandler();
-
 	private static SplashScreen splashScreen;
 
 	private static boolean isInitiated = false;
@@ -708,10 +706,10 @@ public class RapidMiner {
 		RapidMiner.splashMessage("init_i18n");
 		// init ParameterService as early as possible (but after FileSystemService and LogService). If already initialized, does nothing.
 		ParameterService.init();
-		// init i18n (it is initialized in a static block)
+
+		// init i18n utils for more language support
 		I18NUtils.init();
-		String localeLanguage = ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_GENERAL_LOCALE_LANGUAGE);
-		Settings.setSetting(SettingsConstants.I18N_LOCALE, localeLanguage);
+
 		if (RapidMiner.getExecutionMode().canAccessFilesystem()) {
 			// if this file exists, it gets filled with missing translations if locale is not english
 			Settings.setSetting(SettingsConstants.I18N_TRANSLATION_HELPER, FileSystemService.getUserRapidMinerDir().toPath().resolve("translation_helper.txt").toAbsolutePath().toString());
@@ -944,12 +942,22 @@ public class RapidMiner {
 		}
 	}
 
+	/**
+	 * @deprecated since 9.9, has not been used since RapidMiner 5. Throws an {@link UnsupportedOperationException} now.
+	 */
+	@Deprecated
 	public static void setInputHandler(final InputHandler inputHandler) {
-		RapidMiner.inputHandler = inputHandler;
+		LogService.getRoot().log(Level.SEVERE, "Trying to access deprecated setInputHandler()! Functionality has been removed!");
+		throw new UnsupportedOperationException("Trying to access deprecated setInputHandler()! Functionality has been removed!");
 	}
 
+	/**
+	 * @deprecated since 9.9, has not been used since RapidMiner 5. Throws an {@link UnsupportedOperationException} now.
+	 */
+	@Deprecated
 	public static InputHandler getInputHandler() {
-		return inputHandler;
+		LogService.getRoot().log(Level.SEVERE, "Trying to access deprecated getInputHandler()! Functionality has been removed!");
+		throw new UnsupportedOperationException("Trying to access deprecated getInputHandler()! Functionality has been removed!");
 	}
 
 	/**

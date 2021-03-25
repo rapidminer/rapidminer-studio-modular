@@ -2,9 +2,11 @@ apply plugin: 'java'
 
 def templateSrc = file('src/main/resources/com/rapidminer/resources/template/src').absolutePath
 // Generate .template files task
-task buildTemplates << {
-    new File(templateSrc).eachDir {
-        ant.zip(destfile: templateSrc+'/../'+it.name+'.template', basedir: it.path){
+task buildTemplates {
+    doLast {
+        new File(templateSrc).eachDir {
+            ant.zip(destfile: templateSrc + '/../' + it.name + '.template', basedir: it.path) {
+            }
         }
     }
 }

@@ -1,26 +1,27 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
  * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General
- * Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any
- * later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
- * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more
- * details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License along with this program. If not, see
- * http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.gui.viewer;
 
 import static com.rapidminer.gui.viewer.metadata.BeltMetaDataStatisticsViewer.BELT_COLUMN_ROLE_COMPARATOR;
 
 import java.time.Instant;
+import java.time.LocalTime;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
@@ -30,6 +31,7 @@ import javax.swing.table.AbstractTableModel;
 import com.rapidminer.belt.column.Column;
 import com.rapidminer.belt.reader.MixedRowReader;
 import com.rapidminer.belt.reader.Readers;
+import com.rapidminer.belt.table.BeltConverter;
 import com.rapidminer.belt.table.Table;
 import com.rapidminer.belt.util.ColumnRole;
 import com.rapidminer.example.Attribute;
@@ -95,6 +97,8 @@ class BeltTableDataViewerTableModel extends AbstractTableModel {
 			Column attribute = getColumn(column);
 			if (attribute.type().id() == Column.TypeId.DATE_TIME) {
 				type = Date.class;
+			} else if (attribute.type().id() == Column.TypeId.TIME){
+				type = LocalTime.class;
 			} else if (attribute.type().category() == Column.Category.NUMERIC) {
 				type = Double.class;
 			} else {
@@ -137,7 +141,9 @@ class BeltTableDataViewerTableModel extends AbstractTableModel {
 				if (read == null) {
 					return Attribute.MISSING_NOMINAL_VALUE;
 				}
-				return Date.from(read);
+				return new Date((long) BeltConverter.toEpochMilli(read));
+			} else if(attribute.type().id() == Column.TypeId.TIME) {
+				return reader.getObject(column, LocalTime.class);
 			} else if (attribute.type().category() == Column.Category.NUMERIC) {
 				return reader.getNumeric(column);
 			} else {
@@ -181,6 +187,5 @@ class BeltTableDataViewerTableModel extends AbstractTableModel {
 	int getNumberOfSpecials() {
 		return numberOfSpecials;
 	}
-
 
 }

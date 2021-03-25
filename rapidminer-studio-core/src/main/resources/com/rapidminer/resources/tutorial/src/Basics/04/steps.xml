@@ -24,9 +24,9 @@
 		<tasks>
 			<task>Search for and then <activity>drag the <op>Sort</op> operator</activity> into the <ui>Process</ui>.</task>
 			<task><activity>Connect</activity> the output of <op>Filter</op> with the input of <op>Sort</op>.</task>
-			<task><activity>Click on <op>Sort</op></activity> to select it. <activity>Make the following changes</activity> in the <ui>Parameters</ui> panel:</task>
+			<task><activity>Click on <op>Sort</op></activity> to select it. <activity>Make the following changes</activity> to the <param>sort by</param> parameter in the <ui>Parameters</ui> panel:</task>
 			<task>Set <param>attribute name</param> to <value>Passenger Fare</value>.</task>
-			<task>Change <param>sorting direction</param> to <value>decreasing</value>.</task>
+			<task>Change <param>sorting order</param> to <value>descending</value>.</task>
 			<task>Connect the <op>Sort</op> output port to the result port on the right of the <op>Process</op> panel.</task>
 			<task><icon>16/media_play.png</icon><activity>Run the process</activity> and inspect the result.</task>
 		</tasks>

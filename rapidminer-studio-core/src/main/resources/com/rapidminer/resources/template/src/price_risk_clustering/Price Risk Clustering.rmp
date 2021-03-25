@@ -1,11 +1,10 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<process version="6.6.000-SNAPSHOT">
+<?xml version="1.0" encoding="UTF-8"?><process version="9.6.000-SNAPSHOT">
   <context>
     <input/>
     <output/>
     <macros/>
   </context>
-  <operator activated="true" class="process" compatibility="6.6.000-SNAPSHOT" expanded="true" name="Process">
+  <operator activated="true" class="process" compatibility="9.4.000" expanded="true" name="Process" origin="GENERATED_SAMPLE">
     <parameter key="logverbosity" value="init"/>
     <parameter key="random_seed" value="2001"/>
     <parameter key="send_mail" value="never"/>
@@ -13,7 +12,7 @@
     <parameter key="process_duration_for_mail" value="30"/>
     <parameter key="encoding" value="SYSTEM"/>
     <process expanded="true">
-      <operator activated="true" class="retrieve" compatibility="6.6.000-SNAPSHOT" expanded="true" height="68" name="Load Data" width="90" x="45" y="238">
+      <operator activated="true" class="retrieve" compatibility="9.6.000-SNAPSHOT" expanded="true" height="68" name="Load Data" origin="GENERATED_SAMPLE" width="90" x="45" y="238">
         <parameter key="repository_entry" value="//Samples/Templates/Price Risk Clustering/Data"/>
       </operator>
       <operator activated="true" class="set_role" compatibility="6.6.000-SNAPSHOT" expanded="true" height="82" name="Set ID role" width="90" x="179" y="238">
@@ -21,7 +20,7 @@
         <parameter key="target_role" value="id"/>
         <list key="set_additional_roles"/>
       </operator>
-      <operator activated="true" class="normalize" compatibility="6.6.000-SNAPSHOT" expanded="true" height="103" name="Normalize" width="90" x="380" y="238">
+      <operator activated="true" class="normalize" compatibility="7.5.003" expanded="true" height="103" name="Normalize" origin="GENERATED_SAMPLE" width="90" x="380" y="238">
         <parameter key="return_preprocessing_model" value="false"/>
         <parameter key="create_view" value="false"/>
         <parameter key="attribute_filter_type" value="all"/>
@@ -39,9 +38,10 @@
         <parameter key="method" value="Z-transformation"/>
         <parameter key="min" value="0.0"/>
         <parameter key="max" value="1.0"/>
+        <parameter key="allow_negative_values" value="false"/>
       </operator>
-      <operator activated="true" class="transpose" compatibility="6.6.000-SNAPSHOT" expanded="true" height="82" name="Transpose" width="90" x="581" y="238"/>
-      <operator activated="true" class="x_means" compatibility="6.6.000-SNAPSHOT" expanded="true" height="82" name="X-Means" width="90" x="715" y="238">
+      <operator activated="true" class="transpose" compatibility="8.1.010" expanded="true" height="82" name="Transpose" origin="GENERATED_SAMPLE" width="90" x="581" y="238"/>
+      <operator activated="true" class="x_means" compatibility="7.5.003" expanded="true" height="82" name="X-Means" origin="GENERATED_SAMPLE" width="90" x="715" y="238">
         <parameter key="add_cluster_attribute" value="true"/>
         <parameter key="add_as_label" value="false"/>
         <parameter key="remove_unlabeled" value="false"/>
@@ -82,7 +82,7 @@
       <description align="left" color="blue" colored="true" height="290" resized="true" width="270" x="20" y="105">Step 1:&lt;br/&gt;Load price data for the German DAX 30 stocks. Set the date column to role ID.</description>
       <description align="left" color="green" colored="true" height="290" resized="true" width="315" x="555" y="105">Step 3:&lt;br/&gt;Transpose data set (so that each time series is a row now) and cluster the data so that each series falls into one cluster.</description>
       <description align="left" color="purple" colored="true" height="290" resized="true" width="225" x="310" y="105">Step 2:&lt;br/&gt;Standardize each price time series, i.e. perform a Z-transformation of the values so that they have a mean of 0 and a standard deviation of 1 afterwards.</description>
-	  <description align="left" color="yellow" colored="false" height="89" resized="true" width="850" x="20" y="407">Outputs:&lt;br&gt;- The cluster model that we applied to the data set.&lt;br&gt;- The data set with the clusters it falls into. Take a look at the parallel plot of this clustered example set! (After running the process switch to 'Charts' in the Results view and change the 'Chart style' to 'Parallel'.)&lt;br&gt;</description>
+      <description align="left" color="yellow" colored="false" height="89" resized="true" width="850" x="20" y="407">Outputs:&lt;br&gt;- The cluster model that we applied to the data set.&lt;br&gt;- The data set with the clusters it falls into. Take a look at the parallel plot of this clustered example set! (After running the process switch to 'Charts' in the Results view and change the 'Chart style' to 'Parallel'.)&lt;br&gt;</description>
     </process>
   </operator>
 </process>

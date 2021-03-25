@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
@@ -529,15 +529,13 @@ public class ExpressionPropertyDialog extends PropertyDialog {
 		// make attributes available to the parser
 		InputPort inPort = ((ParameterTypeExpression) getParameterType()).getInputPort();
 		if (inPort != null) {
-			if (inPort.getMetaData() instanceof ExampleSetMetaData) {
-				ExampleSetMetaData emd = (ExampleSetMetaData) inPort.getMetaData();
-				if (emd != null) {
-					builder = builder.withDynamics(new ExampleResolver(emd));
-				}
-			} else if (inPort.getMetaData() instanceof ModelMetaData) {
-				ModelMetaData mmd = (ModelMetaData) inPort.getMetaData();
-				if (mmd != null) {
-					ExampleSetMetaData emd = mmd.getTrainingSetMetaData();
+			final ExampleSetMetaData metaDataAsOrNull = inPort.getMetaDataAsOrNull(ExampleSetMetaData.class);
+			if (metaDataAsOrNull != null) {
+				builder = builder.withDynamics(new ExampleResolver(metaDataAsOrNull));
+			} else {
+				final ModelMetaData metaDataOrNull = inPort.getMetaDataAsOrNull(ModelMetaData.class);
+				if (metaDataOrNull != null) {
+					ExampleSetMetaData emd = metaDataOrNull.getTrainingSetMetaData();
 					if (emd != null) {
 						builder = builder.withDynamics(new ExampleResolver(emd));
 					}

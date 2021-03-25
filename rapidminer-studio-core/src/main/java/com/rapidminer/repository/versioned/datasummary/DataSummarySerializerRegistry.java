@@ -1,20 +1,20 @@
 /**
- * Copyright (C) 2001-2020 by RapidMiner and the contributors
+ * Copyright (C) 2001-2021 by RapidMiner and the contributors
  *
  * Complete list of developers available at our web site:
  *
  * http://rapidminer.com
  *
- * This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General
- * Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any
- * later version.
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
- * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more
- * details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License along with this program. If not, see
- * http://www.gnu.org/licenses/.
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see http://www.gnu.org/licenses/.
  */
 package com.rapidminer.repository.versioned.datasummary;
 
@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
 
 import com.rapidminer.repository.AbstractFileSuffixRegistry;
 import com.rapidminer.tools.DominatingClassFinder;
-import com.rapidminer.tools.ValidationUtil;
+import com.rapidminer.tools.ValidationUtilV2;
 import com.rapidminer.versioning.repository.DataSummary;
 
 /**
@@ -45,7 +45,7 @@ public class DataSummarySerializerRegistry extends AbstractFileSuffixRegistry<Da
 	private final Map<Class<? extends DataSummary>, List<DataSummarySerializer>> serializerByClass = new ConcurrentHashMap<>();
 
 	static {
-		ExampleSetDataSummarySerializer.INSTANCE.register();
+		IOTableDataSummarySerializer.INSTANCE.register();
 		ConnectionDataSummarySerializer.INSTANCE.register();
 		IOCollectionDataSummarySerializer.INSTANCE.register();
 	}
@@ -67,7 +67,7 @@ public class DataSummarySerializerRegistry extends AbstractFileSuffixRegistry<Da
 	 */
 	@Override
 	public boolean registerCallback(String suffix, DataSummarySerializer callback) {
-		ValidationUtil.requireNonNull(callback, "callback");
+		ValidationUtilV2.requireNonNull(callback, "callback");
 		suffix = prepareSuffix(suffix);
 		if (!callback.getSuffix().equals(suffix)) {
 			throw new IllegalArgumentException("suffix of callback must be the same as registered");
@@ -85,7 +85,7 @@ public class DataSummarySerializerRegistry extends AbstractFileSuffixRegistry<Da
 	 */
 	@Override
 	public void unregisterCallback(String suffix, DataSummarySerializer callback) {
-		ValidationUtil.requireNonNull(callback, "callback");
+		ValidationUtilV2.requireNonNull(callback, "callback");
 		suffix = prepareSuffix(suffix);
 		if (!callback.getSuffix().equals(suffix)) {
 			throw new IllegalArgumentException("suffix of callback must be the same as registered");
