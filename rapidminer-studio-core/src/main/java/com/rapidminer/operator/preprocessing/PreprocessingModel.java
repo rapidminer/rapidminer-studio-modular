@@ -27,6 +27,7 @@ import com.rapidminer.example.Attribute;
 import com.rapidminer.example.AttributeRole;
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.ExampleSet;
+import com.rapidminer.example.set.HeaderExampleSet;
 import com.rapidminer.example.set.ModelViewExampleSet;
 import com.rapidminer.example.set.NonSpecialAttributesExampleSet;
 import com.rapidminer.example.set.RemappedExampleSet;
@@ -71,9 +72,7 @@ public abstract class PreprocessingModel extends AbstractModel implements ViewMo
 		}
 		// adapting example set to contain only attributes, which were present during learning time
 		// and remove roles if necessary
-		ExampleSet nonSpecialRemapped = RemappedExampleSet.create(
-				isSupportingAttributeRoles() ? exampleSet : NonSpecialAttributesExampleSet.create(exampleSet),
-				getTrainingHeader(), false, needsRemapping());
+		ExampleSet nonSpecialRemapped = getNonSpecialRemappedTarget(exampleSet, getTrainingHeader(), false);
 
 		LinkedList<AttributeRole> unusedList = new LinkedList<>();
 		Iterator<AttributeRole> iterator = exampleSet.getAttributes().allAttributeRoles();
@@ -117,6 +116,18 @@ public abstract class PreprocessingModel extends AbstractModel implements ViewMo
 	}
 
 	/**
+	 * Creates a remapped {@link ExampleSet}, sorting the attributes based on the {@link HeaderExampleSet}.
+	 * Subclasses can adjust this behavior to include more attributes than the original training header.
+	 *
+	 * @since 9.9.3
+	 */
+	protected ExampleSet getNonSpecialRemappedTarget(ExampleSet exampleSet, HeaderExampleSet trainingHeader, boolean keepAdditional) {
+		return RemappedExampleSet.create(
+				isSupportingAttributeRoles() ? exampleSet : NonSpecialAttributesExampleSet.create(exampleSet),
+				trainingHeader, keepAdditional, needsRemapping());
+	}
+
+	/**
 	 * @return {@code true} if the parameter "create view" is selected
 	 */
 	protected boolean isCreateView() {
@@ -147,9 +158,14 @@ public abstract class PreprocessingModel extends AbstractModel implements ViewMo
 		parameterMap.put(key, value);
 	}
 
+	@Override
+	public boolean isModelKind(ModelKind modelKind) {
+		return modelKind == ModelKind.PREPROCESSING;
+	}
+
 	/**
-	 * Subclasses which need to have the attribute roles must return true. Otherwise all selected
-	 * attributes are converted into regular and afterwards given their old roles.
+	 * Subclasses which need to have the attribute roles must return true. Otherwise all selected attributes are
+	 * converted into regular and afterwards given their old roles.
 	 */
 	public boolean isSupportingAttributeRoles() {
 		return false;

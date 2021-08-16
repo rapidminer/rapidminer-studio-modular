@@ -238,12 +238,8 @@ public class OperatorGlobalSearchGUIProvider implements GlobalSearchableGUIProvi
 
 			@Override
 			protected Void doInBackground() {
-				try {
-					Operator operator = OperatorService.getOperatorDescription(operatorKey).createOperatorInstance();
-					RapidMinerGUI.getMainFrame().getOperatorDocViewer().setDisplayedOperator(operator);
-				} catch (OperatorCreationException e) {
-					LogService.getRoot().log(Level.WARNING, "com.rapidminer.gui.processeditor.global_search.OperatorSearchManager.error.operator_browse_error", e.getMessage());
-				}
+				RapidMinerGUI.getMainFrame().getOperatorDocViewer()
+						.setDisplayedOperator(OperatorService.getOperatorDescription(operatorKey));
 				return null;
 			}
 		}.start();

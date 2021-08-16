@@ -25,8 +25,11 @@ import java.util.logging.Level;
 
 import com.rapidminer.adaption.belt.IODataTable;
 import com.rapidminer.adaption.belt.IOTable;
+import com.rapidminer.example.AttributeWeights;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.IOObject;
+import com.rapidminer.operator.IOTableModel;
+import com.rapidminer.operator.performance.PerformanceVector;
 import com.rapidminer.operator.ports.metadata.MetaData;
 import com.rapidminer.operator.ports.metadata.table.TableMetaData;
 import com.rapidminer.repository.IOObjectEntry;
@@ -54,13 +57,31 @@ public interface IOObjectFileTypeHandler<T extends IOObject, U extends IOObjectE
 
 	/**
 	 * The suffix for {@link ExampleSet}s and {@link IOTable}s written in hdf5 format,
-	 * see {@link com.rapidminer.storage.hdf5.ExampleSetHdf5Writer}
+	 * see {@link com.rapidminer.storage.hdf5.ExampleSetHdf5Writer ExampleSetHdf5Writer} and
+	 * {@link com.rapidminer.storage.hdf5.IOTableHdf5Writer IOTableHdf5Writer}
 	 */
 	String DATA_TABLE_FILE_ENDING = "rmhdf5table";
+
+	/**
+	 * The suffix for {@link IOTableModel}s written in json format.
+	 * 
+	 */
+	String TABLE_MODEL_FILE_ENDING = "rmtabmod";
+
 	/**
 	 * The suffix for {@link com.rapidminer.operator.IOObjectCollection}s written in zip format
 	 */
 	String COLLECTION_SUFFIX = "collection";
+
+	/**
+	 * The suffix for {@link PerformanceVector} written in json format.
+	 */
+	String PERFORMANCE_VECTOR_SUFFIX = "rmperf";
+
+	/**
+	 * The suffix for {@link AttributeWeights} written in json format.
+	 */
+	String ATTRIBUTE_WEIGHTS_SUFFIX = "rmweights";
 
 	String ERROR_READING_FILE = "com.rapidminer.repository.versioned.IOObjectFileTypeHandler.error_reading_file";
 
@@ -195,4 +216,87 @@ public interface IOObjectFileTypeHandler<T extends IOObject, U extends IOObjectE
 		}
 	}
 
+	/**
+	 * {@link FileTypeHandler} for {@link IOTableModel} entries in the repository with the json format.
+	 *
+	 * @author Gisa Meier
+	 * @since 9.10
+	 */
+	final class IOTableModelHandler extends JsonStorableIOObjectHandler<IOTableModel, JsonIOTableModelEntry> {
+		static final IOTableModelHandler INSTANCE = new IOTableModelHandler();
+
+		private IOTableModelHandler() {
+		}
+
+		@Override
+		public String getSuffix() {
+			return TABLE_MODEL_FILE_ENDING;
+		}
+
+		@Override
+		public Class<IOTableModel> getIOOClass() {
+			return IOTableModel.class;
+		}
+
+		@Override
+		public Class<JsonIOTableModelEntry> getEntryType() {
+			return JsonIOTableModelEntry.class;
+		}
+	}
+
+	/**
+	 * {@link JsonStorableIOObjectHandler} for {@link PerformanceVector} entries in the repository with the new json
+	 * format.
+	 *
+	 * @author Gisa Meier
+	 * @since 9.10.0
+	 */
+	class PerformanceHandler extends JsonStorableIOObjectHandler<PerformanceVector, JsonPerformanceEntry> {
+		static final PerformanceHandler INSTANCE = new PerformanceHandler();
+
+		private PerformanceHandler(){
+		}
+
+		@Override
+		public Class getEntryType() {
+			return JsonPerformanceEntry.class;
+		}
+
+		public String getSuffix() {
+			return PERFORMANCE_VECTOR_SUFFIX;
+		}
+
+		public Class<PerformanceVector> getIOOClass() {
+			return PerformanceVector.class;
+		}
+	}
+
+	/**
+	 * {@link JsonStorableIOObjectHandler} for {@link AttributeWeights} entries in the repository with the new json
+	 * format.
+	 *
+	 * @author Gisa Meier
+	 * @since 9.10.0
+	 */
+	class WeightsHandler extends JsonStorableIOObjectHandler<AttributeWeights, JsonAttributeWeightsEntry> {
+		static final WeightsHandler INSTANCE = new WeightsHandler();
+
+		private WeightsHandler(){
+		}
+
+		@Override
+		public Class getEntryType() {
+			return JsonAttributeWeightsEntry.class;
+		}
+
+		public String getSuffix() {
+			return ATTRIBUTE_WEIGHTS_SUFFIX;
+		}
+
+		@Override
+		public Class<AttributeWeights> getIOOClass() {
+			return AttributeWeights.class;
+		}
+
+	}
 }

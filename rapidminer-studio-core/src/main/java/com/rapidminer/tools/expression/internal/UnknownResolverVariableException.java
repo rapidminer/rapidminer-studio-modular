@@ -29,7 +29,9 @@ import com.rapidminer.tools.expression.ExpressionParsingException;
  *
  * @author Nils Woehler
  *
+ * @deprecated since 9.11, see {@link com.rapidminer.tools.belt.expression.ExpressionParser}
  */
+@Deprecated
 public class UnknownResolverVariableException extends ExpressionParsingException {
 
 	private static final long serialVersionUID = -9128291928735582300L;

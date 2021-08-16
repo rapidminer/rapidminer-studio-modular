@@ -122,4 +122,9 @@ public class SOMDimensionalityReductionModel extends AbstractModel {
 		build.setAllUserData(exampleSet.getAllUserData());
 		return build;
 	}
+
+	@Override
+	public boolean isModelKind(ModelKind modelKind) {
+		return modelKind == ModelKind.PREPROCESSING;
+	}
 }

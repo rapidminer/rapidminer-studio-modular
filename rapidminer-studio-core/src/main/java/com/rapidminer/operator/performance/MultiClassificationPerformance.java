@@ -25,6 +25,7 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
@@ -78,12 +79,15 @@ public class MultiClassificationPerformance extends MeasuredPerformance {
 	private Map<String, Integer> classNameMap = new HashMap<String, Integer>();
 
 	/** The currently used label attribute. */
+	@JsonIgnore
 	private Attribute labelAttribute;
 
 	/** The currently used predicted label attribute. */
+	@JsonIgnore
 	private Attribute predictedLabelAttribute;
 
 	/** The weight attribute. Might be null. */
+	@JsonIgnore
 	private Attribute weightAttribute;
 
 	/** The type of this performance: accuracy or classification error. */

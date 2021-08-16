@@ -253,4 +253,46 @@ public class GroupedModel extends AbstractModel implements Iterable<Model>, Meta
 	public List<Model> getModels() {
 		return models;
 	}
+
+	@Override
+	public boolean isModelKind(ModelKind modelKind) {
+		if (modelKind == null) {
+			return false;
+		}
+		switch (modelKind) {
+			case PREPROCESSING:
+			case POSTPROCESSING:
+				return allAreModelKind(modelKind);
+			case SUPERVISED:
+			case UNSUPERVISED:
+			case FORECASTING:
+				return oneIsModelKind(modelKind);
+			default:
+				return false;
+		}
+	}
+
+	/**
+	 * Returns {@code true} iff one of the models if of the given kind.
+	 */
+	private boolean oneIsModelKind(ModelKind modelKind) {
+		for (Model model : models) {
+			if (model.isModelKind(modelKind)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Returns {@code true} iff all of the models if of the given kind.
+	 */
+	private boolean allAreModelKind(ModelKind modelKind) {
+		for (Model model : models) {
+			if (!model.isModelKind(modelKind)) {
+				return false;
+			}
+		}
+		return true;
+	}
 }

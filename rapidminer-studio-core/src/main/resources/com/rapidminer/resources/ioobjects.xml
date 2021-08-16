@@ -162,7 +162,7 @@
     
     <ioobject
         name="Model"
-        class="com.rapidminer.operator.Model"
+        class="com.rapidminer.operator.GeneralModel"
         reportable="false"
         icon="lightbulb_off.png"
         >

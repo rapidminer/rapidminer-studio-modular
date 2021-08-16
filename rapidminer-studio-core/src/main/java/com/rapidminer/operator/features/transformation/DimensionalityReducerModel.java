@@ -121,4 +121,9 @@ public class DimensionalityReducerModel extends AbstractModel {
 	public String toString() {
 		return "This model reduces the number of dimensions to " + dimensions + ".";
 	}
+
+	@Override
+	public boolean isModelKind(ModelKind modelKind) {
+		return modelKind == ModelKind.PREPROCESSING;
+	}
 }

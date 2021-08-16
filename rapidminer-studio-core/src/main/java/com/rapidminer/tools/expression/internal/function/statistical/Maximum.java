@@ -25,11 +25,13 @@ import com.rapidminer.tools.expression.internal.function.AbstractArbitraryDouble
 
 /**
  *
- * A {@link Function} for maximum.
+ * A {@link com.rapidminer.tools.expression.Function} for maximum.
  *
  * @author David Arnu
  *
+ * @deprecated since 9.11, see {@link com.rapidminer.tools.belt.expression.ExpressionParser}
  */
+@Deprecated
 public class Maximum extends AbstractArbitraryDoubleInputFunction {
 
 	/**
@@ -42,11 +44,13 @@ public class Maximum extends AbstractArbitraryDoubleInputFunction {
 
 	@Override
 	public double compute(double... values) {
-
+		if (values == null || values.length == 0) {
+			return Double.NaN;
+		}
 		double max = values[0];
 
 		for (int i = 1; i < values.length; i++) {
-			max = max > values[i] ? max : values[i];
+			max = Math.max(max, values[i]);
 		}
 		return max;
 	}

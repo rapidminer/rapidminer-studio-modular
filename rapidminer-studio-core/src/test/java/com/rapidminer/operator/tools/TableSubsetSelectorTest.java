@@ -21,8 +21,11 @@ package com.rapidminer.operator.tools;
 import java.time.Instant;
 import java.time.LocalTime;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.function.BiFunction;
+import java.util.stream.Collectors;
 
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -50,9 +53,9 @@ import com.rapidminer.test_utils.RapidAssert;
 
 
 /**
- * Tests for {@link TableSubsetSelector}, in particular for the type pre-filtering.
+ * Tests for {@link TableSubsetSelector}, in particular for the type pre-filtering and the special columns handling.
  *
- * @author Gisa Meier
+ * @author Gisa Meier, Kevin Majchrzak
  * @since 9.9
  */
 public class TableSubsetSelectorTest {
@@ -88,32 +91,44 @@ public class TableSubsetSelectorTest {
 	public void testAll() throws UserError {
 		Table table = createTable();
 		final DummyOperator dummyOperator = new DummyOperator(this::getTableSubsetSelector);
-		final Table subset = dummyOperator.subsetSelector.getSubset(table);
+		final Table subset = dummyOperator.subsetSelector.getSubset(table, true);
 
 		final DummyOperator dummyOperator2 =
 				new DummyOperator((op, inp) -> new TableSubsetSelector(op, inp, ValueTypeColumnFilter.TYPE_REAL,
 						ValueTypeColumnFilter.TYPE_INTEGER, ValueTypeColumnFilter.TYPE_BINOMINAL,
 						ValueTypeColumnFilter.TYPE_NON_BINOMINAL, ValueTypeColumnFilter.TYPE_DATE_TIME,
 						ValueTypeColumnFilter.TYPE_TIME));
-		final Table subset2 = dummyOperator2.subsetSelector.getSubset(table);
+		final Table subset2 = dummyOperator2.subsetSelector.getSubset(table, true);
 
 		RapidAssert.assertEquals(new IOTable(subset), new IOTable(subset2));
+
+		// check that the keepSpecialIfNotIncluded works as expected
+		Table subset3 = dummyOperator2.subsetSelector.getSubset(table, false);
+		List<String> subset1Minus3 = subset.labels().stream().filter(columnName -> !subset3.labels()
+				.contains(columnName)).collect(Collectors.toList());
+		Assert.assertEquals(Collections.singletonList("Special"), subset1Minus3);
 	}
 
 	@Test
-	public void testAllMD() throws UserError {
+	public void testAllMD() {
 		TableMetaData tableMD = new TableMetaData(new IOTable(createTable()), true);
 		final DummyOperator dummyOperator = new DummyOperator(this::getTableSubsetSelector);
-		final TableMetaData subset = dummyOperator.subsetSelector.getMetaDataSubset(tableMD);
+		final TableMetaData subset = dummyOperator.subsetSelector.getMetaDataSubset(tableMD, true);
 
 		final DummyOperator dummyOperator2 =
 				new DummyOperator((op, inp) -> new TableSubsetSelector(op, inp, ValueTypeColumnFilter.TYPE_REAL,
 						ValueTypeColumnFilter.TYPE_INTEGER, ValueTypeColumnFilter.TYPE_BINOMINAL,
 						ValueTypeColumnFilter.TYPE_NON_BINOMINAL, ValueTypeColumnFilter.TYPE_DATE_TIME,
 						ValueTypeColumnFilter.TYPE_TIME));
-		final TableMetaData subset2 = dummyOperator2.subsetSelector.getMetaDataSubset(tableMD);
+		final TableMetaData subset2 = dummyOperator2.subsetSelector.getMetaDataSubset(tableMD, true);
 
 		Assert.assertEquals(subset.labels(), subset2.labels());
+
+		// check that the keepSpecialIfNotIncluded works as expected
+		TableMetaData subset3 = dummyOperator2.subsetSelector.getMetaDataSubset(tableMD, false);
+		List<String> subset1Minus3 = subset.labels().stream().filter(columnName -> !subset3.labels()
+				.contains(columnName)).collect(Collectors.toList());
+		Assert.assertEquals(Collections.singletonList("Special"), subset1Minus3);
 	}
 
 	@Test
@@ -127,7 +142,8 @@ public class TableSubsetSelectorTest {
 		final Table subset =
 				dummyOperator.subsetSelector.getSubset(table.columns(Arrays.asList(ValueTypeColumnFilter.TYPE_REAL,
 						ValueTypeColumnFilter.TYPE_INTEGER,
-						ValueTypeColumnFilter.TYPE_REAL + "Missing", ValueTypeColumnFilter.TYPE_INTEGER + "Missing")));
+						ValueTypeColumnFilter.TYPE_REAL + "Missing", ValueTypeColumnFilter.TYPE_INTEGER + "Missing")),
+						true);
 
 		final DummyOperator dummyOperator2 =
 				new DummyOperator((op, inp) -> new TableSubsetSelector(op, inp, ValueTypeColumnFilter.TYPE_REAL,
@@ -136,13 +152,19 @@ public class TableSubsetSelectorTest {
 		dummyOperator2.setParameter(SubsetColumnFilter.PARAMETER_SELECT_SUBSET, ValueTypeColumnFilter.TYPE_REAL +
 				ParameterTypeAttributeSubset.ATTRIBUTE_SEPARATOR_CHARACTER + ValueTypeColumnFilter.TYPE_INTEGER +
 				"Missing");
-		final Table subset2 = dummyOperator2.subsetSelector.getSubset(table);
+		final Table subset2 = dummyOperator2.subsetSelector.getSubset(table, true);
 
 		RapidAssert.assertEquals(new IOTable(subset), new IOTable(subset2));
+
+		// check that the keepSpecialIfNotIncluded works as expected
+		Table subset3 = dummyOperator2.subsetSelector.getSubset(table, false);
+		List<String> subset1Minus3 = subset.labels().stream().filter(columnName -> !subset3.labels()
+				.contains(columnName)).collect(Collectors.toList());
+		Assert.assertEquals(Collections.emptyList(), subset1Minus3);
 	}
 
 	@Test
-	public void testNumericMD() throws UserError {
+	public void testNumericMD() {
 		TableMetaData table = new TableMetaData(new IOTable(createTable()), true);
 		final DummyOperator dummyOperator = new DummyOperator(this::getTableSubsetSelector);
 		dummyOperator.setParameter(TableSubsetSelector.PARAMETER_FILTER_NAME, "a subset");
@@ -152,7 +174,8 @@ public class TableSubsetSelectorTest {
 		final TableMetaData subset =
 				dummyOperator.subsetSelector.getMetaDataSubset(table.columns(Arrays.asList(ValueTypeColumnFilter.TYPE_REAL,
 						ValueTypeColumnFilter.TYPE_INTEGER,
-						ValueTypeColumnFilter.TYPE_REAL + "Missing", ValueTypeColumnFilter.TYPE_INTEGER + "Missing")));
+						ValueTypeColumnFilter.TYPE_REAL + "Missing", ValueTypeColumnFilter.TYPE_INTEGER + "Missing")),
+						true);
 
 		final DummyOperator dummyOperator2 =
 				new DummyOperator((op, inp) -> new TableSubsetSelector(op, inp, ValueTypeColumnFilter.TYPE_REAL,
@@ -161,9 +184,15 @@ public class TableSubsetSelectorTest {
 		dummyOperator2.setParameter(SubsetColumnFilter.PARAMETER_SELECT_SUBSET, ValueTypeColumnFilter.TYPE_REAL +
 				ParameterTypeAttributeSubset.ATTRIBUTE_SEPARATOR_CHARACTER + ValueTypeColumnFilter.TYPE_INTEGER +
 				"Missing");
-		final TableMetaData subset2 = dummyOperator2.subsetSelector.getMetaDataSubset(table);
+		final TableMetaData subset2 = dummyOperator2.subsetSelector.getMetaDataSubset(table, true);
 
 		Assert.assertEquals(subset.labels(), subset2.labels());
+
+		// check that the keepSpecialIfNotIncluded works as expected
+		TableMetaData subset3 = dummyOperator2.subsetSelector.getMetaDataSubset(table, false);
+		List<String> subset1Minus3 = subset.labels().stream().filter(columnName -> !subset3.labels()
+				.contains(columnName)).collect(Collectors.toList());
+		Assert.assertEquals(Collections.emptyList(), subset1Minus3);
 	}
 
 	@Test
@@ -175,9 +204,9 @@ public class TableSubsetSelectorTest {
 				ValueTypeColumnFilter.TYPE_BINOMINAL + "Missing");
 		dummyOperator.setParameter(TableSubsetSelector.PARAMETER_INCLUDE_OR_EXCLUDE_SELECTION, "exclude attributes");
 		final Table subset =
-				dummyOperator.subsetSelector.getSubset(table.columns(Arrays.asList(ValueTypeColumnFilter.TYPE_BINOMINAL, ValueTypeColumnFilter.TYPE_NON_BINOMINAL,
-						ValueTypeColumnFilter.TYPE_BINOMINAL + "Missing",
-						ValueTypeColumnFilter.TYPE_NON_BINOMINAL + "Missing", "Special")));
+				dummyOperator.subsetSelector.getSubset(table.columns(Arrays.asList(ValueTypeColumnFilter.TYPE_BINOMINAL,
+						ValueTypeColumnFilter.TYPE_NON_BINOMINAL, ValueTypeColumnFilter.TYPE_BINOMINAL + "Missing",
+						ValueTypeColumnFilter.TYPE_NON_BINOMINAL + "Missing", "Special")), true);
 
 		final DummyOperator dummyOperator2 =
 				new DummyOperator((op, inp) -> new TableSubsetSelector(op, inp, ValueTypeColumnFilter.TYPE_BINOMINAL,
@@ -186,13 +215,38 @@ public class TableSubsetSelectorTest {
 		dummyOperator2.setParameter(SingleColumnFilter.PARAMETER_ATTRIBUTE,
 				ValueTypeColumnFilter.TYPE_BINOMINAL + "Missing");
 		dummyOperator2.setParameter(TableSubsetSelector.PARAMETER_INCLUDE_OR_EXCLUDE_SELECTION, "exclude attributes");
-		final Table subset2 = dummyOperator2.subsetSelector.getSubset(table);
+		final Table subset2 = dummyOperator2.subsetSelector.getSubset(table, true);
 
 		RapidAssert.assertEquals(new IOTable(subset), new IOTable(subset2));
+
+		// check that the keepSpecialIfNotIncluded works as expected
+		Table subset3 = dummyOperator2.subsetSelector.getSubset(table, false);
+		List<String> subset1Minus3 = subset.labels().stream().filter(columnName -> !subset3.labels()
+				.contains(columnName)).collect(Collectors.toList());
+		Assert.assertEquals(Collections.singletonList("Special"), subset1Minus3);
+
+		dummyOperator2.setParameter(TableSubsetSelector.PARAMETER_INCLUDE_SPECIAL_ATTRIBUTES, "true");
+		dummyOperator2.setParameter(SingleColumnFilter.PARAMETER_ATTRIBUTE, "Special");
+		Table subset4 = dummyOperator2.subsetSelector.getSubset(table, true);
+		Assert.assertEquals(Arrays.asList(ValueTypeColumnFilter.TYPE_BINOMINAL,
+				ValueTypeColumnFilter.TYPE_NON_BINOMINAL,
+				ValueTypeColumnFilter.TYPE_BINOMINAL + "Missing",
+				ValueTypeColumnFilter.TYPE_NON_BINOMINAL + "Missing"), subset4.labels());
+
+		dummyOperator2.setParameter(TableSubsetSelector.PARAMETER_INCLUDE_OR_EXCLUDE_SELECTION, "include attributes");
+		Table subset5 = dummyOperator2.subsetSelector.getSubset(table, false);
+		Assert.assertEquals(Collections.singletonList("Special"), subset5.labels());
+
+		Table subset6 = dummyOperator2.subsetSelector.getSubset(table, true);
+		Assert.assertEquals(Collections.singletonList("Special"), subset6.labels());
+
+		dummyOperator2.setParameter(TableSubsetSelector.PARAMETER_INCLUDE_SPECIAL_ATTRIBUTES, "false");
+		Table subset7 = dummyOperator2.subsetSelector.getSubset(table, false);
+		Assert.assertEquals(Collections.emptyList(), subset7.labels());
 	}
 
 	@Test
-	public void testNominalMD() throws UserError {
+	public void testNominalMD() {
 		TableMetaData table = new TableMetaData(new IOTable(createTable()), true);
 		final DummyOperator dummyOperator = new DummyOperator(this::getTableSubsetSelector);
 		dummyOperator.setParameter(TableSubsetSelector.PARAMETER_FILTER_NAME, "one attribute");
@@ -200,9 +254,9 @@ public class TableSubsetSelectorTest {
 				ValueTypeColumnFilter.TYPE_BINOMINAL + "Missing");
 		dummyOperator.setParameter(TableSubsetSelector.PARAMETER_INCLUDE_OR_EXCLUDE_SELECTION, "exclude attributes");
 		final TableMetaData subset =
-				dummyOperator.subsetSelector.getMetaDataSubset(table.columns(Arrays.asList(ValueTypeColumnFilter.TYPE_BINOMINAL, ValueTypeColumnFilter.TYPE_NON_BINOMINAL,
-						ValueTypeColumnFilter.TYPE_BINOMINAL + "Missing",
-						ValueTypeColumnFilter.TYPE_NON_BINOMINAL + "Missing", "Special")));
+				dummyOperator.subsetSelector.getMetaDataSubset(table.columns(Arrays.asList(ValueTypeColumnFilter.TYPE_BINOMINAL,
+						ValueTypeColumnFilter.TYPE_NON_BINOMINAL, ValueTypeColumnFilter.TYPE_BINOMINAL + "Missing",
+						ValueTypeColumnFilter.TYPE_NON_BINOMINAL + "Missing", "Special")), true);
 
 		final DummyOperator dummyOperator2 =
 				new DummyOperator((op, inp) -> new TableSubsetSelector(op, inp, ValueTypeColumnFilter.TYPE_BINOMINAL,
@@ -211,9 +265,34 @@ public class TableSubsetSelectorTest {
 		dummyOperator2.setParameter(SingleColumnFilter.PARAMETER_ATTRIBUTE,
 				ValueTypeColumnFilter.TYPE_BINOMINAL + "Missing");
 		dummyOperator2.setParameter(TableSubsetSelector.PARAMETER_INCLUDE_OR_EXCLUDE_SELECTION, "exclude attributes");
-		final TableMetaData subset2 = dummyOperator2.subsetSelector.getMetaDataSubset(table);
+		final TableMetaData subset2 = dummyOperator2.subsetSelector.getMetaDataSubset(table, true);
 
 		Assert.assertEquals(subset.labels(), subset2.labels());
+
+		// check that the keepSpecialIfNotIncluded works as expected
+		TableMetaData subset3 = dummyOperator2.subsetSelector.getMetaDataSubset(table, false);
+		List<String> subset1Minus3 = subset.labels().stream().filter(columnName -> !subset3.labels()
+				.contains(columnName)).collect(Collectors.toList());
+		Assert.assertEquals(Collections.singletonList("Special"), subset1Minus3);
+
+		dummyOperator2.setParameter(TableSubsetSelector.PARAMETER_INCLUDE_SPECIAL_ATTRIBUTES, "true");
+		dummyOperator2.setParameter(SingleColumnFilter.PARAMETER_ATTRIBUTE, "Special");
+		TableMetaData subset4 = dummyOperator2.subsetSelector.getMetaDataSubset(table, true);
+		Assert.assertEquals(new HashSet<>(Arrays.asList(ValueTypeColumnFilter.TYPE_NON_BINOMINAL,
+				ValueTypeColumnFilter.TYPE_NON_BINOMINAL + "Missing",
+				ValueTypeColumnFilter.TYPE_BINOMINAL,
+				ValueTypeColumnFilter.TYPE_BINOMINAL + "Missing")), subset4.labels());
+
+		dummyOperator2.setParameter(TableSubsetSelector.PARAMETER_INCLUDE_OR_EXCLUDE_SELECTION, "include attributes");
+		TableMetaData subset5 = dummyOperator2.subsetSelector.getMetaDataSubset(table, false);
+		Assert.assertEquals(Collections.singleton("Special"), subset5.labels());
+
+		TableMetaData subset6 = dummyOperator2.subsetSelector.getMetaDataSubset(table, true);
+		Assert.assertEquals(Collections.singleton("Special"), subset6.labels());
+
+		dummyOperator2.setParameter(TableSubsetSelector.PARAMETER_INCLUDE_SPECIAL_ATTRIBUTES, "false");
+		TableMetaData subset7 = dummyOperator2.subsetSelector.getMetaDataSubset(table, false);
+		Assert.assertEquals(Collections.emptySet(), subset7.labels());
 	}
 
 	@Test
@@ -221,37 +300,37 @@ public class TableSubsetSelectorTest {
 		Table table = createTable();
 		final DummyOperator dummyOperator = new DummyOperator(this::getTableSubsetSelector);
 		dummyOperator.setParameter(TableSubsetSelector.PARAMETER_FILTER_NAME, "no missing values");
-		dummyOperator.setParameter(TableSubsetSelector.PARAMETER_FILTER_SPECIAL_ATTRIBUTES, "true");
+		dummyOperator.setParameter(TableSubsetSelector.PARAMETER_INCLUDE_SPECIAL_ATTRIBUTES, "true");
 		final Table subset =
 				dummyOperator.subsetSelector.getSubset(table.columns(Arrays.asList(ValueTypeColumnFilter.TYPE_NON_BINOMINAL,
-						ValueTypeColumnFilter.TYPE_NON_BINOMINAL + "Missing", "Special")));
+						ValueTypeColumnFilter.TYPE_NON_BINOMINAL + "Missing", "Special")), false);
 
 		final DummyOperator dummyOperator2 =
 				new DummyOperator((op, inp) -> new TableSubsetSelector(op, inp,
 						ValueTypeColumnFilter.TYPE_NON_BINOMINAL));
 		dummyOperator2.setParameter(TableSubsetSelector.PARAMETER_FILTER_NAME, "no missing values");
-		dummyOperator2.setParameter(TableSubsetSelector.PARAMETER_FILTER_SPECIAL_ATTRIBUTES, "true");
-		final Table subset2 = dummyOperator2.subsetSelector.getSubset(table);
+		dummyOperator2.setParameter(TableSubsetSelector.PARAMETER_INCLUDE_SPECIAL_ATTRIBUTES, "true");
+		final Table subset2 = dummyOperator2.subsetSelector.getSubset(table, true);
 
 		RapidAssert.assertEquals(new IOTable(subset), new IOTable(subset2));
 	}
 
 	@Test
-	public void testNonBinominalMD() throws UserError {
+	public void testNonBinominalMD() {
 		TableMetaData table = new TableMetaData(new IOTable(createTable()), true);
 		final DummyOperator dummyOperator = new DummyOperator(this::getTableSubsetSelector);
 		dummyOperator.setParameter(TableSubsetSelector.PARAMETER_FILTER_NAME, "no missing values");
-		dummyOperator.setParameter(TableSubsetSelector.PARAMETER_FILTER_SPECIAL_ATTRIBUTES, "true");
+		dummyOperator.setParameter(TableSubsetSelector.PARAMETER_INCLUDE_SPECIAL_ATTRIBUTES, "true");
 		final TableMetaData subset =
 				dummyOperator.subsetSelector.getMetaDataSubset(table.columns(Arrays.asList(ValueTypeColumnFilter.TYPE_NON_BINOMINAL,
-						ValueTypeColumnFilter.TYPE_NON_BINOMINAL + "Missing", "Special")));
+						ValueTypeColumnFilter.TYPE_NON_BINOMINAL + "Missing", "Special")), false);
 
 		final DummyOperator dummyOperator2 =
 				new DummyOperator((op, inp) -> new TableSubsetSelector(op, inp,
 						ValueTypeColumnFilter.TYPE_NON_BINOMINAL));
 		dummyOperator2.setParameter(TableSubsetSelector.PARAMETER_FILTER_NAME, "no missing values");
-		dummyOperator2.setParameter(TableSubsetSelector.PARAMETER_FILTER_SPECIAL_ATTRIBUTES, "true");
-		final TableMetaData subset2 = dummyOperator2.subsetSelector.getMetaDataSubset(table);
+		dummyOperator2.setParameter(TableSubsetSelector.PARAMETER_INCLUDE_SPECIAL_ATTRIBUTES, "true");
+		final TableMetaData subset2 = dummyOperator2.subsetSelector.getMetaDataSubset(table, true);
 
 		Assert.assertEquals(subset.labels(), subset2.labels());
 	}
@@ -262,38 +341,38 @@ public class TableSubsetSelectorTest {
 		final DummyOperator dummyOperator = new DummyOperator(this::getTableSubsetSelector);
 		dummyOperator.setParameter(TableSubsetSelector.PARAMETER_FILTER_NAME, "regular expression");
 		dummyOperator.setParameter(RegexColumnFilter.PARAMETER_REGULAR_EXPRESSION, "Mis");
-		dummyOperator.setParameter(TableSubsetSelector.PARAMETER_FILTER_SPECIAL_ATTRIBUTES, "true");
+		dummyOperator.setParameter(TableSubsetSelector.PARAMETER_INCLUDE_SPECIAL_ATTRIBUTES, "true");
 		final Table subset =
 				dummyOperator.subsetSelector.getSubset(table.columns(Arrays.asList(ValueTypeColumnFilter.TYPE_INTEGER,
-						ValueTypeColumnFilter.TYPE_INTEGER + "Missing")));
+						ValueTypeColumnFilter.TYPE_INTEGER + "Missing")), true);
 
 		final DummyOperator dummyOperator2 =
 				new DummyOperator((op, inp) -> new TableSubsetSelector(op, inp, ValueTypeColumnFilter.TYPE_INTEGER));
 		dummyOperator2.setParameter(TableSubsetSelector.PARAMETER_FILTER_NAME, "regular expression");
 		dummyOperator2.setParameter(RegexColumnFilter.PARAMETER_REGULAR_EXPRESSION, "Mis");
-		dummyOperator2.setParameter(TableSubsetSelector.PARAMETER_FILTER_SPECIAL_ATTRIBUTES, "true");
-		final Table subset2 = dummyOperator2.subsetSelector.getSubset(table);
+		dummyOperator2.setParameter(TableSubsetSelector.PARAMETER_INCLUDE_SPECIAL_ATTRIBUTES, "true");
+		final Table subset2 = dummyOperator2.subsetSelector.getSubset(table, false);
 
 		RapidAssert.assertEquals(new IOTable(subset), new IOTable(subset2));
 	}
 
 	@Test
-	public void testIntegerMD() throws UserError {
+	public void testIntegerMD() {
 		TableMetaData table = new TableMetaData(new IOTable(createTable()), true);
 		final DummyOperator dummyOperator = new DummyOperator(this::getTableSubsetSelector);
 		dummyOperator.setParameter(TableSubsetSelector.PARAMETER_FILTER_NAME, "regular expression");
 		dummyOperator.setParameter(RegexColumnFilter.PARAMETER_REGULAR_EXPRESSION, "Mis");
-		dummyOperator.setParameter(TableSubsetSelector.PARAMETER_FILTER_SPECIAL_ATTRIBUTES, "true");
+		dummyOperator.setParameter(TableSubsetSelector.PARAMETER_INCLUDE_SPECIAL_ATTRIBUTES, "true");
 		final TableMetaData subset =
 				dummyOperator.subsetSelector.getMetaDataSubset(table.columns(Arrays.asList(ValueTypeColumnFilter.TYPE_INTEGER,
-						ValueTypeColumnFilter.TYPE_INTEGER + "Missing")));
+						ValueTypeColumnFilter.TYPE_INTEGER + "Missing")), true);
 
 		final DummyOperator dummyOperator2 =
 				new DummyOperator((op, inp) -> new TableSubsetSelector(op, inp, ValueTypeColumnFilter.TYPE_INTEGER));
 		dummyOperator2.setParameter(TableSubsetSelector.PARAMETER_FILTER_NAME, "regular expression");
 		dummyOperator2.setParameter(RegexColumnFilter.PARAMETER_REGULAR_EXPRESSION, "Mis");
-		dummyOperator2.setParameter(TableSubsetSelector.PARAMETER_FILTER_SPECIAL_ATTRIBUTES, "true");
-		final TableMetaData subset2 = dummyOperator2.subsetSelector.getMetaDataSubset(table);
+		dummyOperator2.setParameter(TableSubsetSelector.PARAMETER_INCLUDE_SPECIAL_ATTRIBUTES, "true");
+		final TableMetaData subset2 = dummyOperator2.subsetSelector.getMetaDataSubset(table, true);
 
 		Assert.assertEquals(subset.labels(), subset2.labels());
 	}
@@ -308,19 +387,20 @@ public class TableSubsetSelectorTest {
 				dummyOperator.subsetSelector.getSubset(table.columns(Arrays.asList(ValueTypeColumnFilter.TYPE_TIME,
 						ValueTypeColumnFilter.TYPE_DATE_TIME,
 						ValueTypeColumnFilter.TYPE_TIME + "Missing",
-						ValueTypeColumnFilter.TYPE_DATE_TIME + "Missing")));
+						ValueTypeColumnFilter.TYPE_DATE_TIME + "Missing")), true);
 
 		final DummyOperator dummyOperator2 =
-				new DummyOperator((op, inp) -> new TableSubsetSelector(op, inp, ValueTypeColumnFilter.TYPE_TIME, ValueTypeColumnFilter.TYPE_DATE_TIME));
+				new DummyOperator((op, inp) -> new TableSubsetSelector(op, inp, ValueTypeColumnFilter.TYPE_TIME,
+						ValueTypeColumnFilter.TYPE_DATE_TIME));
 		dummyOperator2.setParameter(TableSubsetSelector.PARAMETER_FILTER_NAME, "type(s) of values");
 		dummyOperator2.setParameter(ValueTypeColumnFilter.PARAMETER_VALUE_TYPES, ValueTypeColumnFilter.TYPE_DATE_TIME);
-		final Table subset2 = dummyOperator2.subsetSelector.getSubset(table);
+		final Table subset2 = dummyOperator2.subsetSelector.getSubset(table, true);
 
 		RapidAssert.assertEquals(new IOTable(subset), new IOTable(subset2));
 	}
 
 	@Test
-	public void testDatetimeMD() throws UserError {
+	public void testDatetimeMD() {
 		TableMetaData table = new TableMetaData(new IOTable(createTable()), true);
 		final DummyOperator dummyOperator = new DummyOperator(this::getTableSubsetSelector);
 		dummyOperator.setParameter(TableSubsetSelector.PARAMETER_FILTER_NAME, "type(s) of values");
@@ -329,13 +409,14 @@ public class TableSubsetSelectorTest {
 				dummyOperator.subsetSelector.getMetaDataSubset(table.columns(Arrays.asList(ValueTypeColumnFilter.TYPE_TIME,
 						ValueTypeColumnFilter.TYPE_DATE_TIME,
 						ValueTypeColumnFilter.TYPE_TIME + "Missing",
-						ValueTypeColumnFilter.TYPE_DATE_TIME + "Missing")));
+						ValueTypeColumnFilter.TYPE_DATE_TIME + "Missing")), true);
 
 		final DummyOperator dummyOperator2 =
-				new DummyOperator((op, inp) -> new TableSubsetSelector(op, inp, ValueTypeColumnFilter.TYPE_TIME, ValueTypeColumnFilter.TYPE_DATE_TIME));
+				new DummyOperator((op, inp) -> new TableSubsetSelector(op, inp, ValueTypeColumnFilter.TYPE_TIME,
+						ValueTypeColumnFilter.TYPE_DATE_TIME));
 		dummyOperator2.setParameter(TableSubsetSelector.PARAMETER_FILTER_NAME, "type(s) of values");
 		dummyOperator2.setParameter(ValueTypeColumnFilter.PARAMETER_VALUE_TYPES, ValueTypeColumnFilter.TYPE_DATE_TIME);
-		final TableMetaData subset2 = dummyOperator2.subsetSelector.getMetaDataSubset(table);
+		final TableMetaData subset2 = dummyOperator2.subsetSelector.getMetaDataSubset(table, true);
 
 		Assert.assertEquals(subset.labels(), subset2.labels());
 	}

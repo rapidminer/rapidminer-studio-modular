@@ -18,6 +18,8 @@
  */
 package com.rapidminer.tools;
 
+import static com.rapidminer.gui.renderer.RendererService.CORE_IOOBJECTS_XML;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -43,6 +45,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
 import com.rapidminer.RapidMiner;
 import com.rapidminer.core.license.ProductConstraintManager;
@@ -55,10 +58,8 @@ import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorCreationException;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.ProcessRootOperator;
-import com.rapidminer.operator.ports.IncompatibleMDClassException;
 import com.rapidminer.operator.ports.Port;
 import com.rapidminer.operator.ports.Ports;
-import com.rapidminer.operator.ports.metadata.MetaData;
 import com.rapidminer.operator.tools.OperatorCreationHook;
 import com.rapidminer.search.GlobalSearchable;
 import com.rapidminer.tools.documentation.OperatorDocBundle;
@@ -165,6 +166,8 @@ public class OperatorService {
 
 
 	public static void init() {
+		OperatorSignatureRegistry.init();
+
 		// this serves 2 purposes:
 		// 1: Add Global Search capabilities for operators by registering OperatorServiceListener
 		// 2: Keep reference so that weak listener reference is not killed via GC
@@ -178,6 +181,7 @@ public class OperatorService {
 					"com.rapidminer.tools.OperatorService.main_operator_descripton_file_not_found",
 					new Object[] { Tools.RESOURCE_PREFIX, OPERATORS_XML });
 		} else {
+			initIOObjects(RAPID_MINER_CORE_PREFIX, Tools.getResource(CORE_IOOBJECTS_XML), Plugin.getMajorClassLoader());
 			registerOperators(mainOperators, null, null);
 		}
 
@@ -228,11 +232,82 @@ public class OperatorService {
 				"com.rapidminer.tools.OperatorService.number_of_registered_operator_classes_and_descriptions",
 				new Object[] { REGISTERED_OPERATOR_CLASSES.size(), KEYS_TO_DESCRIPTIONS.size(), DEPRECATION_MAP.size() });
 
+		OperatorSignatureRegistry.registerAllIOObjects();
+		OperatorSignatureRegistry.finalizeLoading();
+
 		updateBlacklist();
 		ParameterService.removeParameterChangeListener(UPDATE_BLACKLIST_LISTENER);
 		ParameterService.registerParameterChangeListener(UPDATE_BLACKLIST_LISTENER);
 		ProductConstraintManager.INSTANCE.removeLicenseManagerListener(ACTIVE_LICENSE_CHANGED);
 		ProductConstraintManager.INSTANCE.registerLicenseManagerListener(ACTIVE_LICENSE_CHANGED);
+	}
+
+	/**
+	 * Initializes {@link IOObject IOObjects} from the given URL (representing an xml file).
+	 *
+	 * @param name         the name of the provider of the ioobjects
+	 * @param ioObjectsURL the url to look up the ioobjects xml
+	 * @param classLoader  the classloader to use
+	 * @since 9.10
+	 */
+	public static void initIOObjects(String name, URL ioObjectsURL, ClassLoader classLoader) {
+		if (ioObjectsURL == null) {
+			return;
+		}
+		try (InputStream in = WebServiceTools.openStreamFromURL(ioObjectsURL)) {
+			initIOObjects(name, in, classLoader);
+		} catch (IOException e) {
+			LogService.getRoot().log(Level.WARNING,
+					I18N.getMessage(LogService.getRoot().getResourceBundle(),
+							"com.rapidminer.gui.renderer.RendererService.initializing_io_object_description_from_plugin_error",
+							name, e), e);
+		}
+	}
+
+	/**
+	 * Initializes {@link IOObject IOObjects} from the given {@link InputStream} (representing an xml file).
+	 *
+	 * @param name        the name of the provider of the ioobjects
+	 * @param in          the input stream to look up the ioobjects xml
+	 * @param classLoader the classloader to use
+	 * @since 9.10
+	 */
+	private static void initIOObjects(String name, InputStream in, ClassLoader classLoader) {
+		LogService.getRoot().log(Level.CONFIG, "com.rapidminer.tools.OperatorService.loading_ioobjects", name);
+		try {
+			Document document = XMLTools.createDocumentBuilder().parse(in);
+			Element ioObjectsElement = document.getDocumentElement();
+			if (!ioObjectsElement.getTagName().equals("ioobjects")) {
+				LogService.getRoot().log(Level.WARNING,
+						"com.rapidminer.gui.renderer.RendererService.initializing_io_object_description_tag_error");
+				return;
+			}
+			NodeList ioObjectNodes = ioObjectsElement.getElementsByTagName("ioobject");
+			Set<Class<? extends IOObject>> classesToRegister = new HashSet<>();
+			for (int i = 0; i < ioObjectNodes.getLength(); i++) {
+				Node ioObjectNode = ioObjectNodes.item(i);
+				if (ioObjectNode instanceof Element) {
+					Element ioObjectElement = (Element) ioObjectNode;
+					String className = ioObjectElement.getAttribute("class");
+					try {
+						Class<?> objectClass = classLoader.loadClass(className);
+						if (IOObject.class.isAssignableFrom(objectClass)) {
+							classesToRegister.add((Class<? extends IOObject>) objectClass);
+						}
+					} catch (ClassNotFoundException e) {
+						// ignore
+					}
+				}
+			}
+			registerIOObjects(classesToRegister);
+		} catch (IOException | SAXException e) {
+			String errorKey = "com.rapidminer.gui.renderer.RendererService.initializing_io_object_description_parsing_error";
+			if (e instanceof XMLParserException) {
+				errorKey = "com.rapidminer.gui.renderer.RendererService.initializing_io_object_description_error";
+			}
+			LogService.getRoot().log(
+					Level.WARNING, I18N.getMessage(LogService.getRoot().getResourceBundle(), errorKey, name), e);
+		}
 	}
 
 	private static void updateBlacklist() {
@@ -594,12 +669,7 @@ public class OperatorService {
 		KEYS_TO_DESCRIPTIONS.put(description.getKey(), description);
 		REGISTERED_OPERATOR_CLASSES.add(description.getOperatorClass());
 
-		// TODO: Check if still necessary.
-		Operator currentOperator = description.createOperatorInstance();
-		currentOperator.assumePreconditionsSatisfied();
-		currentOperator.transformMetaData();
-		checkIOObjects(currentOperator.getInputPorts());
-		checkIOObjects(currentOperator.getOutputPorts());
+		OperatorSignatureRegistry.INSTANCE.register(description);
 
 		// inform listener
 		invokeOperatorRegisteredListener(description, bundle);

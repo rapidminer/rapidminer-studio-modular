@@ -33,7 +33,17 @@ import com.rapidminer.report.Readable;
  * 
  * @author Ingo Mierswa
  */
-public interface Model extends ResultObject, Readable {
+public interface Model extends ResultObject, Readable, GeneralModel<ExampleSet, ExampleSet> {
+
+	@Override
+	default Class<ExampleSet> getInputType(){
+		return ExampleSet.class;
+	}
+
+	@Override
+	default Class<ExampleSet> getOutputType(){
+		return ExampleSet.class;
+	}
 
 	/**
 	 * This method has to return the HeaderExampleSet containing the signature of the example set
@@ -46,8 +56,16 @@ public interface Model extends ResultObject, Readable {
 	/**
 	 * Applies the model on the given {@link ExampleSet}. Please note that the delivered {@link ExampleSet} might
 	 * be the same as the input {@link ExampleSet}. This is, however, not always the case.
+	 *
+	 * @deprecated since 9.10, use {@link #apply(ExampleSet, Operator)} instead
 	 */
+	@Deprecated
 	public ExampleSet apply(ExampleSet testSet) throws OperatorException;
+
+	@Override
+	default ExampleSet apply(ExampleSet testObject, Operator operator) throws OperatorException{
+		return apply(testObject);
+	}
 
 	/**
 	 * This method can be used to allow additional parameters. Most models do not support parameters
@@ -65,7 +83,20 @@ public interface Model extends ResultObject, Readable {
 	 * Updates the model according to the given example set. This method might throw an
 	 * {@link UserError} if the model is not updatable. In that case the method
 	 * {@link #isUpdatable()} should deliver false.
+	 *
+	 * @deprecated since 9.10, use {@link #updateModel(ExampleSet, Operator)} instead
 	 */
+	@Deprecated
 	public void updateModel(ExampleSet updateExampleSet) throws OperatorException;
 
+	@Override
+	default void updateModel(ExampleSet updateObject, Operator operator) throws OperatorException {
+		updateModel(updateObject);
+	}
+
+	@Override
+	default boolean isModelKind(ModelKind modelKind) {
+		//return false by default, subclasses must be updated
+		return false;
+	}
 }

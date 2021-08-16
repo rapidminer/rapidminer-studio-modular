@@ -30,6 +30,7 @@ import com.rapidminer.example.table.AttributeFactory;
 import com.rapidminer.example.table.ExampleTable;
 import com.rapidminer.operator.AbstractModel;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.Ontology;
 
 
@@ -141,15 +142,15 @@ public abstract class PredictionModel extends AbstractModel {
 				exampleSet.getAttributes(), compareSetSize, compareDataType);
 		// check number of attributes
 		if (exampleSet.getAttributes().size() != trainingHeaderSet.getAttributes().size()) {
-			logWarning("The number of regular attributes of the given example set does not fit the number of attributes of the training example set, training: "
-					+ trainingHeaderSet.getAttributes().size() + ", application: " + exampleSet.getAttributes().size());
+			logWarning(I18N.getMessage(I18N.getLoggingBundle(),"com.rapidminer.operator.learner.PredictionModel.regular_size",
+					trainingHeaderSet.getAttributes().size(), exampleSet.getAttributes().size()));
 		} else {
 			// check order of attributes
 			Iterator<Attribute> trainingIt = trainingHeaderSet.getAttributes().iterator();
 			Iterator<Attribute> applyIt = exampleSet.getAttributes().iterator();
 			while (trainingIt.hasNext() && applyIt.hasNext()) {
 				if (!trainingIt.next().getName().equals(applyIt.next().getName())) {
-					logWarning("The order of attributes is not equal for the training and the application example set. This might lead to problems for some models.");
+					logWarning(I18N.getMessage(I18N.getLoggingBundle(),"com.rapidminer.operator.learner.PredictionModel.regular_order"));
 					break;
 				}
 			}
@@ -161,30 +162,24 @@ public abstract class PredictionModel extends AbstractModel {
 			String name = trainingAttribute.getName();
 			Attribute attribute = exampleSet.getAttributes().getRegular(name);
 			if (attribute == null) {
-				logWarning("The given example set does not contain a regular attribute with name '" + name
-						+ "'. This might cause problems for some models depending on this particular attribute.");
+				logWarning(I18N.getMessage(I18N.getLoggingBundle(),"com.rapidminer.operator.learner.PredictionModel.attribute_missing", name));
 			} else {
 				if (trainingAttribute.getValueType() != attribute.getValueType()) {
-					logWarning("The value types between training and application differ for attribute '" + name
-							+ "', training: " + Ontology.VALUE_TYPE_NAMES[trainingAttribute.getValueType()]
-							+ ", application: " + Ontology.VALUE_TYPE_NAMES[attribute.getValueType()]);
+					logWarning(I18N.getMessage(I18N.getLoggingBundle(),"com.rapidminer.operator.learner.PredictionModel.different_types",
+							name, Ontology.VALUE_TYPE_NAMES[trainingAttribute.getValueType()], Ontology.VALUE_TYPE_NAMES[attribute.getValueType()]));
 				} else {
 					// check nominal values
 					if (trainingAttribute.isNominal()) {
 						if (trainingAttribute.getMapping().size() != attribute.getMapping().size()) {
-							logWarning("The number of nominal values is not the same for training and application for attribute '"
-									+ name
-									+ "', training: "
-									+ trainingAttribute.getMapping().size()
-									+ ", application: "
-									+ attribute.getMapping().size());
+							logWarning(I18N.getMessage(I18N.getLoggingBundle(),"com.rapidminer.operator.learner.PredictionModel.nominal_values",
+									name, trainingAttribute.getMapping().size(), attribute.getMapping().size()));
 						} else {
 							for (String v : trainingAttribute.getMapping().getValues()) {
 								int trainingIndex = trainingAttribute.getMapping().getIndex(v);
 								int applicationIndex = attribute.getMapping().getIndex(v);
 								if (trainingIndex != applicationIndex) {
-									logWarning("The internal nominal mappings are not the same between training and application for attribute '"
-											+ name + "'. This will probably lead to wrong results during model application.");
+									logWarning(I18N.getMessage(I18N.getLoggingBundle(),"com.rapidminer.operator.learner.PredictionModel.nominal_mapping",
+											name));
 									break;
 								}
 							}
@@ -331,5 +326,10 @@ public abstract class PredictionModel extends AbstractModel {
 		if (costs != null) {
 			destination.getAttributes().setSpecialAttribute(costs, Attributes.CLASSIFICATION_COST);
 		}
+	}
+
+	@Override
+	public boolean isModelKind(ModelKind modelKind) {
+		return modelKind == ModelKind.SUPERVISED;
 	}
 }

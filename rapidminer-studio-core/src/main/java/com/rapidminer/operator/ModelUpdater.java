@@ -24,8 +24,9 @@ import com.rapidminer.operator.ports.OutputPort;
 
 
 /**
- * This operator updates a {@link Model} with an {@link ExampleSet}. Please note that the model must
- * return true for {@link Model#isUpdatable()} in order to be usable with this operator.
+ * This operator updates a {@link GeneralModel} with an {@link IOObject}, usually a
+ * {@link com.rapidminer.example.ExampleSet} or {@link com.rapidminer.adaption.belt.IOTable}. Please note that the
+ * model must return true for {@link Model#isUpdatable()} in order to be usable with this operator.
  * 
  * @author Ingo Mierswa
  */
@@ -50,22 +51,32 @@ public class ModelUpdater extends Operator {
 	 */
 	@Override
 	public void doWork() throws OperatorException {
-		ExampleSet inputExampleSet = exampleSetInput.getData(ExampleSet.class);
-		Model model = modelInput.getData(Model.class);
+		GeneralModel<?, ?> model = modelInput.getData(GeneralModel.class);
 		if (!model.isUpdatable()) {
 			throw new UserError(this, 135, model.getClass());
 		}
 
+		IOObject updateObject = updateModel(model);
+
+		exampleSetOutput.deliver(updateObject);
+		modelOutput.deliver(model);
+	}
+
+	/**
+	 * Updates the model in a generic way and returns the update data.
+	 *
+	 * @since 9.10
+	 */
+	private <T extends IOObject, S extends IOObject> T updateModel(GeneralModel<T, S> model) throws OperatorException {
+		T data = exampleSetInput.getData(model.getInputType());
 		try {
-			model.updateModel(inputExampleSet);
+			model.updateModel(data, this);
 		} catch (UserError e) {
 			if (e.getOperator() == null) {
 				e.setOperator(this);
 			}
 			throw e;
 		}
-
-		exampleSetOutput.deliver(inputExampleSet);
-		modelOutput.deliver(model);
+		return data;
 	}
 }

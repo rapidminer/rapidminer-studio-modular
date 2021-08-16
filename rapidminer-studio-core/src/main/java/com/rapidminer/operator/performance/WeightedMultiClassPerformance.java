@@ -24,6 +24,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
@@ -80,12 +81,15 @@ public class WeightedMultiClassPerformance extends MeasuredPerformance implement
 	private double weightSum;
 
 	/** The currently used label attribute. */
+	@JsonIgnore
 	private Attribute labelAttribute;
 
 	/** The currently used predicted label attribute. */
+	@JsonIgnore
 	private Attribute predictedLabelAttribute;
 
 	/** The weight attribute. Might be null. */
+	@JsonIgnore
 	private Attribute weightAttribute;
 
 	/** Creates a WeightedMultiClassPerformance with undefined type. */

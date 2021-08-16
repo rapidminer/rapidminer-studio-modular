@@ -144,6 +144,11 @@ public class ClusterModel extends AbstractModel implements ClusterModelInterface
 
 	}
 
+	@Override
+	public boolean isModelKind(ModelKind modelKind) {
+		return modelKind == ModelKind.UNSUPERVISED;
+	}
+
 	public int getNumberOfClusters() {
 		return clusters.size();
 	}

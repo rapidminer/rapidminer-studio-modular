@@ -25,11 +25,13 @@ import com.rapidminer.tools.expression.internal.function.AbstractArbitraryDouble
 
 /**
  *
- * A {@link Function} for minimum.
+ * A {@link com.rapidminer.tools.expression.Function} for minimum.
  *
  * @author David Arnu
  *
+ * @deprecated since 9.11, see {@link com.rapidminer.tools.belt.expression.ExpressionParser}
  */
+@Deprecated
 public class Minimum extends AbstractArbitraryDoubleInputFunction {
 
 	/**
@@ -42,11 +44,13 @@ public class Minimum extends AbstractArbitraryDoubleInputFunction {
 
 	@Override
 	public double compute(double... values) {
-
+		if (values == null || values.length == 0) {
+			return Double.NaN;
+		}
 		double min = values[0];
 
 		for (int i = 1; i < values.length; i++) {
-			min = min < values[i] ? min : values[i];
+			min = Math.min(min, values[i]);
 		}
 		return min;
 	}

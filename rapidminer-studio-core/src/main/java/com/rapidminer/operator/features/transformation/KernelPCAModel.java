@@ -156,4 +156,9 @@ public class KernelPCAModel extends AbstractModel {
 		buffer.append("Kernel used for distance calculation:\n " + kernel.toString());
 		return buffer.toString();
 	}
+
+	@Override
+	public boolean isModelKind(ModelKind modelKind) {
+		return modelKind == ModelKind.PREPROCESSING;
+	}
 }

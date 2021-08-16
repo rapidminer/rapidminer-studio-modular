@@ -18,15 +18,6 @@
  */
 package com.rapidminer.gui.viewer.metadata.model;
 
-import java.awt.Font;
-import java.lang.ref.WeakReference;
-
-import javax.swing.event.EventListenerList;
-
-import org.jfree.chart.ChartTheme;
-import org.jfree.chart.JFreeChart;
-import org.jfree.chart.StandardChartTheme;
-
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.AttributeRole;
 import com.rapidminer.example.ExampleSet;
@@ -34,7 +25,16 @@ import com.rapidminer.gui.viewer.metadata.AttributeStatisticsPanel;
 import com.rapidminer.gui.viewer.metadata.event.AttributeStatisticsEvent;
 import com.rapidminer.gui.viewer.metadata.event.AttributeStatisticsEvent.EventType;
 import com.rapidminer.gui.viewer.metadata.event.AttributeStatisticsEventListener;
+import com.rapidminer.tools.BiasExplanation;
+import com.rapidminer.tools.BiasTools;
 import com.rapidminer.tools.FontTools;
+import org.jfree.chart.ChartTheme;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.StandardChartTheme;
+
+import javax.swing.event.EventListenerList;
+import java.awt.Font;
+import java.lang.ref.WeakReference;
 
 
 /**
@@ -72,6 +72,9 @@ public abstract class AbstractAttributeStatisticsModel {
 	/** event listener for this model */
 	private final EventListenerList eventListener;
 
+	/** indicates if this attribute is likely to introduce bias */
+	private BiasExplanation potentialBiasExplanation;
+
 	/**
 	 * Inits the
 	 *
@@ -85,6 +88,8 @@ public abstract class AbstractAttributeStatisticsModel {
 		this.construction = attribute.getConstruction();
 
 		this.eventListener = new EventListenerList();
+
+		this.potentialBiasExplanation = BiasTools.checkForBias(exampleSet, attribute);
 	}
 
 	/**
@@ -280,6 +285,16 @@ public abstract class AbstractAttributeStatisticsModel {
 	 */
 	public String getConstruction() {
 		return construction;
+	}
+
+	/**
+	 * Returns a bias explanation if the attribute is likely to potentially introduce some bias.
+	 *
+	 * @return the bias explanation or null
+	 * @since 9.10
+	 */
+	public BiasExplanation getPotentialBiasExplanation() {
+		return potentialBiasExplanation;
 	}
 
 	/**

@@ -47,7 +47,9 @@ import com.rapidminer.tools.I18N;
  *
  * @author Gisa Schaefer
  *
+ * @deprecated since 9.11, see {@link com.rapidminer.tools.belt.expression.ExpressionParser}
  */
+@Deprecated
 public class ExpressionParsingException extends RuntimeException {
 
 	private static final long serialVersionUID = 5039785364556274963L;

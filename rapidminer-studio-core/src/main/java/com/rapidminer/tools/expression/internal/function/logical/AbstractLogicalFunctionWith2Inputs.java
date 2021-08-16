@@ -34,7 +34,9 @@ import com.rapidminer.tools.expression.internal.SimpleExpressionEvaluator;
  *
  * @author Sabrina Kirstein
  *
+ * @deprecated since 9.11, see {@link com.rapidminer.tools.belt.expression.ExpressionParser}
  */
+@Deprecated
 public abstract class AbstractLogicalFunctionWith2Inputs extends AbstractLogicalFunction {
 
 	/**
@@ -68,8 +70,7 @@ public abstract class AbstractLogicalFunctionWith2Inputs extends AbstractLogical
 	}
 
 	/**
-	 * Builds a boolean callable from evaluator using {@link #compute(double} or {@link
-	 * #compute(boolean}, where constant child results are evaluated.
+	 * Builds a boolean callable from the inputs. Constant child results are evaluated.
 	 *
 	 * @param left
 	 *            evaluator

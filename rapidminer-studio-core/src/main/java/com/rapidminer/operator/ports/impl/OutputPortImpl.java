@@ -19,9 +19,11 @@
 package com.rapidminer.operator.ports.impl;
 
 import com.rapidminer.Process;
+import com.rapidminer.adaption.belt.AtPortConverter;
 import com.rapidminer.adaption.belt.IOTable;
 import com.rapidminer.operator.DebugMode;
 import com.rapidminer.operator.IOObject;
+import com.rapidminer.operator.WrappedGeneralModel;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.WrapperOperatorRuntimeException;
 import com.rapidminer.operator.ports.DeliveringPortManager;
@@ -47,7 +49,13 @@ public class OutputPortImpl extends AbstractOutputPort {
 	public void deliver(IOObject object) {
 		// disallow advanced columns outside operators until the capability provider can handle them
 		if (object instanceof IOTable && BeltTools.hasAdvanced(((IOTable) object).getTable())) {
-			throw new WrapperOperatorRuntimeException(new OperatorException("No advanced columns allowed outside Operators"));
+			throw new WrapperOperatorRuntimeException(new OperatorException("No advanced columns allowed outside " +
+					"Operators"));
+		}
+
+		// unwrap if possible
+		if (object instanceof WrappedGeneralModel) {
+			object = AtPortConverter.convert(object, this);
 		}
 
 		// registering history of object

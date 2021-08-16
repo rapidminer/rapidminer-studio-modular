@@ -51,14 +51,14 @@ public class DateToolsTest {
 	@Test
 	public void testFormatCustom() {
 		String formattedDate = DateTools.INSTANCE.formatDateTime(new Date(), TimeZone.getTimeZone("PST"));
-		Assert.assertTrue("Formatted date does not end with PST: " + formattedDate, formattedDate.endsWith("PST"));
+		Assert.assertTrue("Formatted date does not end with PST: " + formattedDate, formattedDate.endsWith("PST") || formattedDate.endsWith("PDT"));
 	}
 
 	@Test
 	public void testTimezoneViaSettings() {
 		Settings.setSetting(SettingsConstants.DEFAULT_TIMEZONE, "PST");
 		String formattedDate = DateTools.INSTANCE.formatDateTime(new Date(), null);
-		Assert.assertTrue("Formatted date does not end with PST: " + formattedDate, formattedDate.endsWith("PST"));
+		Assert.assertTrue("Formatted date does not end with PST: " + formattedDate, formattedDate.endsWith("PST") || formattedDate.endsWith("PDT"));
 	}
 
 	@Test

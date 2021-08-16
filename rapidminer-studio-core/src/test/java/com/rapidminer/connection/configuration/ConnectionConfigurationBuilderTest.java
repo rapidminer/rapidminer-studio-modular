@@ -40,7 +40,7 @@ import org.apache.commons.io.IOUtils;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.fasterxml.jackson.databind.exc.InvalidDefinitionException;
+import com.fasterxml.jackson.databind.exc.ValueInstantiationException;
 import com.rapidminer.connection.ConnectionInformationSerializer;
 import com.rapidminer.connection.valueprovider.ValueProviderImpl;
 import com.rapidminer.connection.valueprovider.handler.ValueProviderHandler;
@@ -301,7 +301,7 @@ public class ConnectionConfigurationBuilderTest {
 			try {
 				ConnectionInformationSerializer.INSTANCE.loadConfiguration(new ByteArrayInputStream(replaced.getBytes(StandardCharsets.UTF_8)), EncryptionProvider.DEFAULT_CONTEXT);
 				fail("Groups with dots should not be allowed");
-			} catch (InvalidDefinitionException e) {
+			} catch (ValueInstantiationException e) {
 				assertEquals(IllegalArgumentException.class, e.getCause().getClass());
 			}
 		}

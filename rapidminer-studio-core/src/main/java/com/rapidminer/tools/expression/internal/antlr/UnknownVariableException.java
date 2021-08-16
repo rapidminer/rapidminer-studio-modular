@@ -30,7 +30,9 @@ import com.rapidminer.tools.expression.internal.UnknownResolverVariableException
  *
  * @author Gisa Schaefer
  *
+ * @deprecated since 9.11, see {@link com.rapidminer.tools.belt.expression.ExpressionParser}
  */
+@Deprecated
 public class UnknownVariableException extends UnknownResolverVariableException {
 
 	private static final long serialVersionUID = 4596282974568142330L;

@@ -39,7 +39,9 @@ import com.rapidminer.tools.expression.internal.function.AbstractFunction;
  *
  * @author Marcel Seifert
  *
+ * @deprecated since 9.11, see {@link com.rapidminer.tools.belt.expression.ExpressionParser}
  */
+@Deprecated
 public class DateStringCustom extends AbstractFunction {
 
 	/**
@@ -246,7 +248,8 @@ public class DateStringCustom extends AbstractFunction {
 		try {
 			simpleDateFormatter = new SimpleDateFormat(patternString, locale);
 		} catch (IllegalArgumentException e) {
-			throw new FunctionInputException("invalid_argument.custom_format", getFunctionName());
+			throw new FunctionInputException("invalid_argument.custom_format"
+					, getFunctionName(), e.getMessage());
 		}
 
 		String result = simpleDateFormatter.format(dateDate);

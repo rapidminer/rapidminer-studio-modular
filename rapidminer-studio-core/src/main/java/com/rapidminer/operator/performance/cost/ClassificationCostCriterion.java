@@ -21,6 +21,7 @@ package com.rapidminer.operator.performance.cost;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
 import com.rapidminer.operator.OperatorVersion;
@@ -43,7 +44,9 @@ public class ClassificationCostCriterion extends MeasuredPerformance {
 	private double costs;
 	private double totalCosts;
 	private double totalExampleCount;
+	@JsonIgnore
 	Attribute label;
+	@JsonIgnore
 	Attribute predictedLabel;
 	private final Map<String, Integer> classOrderMap;
 
@@ -62,6 +65,11 @@ public class ClassificationCostCriterion extends MeasuredPerformance {
 	 * @since 9.0.3
 	 */
 	private int version = AFTER_BROKEN_FITNESS;
+
+	private ClassificationCostCriterion() {
+		// needed for jackson
+		classOrderMap = new HashMap<>();
+	}
 
 	/**
 	 * Clone constructor

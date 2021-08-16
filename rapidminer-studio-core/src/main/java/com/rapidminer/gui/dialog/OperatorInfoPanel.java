@@ -20,7 +20,6 @@ package com.rapidminer.gui.dialog;
 
 import java.awt.BorderLayout;
 import java.util.logging.Level;
-
 import javax.swing.BorderFactory;
 import javax.swing.Icon;
 import javax.swing.JEditorPane;
@@ -39,6 +38,7 @@ import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorChain;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.learner.CapabilityProvider;
+import com.rapidminer.operator.TableCapabilityProvider;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.LogService;
 
@@ -103,9 +103,12 @@ public class OperatorInfoPanel extends JPanel {
 			spD.setBorder(null);
 			tabs.addTabI18N("description", spD);
 
-			if (operator instanceof CapabilityProvider) {
+			if (operator instanceof CapabilityProvider || operator instanceof TableCapabilityProvider) {
 				JPanel panel = new JPanel(new BorderLayout());
-				panel.add(OperatorInfoScreen.createCapabilitiesPanel(operator), BorderLayout.NORTH);
+				JPanel capabilitiesPanel = operator instanceof TableCapabilityProvider ?
+						OperatorInfoScreen.createCapabilitiesPanelV2(operator) :
+						OperatorInfoScreen.createCapabilitiesPanel(operator);
+				panel.add(capabilitiesPanel, BorderLayout.NORTH);
 				panel.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
 				JScrollPane spC = new ExtendedJScrollPane(panel);
 				spC.setBorder(null);

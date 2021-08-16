@@ -42,14 +42,10 @@ public class AntlrParserTrigonometricTest extends AntlrParserTest {
 
 	// sin()
 	@Test
-	public void sinInt() {
-		try {
+	public void sinInt() throws ExpressionException {
 			Expression expression = getExpressionWithFunctionContext("sin(16)");
 			assertEquals(ExpressionType.DOUBLE, expression.getExpressionType());
 			assertEquals(Math.sin(16), expression.evaluateNumerical(), 1e-15);
-		} catch (ExpressionException e) {
-			assertNotNull(e.getMessage());
-		}
 	}
 
 	@Test

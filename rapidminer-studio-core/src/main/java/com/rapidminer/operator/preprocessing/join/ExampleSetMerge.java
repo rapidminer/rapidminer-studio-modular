@@ -25,10 +25,17 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.IntToDoubleFunction;
+import java.util.stream.Collectors;
+
+import org.apache.commons.lang.ArrayUtils;
 
 import com.rapidminer.RapidMiner;
+import com.rapidminer.adaption.belt.IOTable;
+import com.rapidminer.belt.table.Appender;
+import com.rapidminer.belt.table.Table;
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.AttributeRole;
 import com.rapidminer.example.Example;
@@ -42,6 +49,7 @@ import com.rapidminer.operator.MissingIOObjectException;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.OperatorVersion;
 import com.rapidminer.operator.ProcessSetupError.Severity;
 import com.rapidminer.operator.ProcessStoppedException;
 import com.rapidminer.operator.SimpleProcessSetupError;
@@ -54,17 +62,25 @@ import com.rapidminer.operator.ports.OutputPort;
 import com.rapidminer.operator.ports.metadata.AttributeMetaData;
 import com.rapidminer.operator.ports.metadata.ExampleSetMetaData;
 import com.rapidminer.operator.ports.metadata.ExampleSetPrecondition;
+import com.rapidminer.operator.ports.metadata.MDInteger;
 import com.rapidminer.operator.ports.metadata.MDTransformationRule;
 import com.rapidminer.operator.ports.metadata.MetaData;
 import com.rapidminer.operator.ports.metadata.MetaDataInfo;
 import com.rapidminer.operator.ports.metadata.Precondition;
+import com.rapidminer.operator.ports.metadata.table.ColumnInfo;
+import com.rapidminer.operator.ports.metadata.table.ColumnInfoBuilder;
+import com.rapidminer.operator.ports.metadata.table.TableMetaData;
+import com.rapidminer.operator.ports.metadata.table.TableMetaDataBuilder;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeCategory;
 import com.rapidminer.parameter.UndefinedParameterError;
+import com.rapidminer.parameter.conditions.BelowOrEqualOperatorVersionCondition;
 import com.rapidminer.studio.internal.ProcessStoppedRuntimeException;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.OperatorResourceConsumptionHandler;
 import com.rapidminer.tools.ParameterService;
+import com.rapidminer.tools.belt.BeltTools;
+import com.rapidminer.tools.math.container.Range;
 import com.rapidminer.tools.parameter.internal.DataManagementParameterHelper;
 
 
@@ -84,9 +100,14 @@ import com.rapidminer.tools.parameter.internal.DataManagementParameterHelper;
  * is then returned.
  * </p>
  *
- * @author Ingo Mierswa
+ * @author Ingo Mierswa, Gisa Meier
  */
 public class ExampleSetMerge extends Operator {
+
+	/**
+	 * Versions > this version make full use of the belt append. This changes the behavior in some edge cases.
+	 */
+	private static final OperatorVersion VERSION_BELT = new OperatorVersion(9, 9, 2);
 
 	private final InputPortExtender inputExtender = new InputPortExtender("example set", getInputPorts()) {
 
@@ -125,55 +146,185 @@ public class ExampleSetMerge extends Operator {
 		inputExtender.start();
 
 		getTransformer().addRule(inputExtender.makeFlatteningPassThroughRule(mergedOutput));
-		getTransformer().addRule(new MDTransformationRule() {
-
-			@Override
-			public void transformMD() {
-				List<MetaData> metaDatas = inputExtender.getMetaData(true);
-				List<ExampleSetMetaData> emds = new ArrayList<ExampleSetMetaData>(metaDatas.size());
-				for (MetaData metaData : metaDatas) {
-					if (metaData instanceof ExampleSetMetaData) {
-						emds.add((ExampleSetMetaData) metaData);
-					}
-				}
-
-				// now unify all single attributes meta data
-				if (emds.size() > 0) {
-					ExampleSetMetaData resultEMD = emds.get(0).clone();
-					for (int i = 1; i < emds.size(); i++) {
-						ExampleSetMetaData mergerEMD = emds.get(i);
-						resultEMD.getNumberOfExamples().add(mergerEMD.getNumberOfExamples());
-
-						// now iterating over all single attributes in order to merge their meta
-						// data
-						for (AttributeMetaData amd : resultEMD.getAllAttributes()) {
-							String name = amd.getName();
-							AttributeMetaData mergingAMD = mergerEMD.getAttributeByName(name);
-							if (mergingAMD != null) {
-								// values
-								if (amd.isNominal()) {
-									amd.getValueSet().addAll(mergingAMD.getValueSet());
-								} else {
-									amd.getValueRange().union(mergingAMD.getValueRange());
-								}
-								amd.getValueSetRelation().merge(mergingAMD.getValueSetRelation());
-								// missing values
-								amd.getNumberOfMissingValues().add(mergingAMD.getNumberOfMissingValues());
-							}
-						}
-					}
-					mergedOutput.deliverMD(resultEMD);
-				}
+		getTransformer().addRule(() -> {
+			if (getCompatibilityLevel().isAtMost(VERSION_BELT)) {
+				transformExampleSetMetaData();
+			} else {
+				transformTableMetaData();
 			}
 		});
 	}
 
-	@Override
-	public void doWork() throws OperatorException {
-		List<ExampleSet> allExampleSets = inputExtender.getData(ExampleSet.class, true);
-		mergedOutput.deliver(merge(allExampleSets));
+	/**
+	 * Transforms the meta data as {@link ExampleSet}s.
+	 */
+	private void transformExampleSetMetaData() {
+		List<MetaData> metaDatas = inputExtender.getMetaData(true);
+		List<ExampleSetMetaData> emds = new ArrayList<>(metaDatas.size());
+		for (MetaData metaData : metaDatas) {
+			if (metaData instanceof ExampleSetMetaData) {
+				emds.add((ExampleSetMetaData) metaData);
+			}
+		}
+
+		// now unify all single attributes meta data
+		if (!emds.isEmpty()) {
+			ExampleSetMetaData resultEMD = emds.get(0).clone();
+			for (int i = 1; i < emds.size(); i++) {
+				ExampleSetMetaData mergerEMD = emds.get(i);
+				resultEMD.getNumberOfExamples().add(mergerEMD.getNumberOfExamples());
+
+				// now iterating over all single attributes in order to merge their meta
+				// data
+				for (AttributeMetaData amd : resultEMD.getAllAttributes()) {
+					adjustAttributeMetaData(mergerEMD, amd);
+				}
+			}
+			mergedOutput.deliverMD(resultEMD);
+		}
 	}
 
+	/**
+	 * Transforms a single attribute meta data.
+	 */
+	private void adjustAttributeMetaData(ExampleSetMetaData mergerEMD, AttributeMetaData amd) {
+		String name = amd.getName();
+		AttributeMetaData mergingAMD = mergerEMD.getAttributeByName(name);
+		if (mergingAMD != null) {
+			// values
+			if (amd.isNominal()) {
+				amd.getValueSet().addAll(mergingAMD.getValueSet());
+			} else {
+				amd.getValueRange().union(mergingAMD.getValueRange());
+			}
+			amd.getValueSetRelation().merge(mergingAMD.getValueSetRelation());
+			// missing values
+			amd.getNumberOfMissingValues().add(mergingAMD.getNumberOfMissingValues());
+		}
+	}
+
+	/**
+	 * Transforms the meta data as {@link TableMetaData}.
+	 */
+	private void transformTableMetaData() {
+		List<TableMetaData> metaDatas = inputExtender.getMetaDataAsOrNull(TableMetaData.class, true);
+		List<TableMetaData> tmds = metaDatas.stream().filter(Objects::nonNull).collect(Collectors.toList());
+
+		if (!tmds.isEmpty()) {
+			TableMetaData firstTMD = tmds.get(0);
+			TableMetaDataBuilder builder = new TableMetaDataBuilder(firstTMD);
+			MDInteger height = builder.height();
+			for (int i = 1; i < tmds.size(); i++) {
+				TableMetaData mergerTMD = tmds.get(i);
+				height.add(mergerTMD.height());
+			}
+			builder.updateHeight(height);
+
+			// now iterating over all single columns in order to merge their meta
+			// data
+			for (String name : firstTMD.labels()) {
+				ColumnInfo firstColumn = builder.column(name);
+				ColumnInfoBuilder columnInfoBuilder = new ColumnInfoBuilder(firstColumn);
+				for (int i = 1; i < tmds.size(); i++) {
+					TableMetaData mergerTMD = tmds.get(i);
+					adjustColumnInfo(name, firstColumn, columnInfoBuilder, mergerTMD);
+				}
+				builder.replace(name, columnInfoBuilder.build());
+			}
+
+			mergedOutput.deliverMD(builder.build());
+		}
+	}
+
+	/**
+	 * Transforms a single column info.
+	 */
+	private void adjustColumnInfo(String name, ColumnInfo firstColumn, ColumnInfoBuilder columnInfoBuilder,
+						   TableMetaData mergerTMD) {
+		if (mergerTMD.contains(name) == MetaDataInfo.YES) {
+			ColumnInfo column = mergerTMD.column(name);
+			columnInfoBuilder.mergeValueSetRelation(column.getValueSetRelation());
+			columnInfoBuilder.addMissings(column.getMissingValues());
+			if (firstColumn.isNominal() == MetaDataInfo.YES) {
+				columnInfoBuilder.addDictionaryValues(column.getDictionary().getValueSet());
+			} else if (columnInfoBuilder.getNumericRange().isPresent() && column.getNumericRange().isPresent()) {
+				Range range = columnInfoBuilder.getNumericRange().get();
+				range.union(column.getNumericRange().get());
+				columnInfoBuilder.setNumericRange(range, columnInfoBuilder.getValueSetRelation());
+			}
+		}
+	}
+
+	@Override
+	public void doWork() throws OperatorException {
+		if (getCompatibilityLevel().isAtMost(VERSION_BELT)) {
+			List<ExampleSet> allExampleSets = inputExtender.getData(ExampleSet.class, true);
+			mergedOutput.deliver(merge(allExampleSets));
+		} else {
+			List<IOTable> data = inputExtender.getData(IOTable.class, true);
+			mergedOutput.deliver(append(data));
+		}
+	}
+
+	/**
+	 * Appends the given list of {@link IOTable}s into one, if possible.
+	 *
+	 * @param ioTables
+	 * 		the tables to append
+	 * @return the resulting table
+	 * @throws UserError
+	 * 		if appending is not possible
+	 * @since 9.10
+	 */
+	public IOTable append(List<IOTable> ioTables) throws UserError {
+		// throw error if no tables are available
+		if (ioTables.isEmpty()) {
+			throw new MissingIOObjectException(IOTable.class);
+		}
+		List<Table> tables = new ArrayList<>(ioTables.size());
+		for (IOTable ioTable : ioTables) {
+			tables.add(ioTable.getTable());
+		}
+		getProgress().setCheckForStop(false);
+		getProgress().setTotal(100);
+		try {
+			Table appended = Appender.append(tables, this::silentProgress, BeltTools.getContext(this));
+			IOTable result = new IOTable(appended);
+			result.getAnnotations().addAll(ioTables.get(0).getAnnotations());
+			return result;
+		} catch (Appender.IncompatibleTableWidthException e) {
+			throw new UserError(this, "append_compatibility.incompatible_width", e.getTableIndex() + 1);
+		} catch (Appender.IncompatibleColumnsException e) {
+			throw new UserError(this, "append_compatibility.incompatible_column",
+					e.getTableIndex() + 1, e.getColumnName());
+		} catch (Appender.IncompatibleTypesException e) {
+			throw new UserError(this, "append_compatibility.incompatible_type", e.getColumnName(),
+					e.getDesiredType().replace("Column type ", ""),
+					e.getActualType().replace("Column type ", ""));
+		} catch (Appender.TableTooLongException e) {
+			throw new UserError(this, "append.result_too_big");
+		}
+	}
+
+	private void silentProgress(double progress) {
+		try {
+			getProgress().setCompleted((int) (progress * 100));
+		} catch (ProcessStoppedException e) {
+			// cannot happen, check for stop is disabled
+		}
+	}
+
+	/**
+	 * Appends the {@link ExampleSet}s into one, if possible.
+	 *
+	 * @param allExampleSets
+	 * 		the example sets to append
+	 * @return the resulting example set
+	 * @throws OperatorException
+	 * 		if appending fails
+	 * @deprecated since 9.10, use {@link #append(List)} instead
+	 */
+	@Deprecated
 	public ExampleSet merge(List<ExampleSet> allExampleSets) throws OperatorException {
 		// throw error if no example sets were available
 		if (allExampleSets.size() == 0) {
@@ -215,7 +366,8 @@ public class ExampleSetMerge extends Operator {
 				// binominals with more than 2 values cannot keep their value type, else try to
 				// preserve value type is all have the same
 				if (hasSameValueType
-						&& (!Ontology.ATTRIBUTE_VALUE_TYPE.isA(oldAttribute.getValueType(), Ontology.BINOMINAL) || values
+						&&
+						(!Ontology.ATTRIBUTE_VALUE_TYPE.isA(oldAttribute.getValueType(), Ontology.BINOMINAL) || values
 								.size() <= 2)) {
 					newType = oldAttribute.getValueType();
 				} else if (hasNominal) {
@@ -249,7 +401,8 @@ public class ExampleSetMerge extends Operator {
 					newType = oldAttribute.getValueType();
 				}
 			} else if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(oldAttribute.getValueType(), Ontology.DATE)
-					|| (Ontology.ATTRIBUTE_VALUE_TYPE.isA(oldAttribute.getValueType(), Ontology.TIME) || (Ontology.ATTRIBUTE_VALUE_TYPE
+					|| (Ontology.ATTRIBUTE_VALUE_TYPE.isA(oldAttribute.getValueType(), Ontology.TIME) ||
+					(Ontology.ATTRIBUTE_VALUE_TYPE
 							.isA(oldAttribute.getValueType(), Ontology.DATE_TIME)))) {
 				// this case covers the date, time, date_time valueType
 				// if all attribute valueTypes are the same keep it, otherwise switch to date_time
@@ -259,9 +412,11 @@ public class ExampleSetMerge extends Operator {
 					Attribute otherAttribute = otherExampleSet.getAttributes().get(oldAttribute.getName());
 					// not the same type but all
 					if (otherAttribute.getValueType() != newType) {
-						if (((Ontology.ATTRIBUTE_VALUE_TYPE.isA(oldAttribute.getValueType(), Ontology.DATE) || (Ontology.ATTRIBUTE_VALUE_TYPE
-								.isA(oldAttribute.getValueType(), Ontology.TIME) || (Ontology.ATTRIBUTE_VALUE_TYPE.isA(
-								oldAttribute.getValueType(), Ontology.DATE_TIME)))))) {
+						if (Ontology.ATTRIBUTE_VALUE_TYPE.isA(oldAttribute.getValueType(), Ontology.DATE) ||
+								(Ontology.ATTRIBUTE_VALUE_TYPE
+										.isA(oldAttribute.getValueType(), Ontology.TIME) ||
+										(Ontology.ATTRIBUTE_VALUE_TYPE.isA(
+												oldAttribute.getValueType(), Ontology.DATE_TIME)))) {
 							newType = Ontology.DATE_TIME;
 						} else {
 							// totally different valueType, cannot merge -> throw
@@ -407,15 +562,16 @@ public class ExampleSetMerge extends Operator {
 		throw new UserError(this, 925,
 				"Attribute '" + oldAttribute.getName() + "' has incompatible types ("
 						+ Ontology.ATTRIBUTE_VALUE_TYPE.mapIndex(oldAttribute.getValueType()) + " and "
-						+ Ontology.ATTRIBUTE_VALUE_TYPE.mapIndex(otherAttribute.getValueType()) + ") in two input sets.");
+						+ Ontology.ATTRIBUTE_VALUE_TYPE.mapIndex(otherAttribute.getValueType()) +
+						") in two input sets.");
 	}
 
 	/**
 	 * Checks whether all attributes in set 1 occur in the others as well. Types are (deliberately)
 	 * not checked. Type check happens in {@link #merge(List)} itself.
 	 *
-	 * @throws on
-	 *             failed check
+	 * @throws UserError
+	 *             on failed check
 	 */
 	private void checkForCompatibility(List<ExampleSet> allExampleSets) throws OperatorException {
 		ExampleSet first = allExampleSets.get(0);
@@ -458,12 +614,17 @@ public class ExampleSetMerge extends Operator {
 	@Override
 	public List<ParameterType> getParameterTypes() {
 		List<ParameterType> types = super.getParameterTypes();
-		DataManagementParameterHelper.addParameterTypes(types, this);
+		List<ParameterType> dependentTypes = new ArrayList<>();
+		DataManagementParameterHelper.addParameterTypes(dependentTypes, this);
+		for (ParameterType dependentType : dependentTypes) {
+			dependentType.registerDependencyCondition(new BelowOrEqualOperatorVersionCondition(this, VERSION_BELT));
+		}
+		types.addAll(dependentTypes);
 
 		// deprecated parameter
 		ParameterType type = new ParameterTypeCategory("merge_type",
 				"Indicates if all input example sets or only the first two example sets should be merged.",
-				new String[] { "all", "first_two" }, 0);
+				new String[]{"all", "first_two"}, 0);
 		type.setDeprecated();
 		types.add(type);
 		return types;
@@ -473,5 +634,11 @@ public class ExampleSetMerge extends Operator {
 	public ResourceConsumptionEstimator getResourceConsumptionEstimator() {
 		return OperatorResourceConsumptionHandler.getResourceConsumptionEstimator(getInputPorts().getPortByIndex(0),
 				ExampleSetMerge.class, null);
+	}
+
+	@Override
+	public OperatorVersion[] getIncompatibleVersionChanges() {
+		return (OperatorVersion[]) ArrayUtils.add(super.getIncompatibleVersionChanges(),
+				VERSION_BELT);
 	}
 }

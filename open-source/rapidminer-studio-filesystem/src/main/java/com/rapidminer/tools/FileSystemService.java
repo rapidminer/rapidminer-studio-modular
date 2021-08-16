@@ -59,6 +59,8 @@ public class FileSystemService {
 	private static final String RAPIDMINER_INTERNAL_CACHE_CONTENT_MAPPER_STORE = "content mapper";
 	/** {@link #RAPIDMINER_INTERNAL_CACHE} subfolder which can be used as an internal fallback temp folder */
 	private static final String RAPIDMINER_INTERNAL_CACHE_TEMP = "temp";
+	/** {@link #RAPIDMINER_INTERNAL_CACHE} subfolder which can be used to store operator signatures */
+	private static final String RAPIDMINER_INTERNAL_CACHE_SIGNATURE = "signature";
 
 	public static final String PROPERTY_RAPIDMINER_SRC_ROOT = "rapidminer.src.root";
 
@@ -69,6 +71,7 @@ public class FileSystemService {
 	public static final String RAPIDMINER_INTERNAL_CACHE_CONTENT_MAPPER_STORE_FULL = RAPIDMINER_INTERNAL_CACHE + "/" + RAPIDMINER_INTERNAL_CACHE_CONTENT_MAPPER_STORE;
 	public static final String RAPIDMINER_INTERNAL_CACHE_BROWSER_FULL = RAPIDMINER_INTERNAL_CACHE + "/" + RAPIDMINER_INTERNAL_CACHE_BROWSER;
 	public static final String RAPIDMINER_INTERNAL_CACHE_TEMP_FULL = RAPIDMINER_INTERNAL_CACHE + "/" + RAPIDMINER_INTERNAL_CACHE_TEMP;
+	public static final String RAPIDMINER_INTERNAL_CACHE_SIGNATURE_FULL = RAPIDMINER_INTERNAL_CACHE + "/" + RAPIDMINER_INTERNAL_CACHE_SIGNATURE;
 	/** the folder where the com.rapidminer.encryption.EncryptionProviderRegistry stores the encryption keys */
 	public static final String RAPIDMINER_ENCRYPTION_FOLDER = "encryption";
 
@@ -138,6 +141,7 @@ public class FileSystemService {
 		File internalCacheRepositoryMapperStoreFolder = new File(internalCacheFolder, RAPIDMINER_INTERNAL_CACHE_CONTENT_MAPPER_STORE);
 		File internalCacheBrowserFolder = new File(internalCacheFolder, RAPIDMINER_INTERNAL_CACHE_BROWSER);
 		File internalTempFolder = new File(internalCacheFolder, RAPIDMINER_INTERNAL_CACHE_TEMP);
+		File internalSignatureFolder = new File(internalCacheFolder, RAPIDMINER_INTERNAL_CACHE_SIGNATURE);
 
 		checkAndCreateFolder(rapidMinerDir);
 		checkAndCreateFolder(extensionsWorkspaceRootFolder);
@@ -146,6 +150,7 @@ public class FileSystemService {
 		checkAndCreateFolder(internalCacheRepositoryMapperStoreFolder);
 		checkAndCreateFolder(internalCacheBrowserFolder);
 		checkAndCreateFolder(internalTempFolder);
+		checkAndCreateFolder(internalSignatureFolder);
 
 		checkAndCreateFolder(extensionsWorkspaceFolder);
 		checkAndCreateFolder(sharedDataDir);

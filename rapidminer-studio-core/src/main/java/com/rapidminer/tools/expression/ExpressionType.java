@@ -27,7 +27,9 @@ import com.rapidminer.tools.Ontology;
  *
  * @author Gisa Schaefer
  * @since 6.5.0
+ * @deprecated since 9.11, see {@link com.rapidminer.tools.belt.expression.ExpressionParser}
  */
+@Deprecated
 public enum ExpressionType {
 	STRING(Ontology.NOMINAL), DOUBLE(Ontology.REAL), INTEGER(Ontology.INTEGER), BOOLEAN(Ontology.BINOMINAL), DATE(
 			Ontology.DATE_TIME);	// TEXT(Ontology.STRING);

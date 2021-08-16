@@ -19,10 +19,12 @@
 package com.rapidminer.connection.util;
 
 import static com.rapidminer.connection.util.ConnectionI18N.getTypeName;
+import static com.rapidminer.tools.FunctionWithThrowable.suppress;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import com.rapidminer.connection.ConnectionHandlerRegistry;
 import com.rapidminer.connection.ConnectionInformation;
@@ -37,7 +39,6 @@ import com.rapidminer.operator.ProcessSetupError.Severity;
 import com.rapidminer.operator.SimpleProcessSetupError;
 import com.rapidminer.operator.UserError;
 import com.rapidminer.operator.error.ParameterError;
-import com.rapidminer.operator.ports.IncompatibleMDClassException;
 import com.rapidminer.operator.ports.InputPort;
 import com.rapidminer.operator.ports.OutputPort;
 import com.rapidminer.operator.ports.Port;
@@ -54,7 +55,6 @@ import com.rapidminer.parameter.ParameterTypeConnectionLocation;
 import com.rapidminer.parameter.conditions.PortConnectedCondition;
 import com.rapidminer.repository.ConnectionEntry;
 import com.rapidminer.repository.DataEntry;
-import com.rapidminer.repository.MalformedRepositoryLocationException;
 import com.rapidminer.repository.RepositoryEntryNotFoundException;
 import com.rapidminer.repository.RepositoryEntryWrongTypeException;
 import com.rapidminer.repository.RepositoryException;
@@ -174,7 +174,12 @@ public class ConnectionInformationSelector {
 		if (input == null || !input.isConnected()) {
 			return handler.getParameters().isSet(getParameterKey());
 		}
-		return input.getRawMetaData() instanceof ConnectionInformationMetaData;
+		try {
+			return input.getRawMetaData() instanceof ConnectionInformationMetaData
+					|| input.getDataOrNull(ConnectionInformationContainerIOObject.class) != null;
+		} catch (UserError userError) {
+			return false;
+		}
 	}
 
 	/**
@@ -301,7 +306,12 @@ public class ConnectionInformationSelector {
 		boolean connectionFromPort = input != null && input.isConnected();
 		if (connectionFromPort) {
 			// infer repo location from meta data
-			return getRepoLocationFromInputMD(input);
+			RepositoryLocation repoLocation = getRepoLocationFromInputMD(input);
+			if (repoLocation != null) {
+				return repoLocation;
+			}
+			// or from actual data
+			return getRepoLocationFromInput(input);
 		} else {
 			try {
 				return getRepoLocationFromParameter();
@@ -409,19 +419,45 @@ public class ConnectionInformationSelector {
 	 * @see com.rapidminer.operator.io.RepositorySource#getGeneratedMetaData() RepositorySource.getGeneratedMetaData()
 	 */
 	private RepositoryLocation getRepoLocationFromInputMD(InputPort input) {
-		MetaData md;
-		try {
-			md = input.getMetaData(ConnectionInformationMetaData.class);
-			if (md != null && md.getAnnotations() != null) {
-				String source = md.getAnnotations().getAnnotation(Annotations.KEY_SOURCE);
-				if (source != null) {
-					return new RepositoryLocationBuilder().withExpectedDataEntryType(ConnectionEntry.class).buildFromAbsoluteLocation(source);
-				}
-			}
-		} catch (IncompatibleMDClassException | MalformedRepositoryLocationException e) {
-			// ignore
-		}
-		return null;
+		return getRepositoryLocationFromAnnotation(Optional.of(input)
+				.map(suppress(p -> p.getMetaData(ConnectionInformationMetaData.class)))
+				.map(MetaData::getAnnotations));
+	}
+
+	/**
+	 * Extracts a repository location from the given {@link Annotations} if possible.
+	 * For this to work, the annotation {@value Annotations#KEY_SOURCE} needs to be present amd
+	 * be a valid {@link RepositoryLocation} which will then be returned.
+	 * Otherwise this method returns {@code null}.
+	 *
+	 * @param annotations
+	 * 		the annotations to look up the source from; can be {@link Optional#empty()}
+	 * @return a valid repository location or {@code null}
+	 * @since 9.9.3
+	 */
+	private RepositoryLocation getRepositoryLocationFromAnnotation(Optional<Annotations> annotations) {
+		return annotations.map(anno -> anno.getAnnotation(Annotations.KEY_SOURCE))
+				.map(suppress(source -> new RepositoryLocationBuilder()
+						.withExpectedDataEntryType(ConnectionEntry.class).buildFromAbsoluteLocation(source)))
+				.orElse(null);
+	}
+
+	/**
+	 * Extracts a repository location from the input ports {@link Port#getDataOrNull(Class) data} if possible.
+	 * For this to work, the input port needs to be connected and have correct data
+	 * of type {@link ConnectionInformationContainerIOObject} that is annotated with {@value Annotations#KEY_SOURCE}.
+	 * This annotation needs to be a valid {@link RepositoryLocation} which will then be returned.
+	 * Otherwise this method returns {@code null}.
+	 *
+	 * @param input
+	 * 		the input port to check for data; must not be {@code null}
+	 * @return a valid repository location or {@code null}
+	 * @since 9.9.3
+	 */
+	private RepositoryLocation getRepoLocationFromInput(InputPort input) {
+		return getRepositoryLocationFromAnnotation(Optional.of(input)
+				.map(suppress(p -> p.getDataOrNull(ConnectionInformationContainerIOObject.class)))
+				.map(IOObject::getAnnotations));
 	}
 
 	/**
@@ -436,7 +472,6 @@ public class ConnectionInformationSelector {
 	 * 		if an error occurs
 	 */
 	private ConnectionInformationContainerIOObject extractConnectionFromLocation(RepositoryLocation location) throws UserError {
-		ConnectionInformationContainerIOObject container;
 		try {
 			DataEntry entry = location.locateData();
 			if (!(entry instanceof ConnectionEntry)) {
@@ -446,14 +481,14 @@ public class ConnectionInformationSelector {
 			if (!(data instanceof ConnectionInformationContainerIOObject)) {
 				throw new UserError(null, "connection.wrong_entry_data");
 			}
-			container = (ConnectionInformationContainerIOObject) data;
+			data.getAnnotations().setAnnotation(Annotations.KEY_SOURCE, entry.getLocation().toString());
+			return (ConnectionInformationContainerIOObject) data;
 		} catch (RepositoryException e) {
 			throw new UserError(null, e, "connection.repository_error", location.getName());
 		}
-		return container;
 	}
 
-	/** Resolves the repository location. Will make a distinction between an operater and a simple parameter handler */
+	/** Resolves the repository location. Will make a distinction between an operator and a simple parameter handler */
 	private RepositoryLocation getRepoLocationFromParameter() throws UserError {
 		return RepositoryLocation.getRepositoryLocationData(handler.getParameterAsString(getParameterKey()),
 				handler instanceof Operator ? (Operator) handler : null, ConnectionEntry.class);

@@ -34,7 +34,7 @@ import com.rapidminer.operator.performance.PerformanceVector;
  * 
  * @author Ingo Mierswa
  */
-public interface Learner extends CapabilityProvider {
+public interface Learner extends CapabilityProvider, GeneralLearner<ExampleSet, ExampleSet> {
 
 	/**
 	 * Trains a model. This method should be called by apply() and is implemented by subclasses.

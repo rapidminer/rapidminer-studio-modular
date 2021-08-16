@@ -25,6 +25,7 @@ import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.ports.InputPort;
 import com.rapidminer.operator.ports.OutputPort;
 import com.rapidminer.parameter.ParameterType;
+import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.parameter.ParameterTypeCategory;
 
 import java.io.Serializable;
@@ -59,13 +60,12 @@ public class DenormalizationOperator extends Operator {
 		}
 	}
 
+	public static final String PARAMETER_DENORMALIZE_PREDICTIONS = "de-normalize_predictions";
 	public static final String PARAMETER_MISSING_ATTRIBUTES_KEY = "missing_attribute_handling";
 	public static final String PROCEED_ON_MISSING = "proceed on missing";
 	public static final String FAIL_ON_MISSING = "fail_on_missing";
 	public static final String[] PARAMETER_MISSING_ATTRIBUTES_OPTIONS = { PROCEED_ON_MISSING, FAIL_ON_MISSING };
 	public static final int PARAMETER_MISSING_ATTRIBUTE_DEFAULT = 0;
-
-	private boolean failOnMissingAttributes;
 
 	private InputPort modelInput = getInputPorts().createPort("model input", AbstractNormalizationModel.class);
 	private OutputPort modelOutput = getOutputPorts().createPort("model output");
@@ -83,11 +83,8 @@ public class DenormalizationOperator extends Operator {
 		AbstractNormalizationModel model = modelInput.getData(AbstractNormalizationModel.class);
 
 		// check how to behave if an Attribute is missing in the input ExampleSet
-		if (getParameter(PARAMETER_MISSING_ATTRIBUTES_KEY).equals(FAIL_ON_MISSING)) {
-			failOnMissingAttributes = true;
-		} else {
-			failOnMissingAttributes = false;
-		}
+		boolean failOnMissingAttributes = getParameter(PARAMETER_MISSING_ATTRIBUTES_KEY).equals(FAIL_ON_MISSING);
+		boolean denormPredictions = getParameterAsBoolean(PARAMETER_DENORMALIZE_PREDICTIONS);
 
 		Map<String, LinearTransformation> attributeTransformations = new HashMap<>();
 		for (Attribute attribute : model.getTrainingHeader().getAttributes()) {
@@ -97,8 +94,9 @@ public class DenormalizationOperator extends Operator {
 			attributeTransformations.put(attribute.getName(), new LinearTransformation(a, b));
 		}
 
-		modelOutput.deliver(new DenormalizationModel(model.getTrainingHeader(), attributeTransformations, model,
-				failOnMissingAttributes));
+		DenormalizationModel denormModel = new DenormalizationModel(model.getTrainingHeader(), attributeTransformations,
+				model, failOnMissingAttributes, denormPredictions);
+		modelOutput.deliver(denormModel);
 		originalModelOutput.deliver(model);
 	}
 
@@ -106,6 +104,9 @@ public class DenormalizationOperator extends Operator {
 	public List<ParameterType> getParameterTypes() {
 		List<ParameterType> types = super.getParameterTypes();
 
+		types.add(new ParameterTypeBoolean(PARAMETER_DENORMALIZE_PREDICTIONS,
+				"Check this option to de-normalize predictions with the corresponding label's de-normalization model (if it is available).",
+				false, false));
 		types.add(new ParameterTypeCategory(
 				PARAMETER_MISSING_ATTRIBUTES_KEY,
 				"Defines how the operator will act if attributes given to the Normalize operator are not present in the given model.",

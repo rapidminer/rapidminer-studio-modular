@@ -18,6 +18,7 @@
  */
 package com.rapidminer.operator.performance;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
@@ -41,10 +42,13 @@ public class RootRelativeSquaredError extends MeasuredPerformance {
 
 	private static final long serialVersionUID = 7781104825149866444L;
 
+	@JsonIgnore
 	private Attribute predictedAttribute;
 
+	@JsonIgnore
 	private Attribute labelAttribute;
 
+	@JsonIgnore
 	private Attribute weightAttribute;
 
 	private double deviationSum = 0.0d;

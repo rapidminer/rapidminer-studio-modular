@@ -42,7 +42,9 @@ import com.rapidminer.tools.expression.internal.antlr.AntlrParser;
  *
  * @author Gisa Schaefer
  *
+ * @deprecated since 9.11, see {@link com.rapidminer.tools.belt.expression.ExpressionParser}
  */
+@Deprecated
 public class Evaluation extends AbstractEvaluation {
 
 	private AntlrParser parser;

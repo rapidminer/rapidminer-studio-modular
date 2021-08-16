@@ -32,8 +32,9 @@ import com.rapidminer.tools.expression.UnknownValue;
  * A basic {@link Expression}.
  *
  * @author Gisa Schaefer
- *
+ * @deprecated since 9.11, see {@link com.rapidminer.tools.belt.expression.ExpressionParser}
  */
+@Deprecated
 class SimpleExpression implements Expression {
 
 	private ExpressionEvaluator evaluator;

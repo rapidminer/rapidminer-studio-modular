@@ -29,7 +29,9 @@ import com.rapidminer.tools.Ontology;
  * Describes a function with a name, description, number of arguments and return type.
  *
  * @author Ingo Mierswa, Sabrina Kirstein
+ * @deprecated since 9.11, see {@link com.rapidminer.tools.belt.expression.ExpressionParser}
  */
+@Deprecated
 public class FunctionDescription {
 
 	final private String displayName;

@@ -49,8 +49,20 @@ public enum TestUtils {
 			ProductConstraintManager.INSTANCE.initialize(null, null);
 		}
 		if (OperatorService.getOperatorDescription("process") == null) {
-			OperatorService.registerOperator(new OperatorDescription("com.rapidminer.operator.ProcessRootOperator",
-					"process", ProcessRootOperator.class, getClass().getClassLoader(), "elements_selection.png", null), null);
+			OperatorDescription desc = new OperatorDescription("", "process", ProcessRootOperator.class,
+					TestUtils.class.getClassLoader(), "elements_selection.png", null) {
+
+				@Override
+				public String getName() {
+					return "Process";
+				}
+
+				@Override
+				public String getShortName() {
+					return "root";
+				}
+			};
+			OperatorService.registerOperator(desc, null);
 		}
 	}
 }

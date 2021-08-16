@@ -1074,6 +1074,11 @@
 						<replaces>PolynomialRegression</replaces>
 					</operator>
 					<operator>
+						<key>function_fitting</key>
+						<class>com.rapidminer.operator.learner.functions.FunctionFitting
+						</class>
+					</operator>
+					<operator>
 						<key>vector_linear_regression</key>
 						<class>com.rapidminer.operator.learner.functions.VectorLinearRegression
 						</class>

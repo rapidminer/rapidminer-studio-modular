@@ -26,7 +26,9 @@ import java.util.Date;
  *
  * @author David Arnu
  *
+ * @deprecated since 9.11, see {@link com.rapidminer.tools.belt.expression.ExpressionParser}
  */
+@Deprecated
 public class DateAfter extends Abstract2DateInputBooleanOutput {
 
 	public DateAfter() {

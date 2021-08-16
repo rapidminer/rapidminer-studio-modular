@@ -26,7 +26,9 @@ import com.rapidminer.tools.expression.FunctionDescription;
  *
  * @author Sabrina Kirstein
  *
+ * @deprecated since 9.11, see {@link com.rapidminer.tools.belt.expression.ExpressionParser}
  */
+@Deprecated
 public class Not extends AbstractLogicalFunctionWith1Input {
 
 	/**

@@ -26,7 +26,9 @@ import com.rapidminer.tools.Ontology;
  * returned unknown actually is.
  * 
  * @author Sebastian Land
+ * @deprecated since 9.11, see {@link com.rapidminer.tools.belt.expression.ExpressionParser}
  */
+@Deprecated
 public enum UnknownValue {
 	UNKNOWN_NOMINAL(Ontology.NOMINAL),
 	// UNKNOWN_NUMERICAL(Ontology.NUMERICAL), Numerical Unknowns must be encoded by Double.NaN

@@ -43,8 +43,9 @@ import com.rapidminer.tools.expression.internal.antlr.FunctionExpressionParser.V
  * every node of the {@link org.antlr.v4.runtime.tree.ParseTree ParseTree}.
  *
  * @author Gisa Schaefer
- *
+ * @deprecated since 9.11, see {@link com.rapidminer.tools.belt.expression.ExpressionParser}
  */
+@Deprecated
 class EvaluatorCreationVisitor extends FunctionExpressionParserBaseVisitor<ExpressionEvaluator> {
 
 	private final ExpressionContext lookUp;

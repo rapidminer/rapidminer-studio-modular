@@ -21,35 +21,26 @@ package com.rapidminer.gui.processeditor.search;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
+import java.util.StringJoiner;
+import java.util.stream.Collectors;
 
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 
 import com.rapidminer.gui.renderer.RendererService;
-import com.rapidminer.operator.Operator;
-import com.rapidminer.operator.OperatorCapability;
-import com.rapidminer.operator.OperatorCreationException;
 import com.rapidminer.operator.OperatorDescription;
+import com.rapidminer.operator.TableCapabilityProvider;
 import com.rapidminer.operator.learner.CapabilityProvider;
-import com.rapidminer.operator.learner.Learner;
-import com.rapidminer.operator.ports.InputPort;
-import com.rapidminer.operator.ports.InputPorts;
-import com.rapidminer.operator.ports.OutputPort;
-import com.rapidminer.operator.ports.OutputPorts;
-import com.rapidminer.operator.ports.metadata.MetaData;
-import com.rapidminer.operator.ports.metadata.Precondition;
-import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.search.AbstractGlobalSearchManager;
 import com.rapidminer.search.GlobalSearchDefaultField;
 import com.rapidminer.search.GlobalSearchUtilities;
-import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.OperatorService;
+import com.rapidminer.tools.OperatorSignatureRegistry;
 import com.rapidminer.tools.documentation.OperatorDocBundle;
-
+import com.rapidminer.tools.plugin.Plugin;
+import com.rapidminer.tools.signature.IOType;
 
 /**
  * Manages operator search for the Global Search feature. See {@link OperatorGlobalSearch}.
@@ -143,24 +134,22 @@ class OperatorGlobalSearchManager extends AbstractGlobalSearchManager implements
 		// add parameters and input/output port classes
 		// as of 8.1, this operator creation does not cost any time, even though it looks scary
 		// for over a dozen extensions, the whole try-block below with operator creation adds less than 1 second to Studio start
-		try {
-			Operator op = opDesc.createOperatorInstance();
 
-			// store parameter keys
-			createParameterField(fields, op);
+		// store parameter keys
+		createParameterField(fields, opDesc);
 
-			// store input port types
-			createInputPortField(fields, op);
+		// store input port types
+		createInputPortField(fields, opDesc);
 
-			// store output port types
-			createOutputPortField(fields, op);
+		// store output port types
+		createOutputPortField(fields, opDesc);
 
-			// for learners, also store their capabilities
-			if (op instanceof CapabilityProvider) {
-				createCapabilitiesField(fields, (CapabilityProvider) op);
-			}
-		} catch (OperatorCreationException e) {
-			// should not happen, if it does, ignore
+		// for learners and new operators, also store their capabilities
+		if (CapabilityProvider.class.isAssignableFrom(opDesc.getOperatorClass())) {
+			createCapabilitiesField(fields, opDesc);
+		}
+		if (TableCapabilityProvider.class.isAssignableFrom(opDesc.getOperatorClass())) {
+			createCapabilitiesField(fields, opDesc);
 		}
 		return GlobalSearchUtilities.INSTANCE.createDocument(opDesc.getKey(), opDesc.getName(), fields.toArray(new Field[0]));
 	}
@@ -170,18 +159,16 @@ class OperatorGlobalSearchManager extends AbstractGlobalSearchManager implements
 	 *
 	 * @param fields
 	 * 		the list of fields to which the new field should be added
-	 * @param op
-	 * 		the operator instance
+	 * @param opDesc
+	 * 		the operator description
 	 */
-	private void createParameterField(final List<Field> fields, final Operator op) {
-		StringBuilder sb;
-		sb = new StringBuilder();
-		for (ParameterType type : op.getParameterTypes()) {
-			String key = type.getKey().replaceAll("_", " ");
-			sb.append(key);
-			sb.append(' ');
-		}
-		fields.add(GlobalSearchUtilities.INSTANCE.createFieldForTexts(FIELD_PARAMETER, sb.toString()));
+	private void createParameterField(final List<Field> fields, final OperatorDescription opDesc) {
+		String paramString = OperatorSignatureRegistry.INSTANCE
+				.lookupParameters(opDesc.getKey())
+				.keySet().stream()
+				.map(key -> key.replace("_", ""))
+				.collect(Collectors.joining(" "));
+		fields.add(GlobalSearchUtilities.INSTANCE.createFieldForTexts(FIELD_PARAMETER, paramString));
 	}
 
 	/**
@@ -189,35 +176,12 @@ class OperatorGlobalSearchManager extends AbstractGlobalSearchManager implements
 	 *
 	 * @param fields
 	 * 		the list of fields to which the new field should be added
-	 * @param op
-	 * 		the operator instance
+	 * @param opDesc
+	 * 		the operator description
 	 */
 
-	private void createInputPortField(final List<Field> fields, final Operator op) {
-		StringBuilder sb;
-		InputPorts inputPorts = op.getInputPorts();
-		if (inputPorts != null && inputPorts.getNumberOfPorts() > 0) {
-			sb = new StringBuilder();
-			// there is a port? Every port input class extends IOObject, so add that
-			sb.append(IO_OBJECT);
-			sb.append(' ');
-			for (InputPort inPort : inputPorts.getAllPorts()) {
-				if (!inPort.getAllPreconditions().isEmpty()) {
-					List<Precondition> preconditions = new LinkedList<>(inPort.getAllPreconditions());
-					MetaData expectedMD = preconditions.get(0).getExpectedMetaData();
-					String name = RendererService.getName(expectedMD.getObjectClass());
-					if (name != null) {
-						sb.append(name);
-					} else {
-						sb.append(inPort.getName());
-					}
-				} else {
-					sb.append(inPort.getName());
-				}
-				sb.append(' ');
-			}
-			fields.add(GlobalSearchUtilities.INSTANCE.createFieldForTexts(FIELD_INPUT_CLASS, sb.toString()));
-		}
+	private void createInputPortField(final List<Field> fields, final OperatorDescription opDesc) {
+		createPortField(fields, opDesc, true);
 	}
 
 	/**
@@ -225,63 +189,55 @@ class OperatorGlobalSearchManager extends AbstractGlobalSearchManager implements
 	 *
 	 * @param fields
 	 * 		the list of fields to which the new field should be added
-	 * @param op
-	 * 		the operator instance
+	 * @param opDesc
+	 * 		the operator description
 	 */
-	private void createOutputPortField(final List<Field> fields, final Operator op) {
-		StringBuilder sb;
-		OutputPorts outputPorts = op.getOutputPorts();
-		if (outputPorts != null && outputPorts.getNumberOfPorts() > 0) {
-			sb = new StringBuilder();
-			// there is a port? Every port output class extends IOObject, so add that
-			sb.append(IO_OBJECT);
-			sb.append(' ');
-
-			// to prepare output MD, we need to trigger generation here
-			try {
-				op.transformMetaData();
-			} catch (Exception e) {
-				// some extensions may throw here, just ignore it and move on
-				LogService.getRoot().log(Level.WARNING, "com.rapidminer.gui.processeditor.global_search.OperatorSearchManager.error.output_metadata_transform_failed",
-						op.getOperatorDescription().getKey());
-			}
-			for (OutputPort outPort : outputPorts.getAllPorts()) {
-				MetaData resultMD = outPort.getRawMetaData();
-				if (resultMD != null) {
-					String name = RendererService.getName(resultMD.getObjectClass());
-					if (name != null) {
-						sb.append(name);
-					} else {
-						sb.append(outPort.getName());
-					}
-				} else {
-					sb.append(outPort.getName());
-				}
-				sb.append(' ');
-			}
-			fields.add(GlobalSearchUtilities.INSTANCE.createFieldForTexts(FIELD_OUTPUT_CLASS, sb.toString()));
-		}
+	private void createOutputPortField(final List<Field> fields, final OperatorDescription opDesc) {
+		createPortField(fields, opDesc, false);
 	}
 
 	/**
-	 * Create the capabilities field for {@link Learner}s.
+	 * Creates the port type field for operators.
 	 *
 	 * @param fields
 	 * 		the list of fields to which the new field should be added
-	 * @param op
-	 * 		the learner instance
+	 * @param opDesc
+	 * 		the operator description
+	 * @param input
+	 * 		whether to create the input or output field
 	 */
-	private void createCapabilitiesField(final List<Field> fields, final CapabilityProvider op) {
-		StringBuilder sb;
-		sb = new StringBuilder();
-		for (OperatorCapability capability : OperatorCapability.values()) {
-			if (op.supportsCapability(capability)) {
-				sb.append(capability.getDescription());
-				sb.append(' ');
-			}
+	private void createPortField(final List<Field> fields, final OperatorDescription opDesc, boolean input) {
+		Map<String, IOType> portSignature = OperatorSignatureRegistry.INSTANCE.lookup(opDesc.getKey(), input);
+		if (portSignature.isEmpty()) {
+			return;
 		}
-
-		fields.add(GlobalSearchUtilities.INSTANCE.createFieldForTexts(FIELD_CAPABILITIES, sb.toString()));
+		StringJoiner joiner = new StringJoiner(" ", IO_OBJECT + " ", "");
+		portSignature.forEach((name, type) -> {
+			String portValue = name;
+			if (type.isSpecific()) {
+				try {
+					portValue = RendererService.getName(Plugin.getMajorClassLoader().loadClass(type.getClassName()));
+				} catch (ClassNotFoundException e) {
+					// ignore and use port name
+				}
+			}
+			joiner.add(portValue);
+		});
+		fields.add(GlobalSearchUtilities.INSTANCE
+				.createFieldForTexts(input ? FIELD_INPUT_CLASS : FIELD_OUTPUT_CLASS, joiner.toString()));
 	}
 
+	/**
+	 * Create the capabilities field for {@link CapabilityProvider}s.
+	 *
+	 * @param fields
+	 * 		the list of fields to which the new field should be added
+	 * @param opDesc
+	 * 		the learner description
+	 */
+	private void createCapabilitiesField(final List<Field> fields, final OperatorDescription opDesc) {
+		fields.add(GlobalSearchUtilities.INSTANCE.createFieldForTexts(FIELD_CAPABILITIES,
+				OperatorSignatureRegistry.INSTANCE.lookupCapabilities(opDesc.getKey())
+						.stream().collect(Collectors.joining(" "))));
+	}
 }

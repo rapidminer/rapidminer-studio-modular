@@ -35,7 +35,9 @@ import com.rapidminer.tools.expression.internal.function.AbstractFunction;
  *
  * @author David Arnu
  *
+ * @deprecated since 9.11, see {@link com.rapidminer.tools.belt.expression.ExpressionParser}
  */
+@Deprecated
 public abstract class Abstract2DateInputBooleanOutput extends AbstractFunction {
 
 	public Abstract2DateInputBooleanOutput(String i18nKey) {

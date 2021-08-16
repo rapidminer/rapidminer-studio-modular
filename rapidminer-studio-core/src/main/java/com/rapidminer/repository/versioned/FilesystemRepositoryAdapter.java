@@ -67,7 +67,10 @@ import com.rapidminer.repository.RepositoryLocationType;
 import com.rapidminer.repository.RepositoryManager;
 import com.rapidminer.repository.gui.RepositoryConfigurationPanel;
 import com.rapidminer.repository.versioned.IOObjectFileTypeHandler.HDF5DataTableHandler;
+import com.rapidminer.repository.versioned.IOObjectFileTypeHandler.IOTableModelHandler;
 import com.rapidminer.repository.versioned.IOObjectFileTypeHandler.LegacyIOOHandler;
+import com.rapidminer.repository.versioned.IOObjectFileTypeHandler.PerformanceHandler;
+import com.rapidminer.repository.versioned.IOObjectFileTypeHandler.WeightsHandler;
 import com.rapidminer.repository.versioned.datasummary.ContentMapperStorage;
 import com.rapidminer.repository.versioned.gui.FilesystemRepositoryConfigurationPanel;
 import com.rapidminer.tools.FileUtils;
@@ -116,7 +119,11 @@ public class FilesystemRepositoryAdapter implements Repository, NewFilesystemRep
 				ConnectionInformationFileTypeHandler.INSTANCE);
 		STANDARD_SUFFIXES.add(normalizeSuffix(ConnectionInformationFileTypeHandler.INSTANCE.getSuffix()));
 		HDF5DataTableHandler.INSTANCE.register();
+		IOTableModelHandler.INSTANCE.register();
 		IOCollectionHandler.INSTANCE.register();
+		// TODO uncomment to activate new file handlers
+		// PerformanceHandler.INSTANCE.register();
+		// WeightsHandler.INSTANCE.register();
 
 		// we do not find legacy .blob files when looking for entries from open file from blob, need to handle them
 		// differently for compatibility

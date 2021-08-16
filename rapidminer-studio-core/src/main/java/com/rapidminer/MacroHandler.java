@@ -231,10 +231,8 @@ public class MacroHandler extends Observable {
 					if (processLocation == null) {
 						return null;
 					}
-					if (processLocation instanceof FileProcessLocation) {
-						return processLocation.getShortName().substring(0, processLocation.getShortName().lastIndexOf("."));
-					}
-					return processLocation.getShortName();
+					return processLocation.getShortName()
+							.replaceFirst("\\." + RapidMiner.PROCESS_FILE_EXTENSION + "$", "");
 				case PROCESS_FILE:
 					return process.getProcessLocation() != null ? process.getProcessLocation().getShortName() : null;
 				case PROCESS_PATH:

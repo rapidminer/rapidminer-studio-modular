@@ -22,8 +22,10 @@ import com.rapidminer.operator.OperatorCapability;
 
 
 /**
+ * Old capability provider only for learners. For new operators, learners or not, use the
+ * {@link com.rapidminer.operator.TableCapabilityProvider}.
+ *
  * @author Sebastian Land
- * 
  */
 public interface CapabilityProvider {
 

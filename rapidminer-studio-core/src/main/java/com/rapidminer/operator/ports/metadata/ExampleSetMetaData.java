@@ -419,7 +419,6 @@ public class ExampleSetMetaData extends MetaData {
 		if (attributeMetaData == null) {
 			return MetaDataInfo.UNKNOWN;
 		}
-		// TODO: This is too slow
 		if (role.equals(Attributes.CONFIDENCE_NAME)) {
 			for (AttributeMetaData amd : attributeMetaData.values()) {
 				String currentRole = amd.getRole();

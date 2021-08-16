@@ -45,6 +45,7 @@
 		</group>
 		<group key="rapidminer.preferences.subgroup.system.file_cache">
 			<property key="rapidminer.system.file_cache.connection.keep" />
+			<property key="rapidminer.system.file_cache.operator_signature.keep" />
 		</group>
 		<group key="rapidminer.preferences.subgroup.system.files">
 			<property key="rapidminer.system.files.file_browser" />

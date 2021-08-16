@@ -35,8 +35,6 @@ import com.rapidminer.parameter.MetaDataProvider;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeRegexp;
 import com.rapidminer.parameter.UndefinedParameterError;
-import com.rapidminer.tools.belt.BeltMetaDataTools;
-import com.rapidminer.tools.belt.BeltTools;
 
 
 /**
@@ -44,7 +42,7 @@ import com.rapidminer.tools.belt.BeltTools;
  * the given regular expression are kept.
  *
  * @author Kevin Majchrzak
- * @since 9.9.0
+ * @since 9.9.1
  */
 public class RegexColumnFilter implements TableSubsetSelectorFilter {
 
@@ -68,7 +66,7 @@ public class RegexColumnFilter implements TableSubsetSelectorFilter {
 	}
 
 	@Override
-	public Table filterTable(Table table, boolean filterSpecialColumns, boolean invertFilter) throws UserError {
+	public Table filterTable(Table table, SpecialFilterStrategy strategy, boolean invertFilter) throws UserError {
 		String regex = null;
 		String exceptRegex = null;
 		if (operator.isParameterSet(PARAMETER_REGULAR_EXPRESSION)) {
@@ -94,11 +92,11 @@ public class RegexColumnFilter implements TableSubsetSelectorFilter {
 						e.getMessage());
 			}
 		}
-		return filterTableWithSettings(table, filterSpecialColumns, invertFilter, regexPattern, exceptPattern);
+		return filterTableWithSettings(table, strategy, invertFilter, regexPattern, exceptPattern);
 	}
 
 	@Override
-	public TableMetaData filterMetaData(TableMetaData metaData, boolean filterSpecialColumns, boolean invertFilter) {
+	public TableMetaData filterMetaData(TableMetaData metaData, SpecialFilterStrategy strategy, boolean invertFilter) {
 		String regex = null;
 		String exceptRegex = null;
 		if (operator.isParameterSet(PARAMETER_REGULAR_EXPRESSION)) {
@@ -131,7 +129,7 @@ public class RegexColumnFilter implements TableSubsetSelectorFilter {
 				//ignore for metadata
 			}
 		}
-		return filterMetaDataWithSettings(metaData, filterSpecialColumns, invertFilter, regexPattern, exceptPattern);
+		return filterMetaDataWithSettings(metaData, strategy, invertFilter, regexPattern, exceptPattern);
 	}
 
 	@Override
@@ -151,9 +149,8 @@ public class RegexColumnFilter implements TableSubsetSelectorFilter {
 	 *
 	 * @param table
 	 * 		the table to be filtered
-	 * @param filterSpecialColumns
-	 * 		If this is {@code true}, then the special columns (columns with a role) are also filtered. Otherwise special
-	 * 		columns are always kept.
+	 * @param strategy
+	 * 		describes how the filter should handle special columns. See {@link SpecialFilterStrategy}.
 	 * @param invertFilter
 	 * 		inverts the result of the filter (keeps the columns that would usually be removed and vice versa)
 	 * @param regex
@@ -164,7 +161,7 @@ public class RegexColumnFilter implements TableSubsetSelectorFilter {
 	 * 		all	columns.
 	 * @return the filtered table
 	 */
-	public static Table filterTableWithSettings(Table table, boolean filterSpecialColumns, boolean invertFilter,
+	public static Table filterTableWithSettings(Table table, SpecialFilterStrategy strategy, boolean invertFilter,
 												Pattern regex, Pattern exceptRegex) {
 		Predicate<String> filter;
 		if (regex != null) {
@@ -175,13 +172,7 @@ public class RegexColumnFilter implements TableSubsetSelectorFilter {
 		if (exceptRegex != null) {
 			filter = filter.and(columnName -> !exceptRegex.matcher(columnName).matches());
 		}
-		if (invertFilter) {
-			filter = filter.negate();
-		}
-		if (!filterSpecialColumns) {
-			Predicate<String> isSpecialColumn = columnName -> BeltTools.isSpecial(table, columnName);
-			filter = isSpecialColumn.or(filter);
-		}
+		filter = FilterUtils.addDefaultFilters(table, strategy, invertFilter, filter);
 		return table.columns(table.labels().stream().filter(filter).collect(Collectors.toList()));
 	}
 
@@ -190,9 +181,8 @@ public class RegexColumnFilter implements TableSubsetSelectorFilter {
 	 *
 	 * @param metaData
 	 * 		the meta data to be filtered
-	 * @param filterSpecialColumns
-	 * 		If this is {@code true}, then the special columns (columns with a role) are also filtered. Otherwise special
-	 * 		columns are always kept.
+	 * @param strategy
+	 * 		describes how the filter should handle special columns. See {@link SpecialFilterStrategy}.
 	 * @param invertFilter
 	 * 		inverts the result of the filter (keeps the columns that would usually be removed and vice versa)
 	 * @param regex
@@ -203,7 +193,7 @@ public class RegexColumnFilter implements TableSubsetSelectorFilter {
 	 * 		all	columns.
 	 * @return the filtered table
 	 */
-	public static TableMetaData filterMetaDataWithSettings(TableMetaData metaData, boolean filterSpecialColumns,
+	public static TableMetaData filterMetaDataWithSettings(TableMetaData metaData, SpecialFilterStrategy strategy,
 														   boolean invertFilter, Pattern regex, Pattern exceptRegex) {
 		Predicate<String> filter;
 		if (regex != null) {
@@ -214,13 +204,7 @@ public class RegexColumnFilter implements TableSubsetSelectorFilter {
 		if (exceptRegex != null) {
 			filter = filter.and(columnName -> !exceptRegex.matcher(columnName).matches());
 		}
-		if (invertFilter) {
-			filter = filter.negate();
-		}
-		if (!filterSpecialColumns) {
-			Predicate<String> isSpecialColumn = columnName -> BeltMetaDataTools.isSpecial(metaData, columnName);
-			filter = isSpecialColumn.or(filter);
-		}
+		filter = FilterUtils.addDefaultFilters(metaData, strategy, invertFilter, filter);
 		return metaData.columns(metaData.labels().stream().filter(filter).collect(Collectors.toList()));
 	}
 

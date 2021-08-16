@@ -226,7 +226,7 @@ public class DefaultPropertyValueCellEditor extends DefaultRMCellEditor implemen
 						} else {
 							Integer defaultValue = (Integer) type.getDefaultValue();
 							if (defaultValue != null) {
-								((JTextField) editorComponent).setText(type.getDefaultValue().toString());
+								((JTextField) editorComponent).setText(type.toString(type.getDefaultValue()));
 							} else {
 								((JTextField) editorComponent).setText(null);
 							}
@@ -240,7 +240,7 @@ public class DefaultPropertyValueCellEditor extends DefaultRMCellEditor implemen
 							// no macro --> set to default
 							Integer defaultValue = (Integer) type.getDefaultValue();
 							if (defaultValue != null) {
-								((JTextField) editorComponent).setText(type.getDefaultValue().toString());
+								((JTextField) editorComponent).setText(type.toString(type.getDefaultValue()));
 							} else {
 								((JTextField) editorComponent).setText(null);
 							}
@@ -270,7 +270,7 @@ public class DefaultPropertyValueCellEditor extends DefaultRMCellEditor implemen
 						// no macro --> set to default
 						Integer defaultValue = (Integer) type.getDefaultValue();
 						if (defaultValue != null) {
-							((JTextField) editorComponent).setText(type.getDefaultValue().toString());
+							((JTextField) editorComponent).setText(type.toString(type.getDefaultValue()));
 							return type.getDefaultValue(); // .toString();
 						} else {
 							((JTextField) editorComponent).setText("");
@@ -320,7 +320,7 @@ public class DefaultPropertyValueCellEditor extends DefaultRMCellEditor implemen
 						} else {
 							Double defaultValue = (Double) type.getDefaultValue();
 							if (defaultValue != null) {
-								((JTextField) editorComponent).setText(type.getDefaultValue().toString());
+								((JTextField) editorComponent).setText(type.toString(type.getDefaultValue()));
 							} else {
 								((JTextField) editorComponent).setText(null);
 							}
@@ -334,7 +334,7 @@ public class DefaultPropertyValueCellEditor extends DefaultRMCellEditor implemen
 							// no macro --> set to default
 							Double defaultValue = (Double) type.getDefaultValue();
 							if (defaultValue != null) {
-								((JTextField) editorComponent).setText(type.getDefaultValue().toString());
+								((JTextField) editorComponent).setText(type.toString(type.getDefaultValue()));
 							} else {
 								((JTextField) editorComponent).setText(null);
 							}
@@ -364,7 +364,7 @@ public class DefaultPropertyValueCellEditor extends DefaultRMCellEditor implemen
 						// no macro --> set to default
 						Double defaultValue = (Double) type.getDefaultValue();
 						if (defaultValue != null) {
-							((JTextField) editorComponent).setText(type.getDefaultValue().toString());
+							((JTextField) editorComponent).setText(type.toString(type.getDefaultValue()));
 							return type.getDefaultValue(); // .toString();
 						} else {
 							((JTextField) editorComponent).setText("");
@@ -416,7 +416,7 @@ public class DefaultPropertyValueCellEditor extends DefaultRMCellEditor implemen
 				String text = ((JTextField) editorComponent).getText();
 				if (text == null || text.length() == 0) {
 					if (type.getDefaultValue() != null) {
-						return type.getDefaultValue().toString();
+						return type.toString(type.getDefaultValue());
 					} else {
 						return null;
 					}

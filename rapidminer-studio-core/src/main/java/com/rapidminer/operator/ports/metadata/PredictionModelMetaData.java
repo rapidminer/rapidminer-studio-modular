@@ -19,6 +19,7 @@
 package com.rapidminer.operator.ports.metadata;
 
 import com.rapidminer.example.Attributes;
+import com.rapidminer.operator.GeneralModel;
 import com.rapidminer.operator.learner.PredictionModel;
 import com.rapidminer.operator.ports.InputPort;
 import com.rapidminer.tools.Ontology;
@@ -49,7 +50,7 @@ public class PredictionModelMetaData extends ModelMetaData {
 	}
 
 	public PredictionModelMetaData(Class<? extends PredictionModel> modelClass, ExampleSetMetaData trainingSetMetaData) {
-		super(modelClass, trainingSetMetaData);
+		super(modelClass, trainingSetMetaData, GeneralModel.ModelKind.SUPERVISED);
 		if (trainingSetMetaData != null) {
 			AttributeMetaData labelAttributeMetaData = trainingSetMetaData.getLabelMetaData();
 			if (labelAttributeMetaData != null) {

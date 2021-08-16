@@ -36,7 +36,9 @@ import com.rapidminer.tools.expression.internal.function.AbstractFunction;
  * Abstract class for a equality check function that has two arbitrary inputs
  *
  * @author Sabrina Kirstein
+ * @deprecated since 9.11, see {@link com.rapidminer.tools.belt.expression.ExpressionParser}
  */
+@Deprecated
 public abstract class AbstractEqualityFunctionWith2Inputs extends AbstractFunction {
 
 	/**

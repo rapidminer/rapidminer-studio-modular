@@ -65,7 +65,7 @@ public abstract class ParameterTypeSingle extends ParameterType {
 			}
 		} else {
 			if (!hideDefault && getDefaultValue() != null) {
-				element.setAttribute("value", getDefaultValue().toString());
+				element.setAttribute("value", toXMLString(getDefaultValue(), encryptionContext));
 			} else {
 				return null;
 			}

@@ -36,6 +36,7 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.rapidminer.TestUtils;
 import com.rapidminer.connection.ConnectionHandlerRegistry;
 import com.rapidminer.connection.ConnectionInformation;
 import com.rapidminer.connection.ConnectionInformationBuilder;
@@ -43,7 +44,6 @@ import com.rapidminer.connection.configuration.ConfigurationParameter;
 import com.rapidminer.connection.util.ConnectionInformationSelector;
 import com.rapidminer.connection.util.ConnectionSelectionProvider;
 import com.rapidminer.operator.Operator;
-import com.rapidminer.operator.OperatorCreationException;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.UserError;
 import com.rapidminer.operator.ports.InputPort;
@@ -52,7 +52,6 @@ import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeInt;
 import com.rapidminer.repository.Repository;
 import com.rapidminer.repository.RepositoryLocation;
-import com.rapidminer.tools.ProcessToolsTest;
 import com.rapidminer.tools.config.ConfigurationException;
 import com.rapidminer.tools.config.ConfigurationManager;
 import com.rapidminer.tools.config.ParameterTypeConfigurable;
@@ -172,7 +171,7 @@ public class ConnectionAdapterHandlerTest {
 
 	@BeforeClass
 	@SuppressWarnings("unchecked")
-	public static void setup() throws ConfigurationException, OperatorCreationException, ConnectionAdapterException {
+	public static void setup() throws Exception {
 		OperatorDocumentation docu = new OperatorDocumentation("Test");
 		desc = mock(OperatorDescription.class);
 		doReturn(docu).when(desc).getOperatorDocumentation();
@@ -232,7 +231,7 @@ public class ConnectionAdapterHandlerTest {
 		configurableParam = new ParameterTypeConfigurable("parameter", "", TEST_TYPE);
 
 		// register a fake process root operator
-		ProcessToolsTest.setup();
+		TestUtils.INSTANCE.minimalProcessUsageSetup();
 	}
 
 	@AfterClass
@@ -249,7 +248,6 @@ public class ConnectionAdapterHandlerTest {
 		desc = null;
 		configurableParam = null;
 		handler = null;
-		ProcessToolsTest.tearDown();
 	}
 
 	@Test

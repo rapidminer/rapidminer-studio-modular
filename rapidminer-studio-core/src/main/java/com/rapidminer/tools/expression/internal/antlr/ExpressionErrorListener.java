@@ -29,8 +29,9 @@ import org.antlr.v4.runtime.Token;
  * Listener for errors in the expression parser. Stores the error line and its message.
  *
  * @author Gisa Schaefer
- *
+ * @deprecated since 9.11, see {@link com.rapidminer.tools.belt.expression.ExpressionParser}
  */
+@Deprecated
 class ExpressionErrorListener extends BaseErrorListener {
 
 	private String errorMessage;

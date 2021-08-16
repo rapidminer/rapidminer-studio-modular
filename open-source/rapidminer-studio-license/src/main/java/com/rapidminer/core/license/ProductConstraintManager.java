@@ -364,6 +364,13 @@ public enum ProductConstraintManager {
 	}
 
 	/**
+	 * See {@link LicenseManager#isAllowedByAnnotations(Class)} for more details.
+	 */
+	public boolean isAllowedByAnnotations(Class<?> clazz) {
+		return LicenseManagerRegistry.INSTANCE.get().isAllowedByAnnotations(clazz);
+	}
+
+	/**
 	 * Checks if free license or a higher license is installed.
 	 *
 	 * @return {@code true} if at least a free license is installed

@@ -19,10 +19,10 @@
 package com.rapidminer.tools.expression.internal;
 
 /**
- *
  * @author Marco Boeck
- *
+ * @deprecated since 9.11, see {@link com.rapidminer.tools.belt.expression.ExpressionParser}
  */
+@Deprecated
 public abstract class ExpressionParserConstants {
 
 	// date constants

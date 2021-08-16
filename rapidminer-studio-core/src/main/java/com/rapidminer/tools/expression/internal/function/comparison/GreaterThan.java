@@ -25,7 +25,9 @@ import com.rapidminer.tools.expression.FunctionDescription;
  * Class for the GREATER THAN function that has two numerical or two nominal inputs
  *
  * @author Sabrina Kirstein
+ * @deprecated since 9.11, see {@link com.rapidminer.tools.belt.expression.ExpressionParser}
  */
+@Deprecated
 public class GreaterThan extends AbstractComparisonFunctionWith2Inputs {
 
 	/**

@@ -27,9 +27,11 @@ import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import javax.swing.BorderFactory;
 import javax.swing.Icon;
 import javax.swing.JLabel;
@@ -47,9 +49,11 @@ import com.rapidminer.gui.tools.ResourceLabel;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.gui.tools.components.FixedWidthLabel;
 import com.rapidminer.gui.tools.dialogs.ButtonDialog;
+import com.rapidminer.operator.TableCapabilityProvider;
 import com.rapidminer.operator.ExecutionUnit;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorCapability;
+import com.rapidminer.operator.TableCapability;
 import com.rapidminer.operator.OperatorChain;
 import com.rapidminer.operator.learner.CapabilityProvider;
 import com.rapidminer.operator.ports.InputPort;
@@ -110,7 +114,7 @@ public class OperatorInfoScreen extends ButtonDialog {
 			overviewPanel.add(deprecatedPanel, c);
 		}
 
-		if (operator instanceof CapabilityProvider) {
+		if (operator instanceof CapabilityProvider || operator instanceof TableCapabilityProvider) {
 			JPanel learnerPanel = new JPanel(new BorderLayout());
 			JLabel label = new ResourceLabel(INFO_SCREEN_PREFIX + "capabilities");
 			label.setHorizontalAlignment(SwingConstants.CENTER);
@@ -120,7 +124,9 @@ public class OperatorInfoScreen extends ButtonDialog {
 			label.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 40));
 			learnerPanel.add(label, BorderLayout.WEST);
 
-			learnerPanel.add(createCapabilitiesPanel(operator), BorderLayout.CENTER);
+			JPanel capabilitiesPanel = operator instanceof TableCapabilityProvider ? createCapabilitiesPanelV2(operator) :
+					createCapabilitiesPanel(operator);
+			learnerPanel.add(capabilitiesPanel, BorderLayout.CENTER);
 			learnerPanel.setBorder(BorderFactory.createCompoundBorder(
 					BorderFactory.createMatteBorder(0, 0, 1, 0, Color.LIGHT_GRAY),
 					BorderFactory.createEmptyBorder(4, 4, 4, 4)));
@@ -302,6 +308,48 @@ public class OperatorInfoScreen extends ButtonDialog {
 					capabilityLabel.setIcon(SwingTools.createIcon("16/ok.png"));
 				} else {
 					capabilityLabel.setIcon(SwingTools.createIcon("16/error.png"));
+				}
+			} catch (Exception e) {
+				break;
+			}
+			capabilitiesPanel.add(capabilityLabel);
+		}
+		return capabilitiesPanel;
+	}
+
+	/**
+	 * Creates a panel that shows the capabilities.
+	 *
+	 * @param operator
+	 * 		the operator that is a {@link TableCapabilityProvider}
+	 * @return the panel showing its capabilities
+	 */
+	public static JPanel createCapabilitiesPanelV2(Operator operator) {
+		TableCapabilityProvider capabilityProvider = (TableCapabilityProvider) operator;
+		TableCapability[] values = TableCapability.values(capabilityProvider);
+		int length = values.length;
+		GridLayout layout = new GridLayout(length / 2, 2);
+		layout.setHgap(GAP);
+		layout.setVgap(GAP);
+		JPanel capabilitiesPanel = new JPanel(layout);
+		Set<TableCapability> supported = capabilityProvider.supported();
+		Set<TableCapability> unsupported = capabilityProvider.unsupported();
+		if (unsupported == null) {
+			unsupported = Collections.emptySet();
+		}
+		if (supported == null) {
+			supported = Collections.emptySet();
+		}
+		for (TableCapability capability : values) {
+			JLabel capabilityLabel = new JLabel(capability.getDescription());
+			try {
+				if (supported.contains(capability)) {
+					capabilityLabel.setIcon(SwingTools.createIcon("16/ok.png"));
+				} else if (unsupported.contains(capability)) {
+					capabilityLabel.setIcon(SwingTools.createIcon("16/error.png"));
+				} else {
+					capabilityLabel.setIcon(SwingTools.createIcon("16/question_blue.png"));
+					capabilityLabel.setEnabled(false);
 				}
 			} catch (Exception e) {
 				break;

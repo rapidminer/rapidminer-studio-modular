@@ -20,6 +20,7 @@ package com.rapidminer.example;
 
 import java.util.Objects;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.rapidminer.tools.math.Averagable;
 
 
@@ -42,7 +43,12 @@ public class AttributeWeight extends Averagable implements Comparable<AttributeW
 	private int counter = 1;
 
 	/** The parent attribute weights. */
+	@JsonBackReference
 	private AttributeWeights weights;
+
+	private AttributeWeight() {
+		// needed for jackson
+	}
 
 	/** Creates a new attribute weight object. */
 	public AttributeWeight(AttributeWeights weights, String name, double weight) {

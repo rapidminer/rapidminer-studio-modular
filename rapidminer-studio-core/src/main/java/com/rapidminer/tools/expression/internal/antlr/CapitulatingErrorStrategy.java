@@ -32,8 +32,9 @@ import org.antlr.v4.runtime.TokenStream;
  * error messages of the {@link DefaultErrorStrategy}.
  *
  * @author Gisa Schaefer
- *
+ * @deprecated since 9.11, see {@link com.rapidminer.tools.belt.expression.ExpressionParser}
  */
+@Deprecated
 class CapitulatingErrorStrategy extends DefaultErrorStrategy {
 
 	@Override

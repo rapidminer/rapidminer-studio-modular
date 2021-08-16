@@ -18,6 +18,7 @@
  */
 package com.rapidminer.operator.performance;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
@@ -49,10 +50,13 @@ public abstract class SimpleCriterion extends MeasuredPerformance {
 
 	private double exampleCount = 0;
 
+	@JsonIgnore
 	private Attribute predictedAttribute;
 
+	@JsonIgnore
 	private Attribute labelAttribute;
 
+	@JsonIgnore
 	private Attribute weightAttribute;
 
 	public SimpleCriterion() {}

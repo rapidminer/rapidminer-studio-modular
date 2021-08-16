@@ -43,4 +43,8 @@ public abstract class AbstractEigenvectorModel extends AbstractModel {
 
 	public abstract double[] getCumulativeVariance();
 
+	@Override
+	public boolean isModelKind(ModelKind modelKind) {
+		return modelKind == ModelKind.PREPROCESSING;
+	}
 }

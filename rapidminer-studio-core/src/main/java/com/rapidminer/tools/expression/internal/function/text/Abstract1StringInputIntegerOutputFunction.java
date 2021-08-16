@@ -37,7 +37,9 @@ import com.rapidminer.tools.expression.internal.function.AbstractFunction;
  *
  * @author Thilo Kamradt
  *
+ * @deprecated since 9.11, see {@link com.rapidminer.tools.belt.expression.ExpressionParser}
  */
+@Deprecated
 public abstract class Abstract1StringInputIntegerOutputFunction extends AbstractFunction {
 
 	/**

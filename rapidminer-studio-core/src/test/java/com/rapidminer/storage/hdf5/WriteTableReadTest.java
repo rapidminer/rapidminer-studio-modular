@@ -407,7 +407,7 @@ public class WriteTableReadTest {
 
 	}
 
-	private static IOTable createBooleanTable(int rows) {
+	static IOTable createBooleanTable(int rows) {
 		final Table table =
 				Builders.newTableBuilder(rows).addBoolean("yes-no-yes", i -> i % 2 == 0 ? "Yes" : "No", "Yes")
 						.addBoolean("yes-no-no", i -> i % 2 == 0 ? "Yes" : "No", "No")
@@ -434,7 +434,7 @@ public class WriteTableReadTest {
 		return new IOTable(builder.build(Belt.defaultContext()));
 	}
 
-	private static IOTable createDifferentRolesAndAnnotations() {
+	static IOTable createDifferentRolesAndAnnotations() {
 		SplittableRandom random = new SplittableRandom();
 		final TableBuilder builder = Builders.newTableBuilder(42);
 		builder.addNominal("withoutRole", i -> "val" + i);
@@ -455,16 +455,20 @@ public class WriteTableReadTest {
 		return new IOTable(builder.build(Belt.defaultContext()));
 	}
 
-	private static IOTable createWithGaps() {
+	static IOTable createWithGaps() {
 		final NominalBuffer nominalBuffer = Buffers.nominalBuffer(100);
 		nominalBuffer.set(0, "red");
 		nominalBuffer.set(1, "green");
 		for (int i = 1; i <= 50; i++) {
 			nominalBuffer.set(i, "blue");
 		}
+		nominalBuffer.set(51, "yellow");
+		nominalBuffer.set(51, "purple");
 		for (int i = 51; i < 100; i++) {
 			nominalBuffer.set(i, "green");
 		}
+		nominalBuffer.set(99, "black");
+		nominalBuffer.set(99, "green");
 		Table table =
 				Builders.newTableBuilder(100).add("nominal", nominalBuffer.toColumn()).add("nominal2",
 						nominalBuffer.toColumn()).add("nominal3", nominalBuffer.toColumn()).build(Belt.defaultContext());
@@ -479,7 +483,7 @@ public class WriteTableReadTest {
 		return new IOTable(table);
 	}
 
-	private static IOTable createMoreColumnMD() {
+	static IOTable createMoreColumnMD() {
 		Plugin plugin = mock(Plugin.class);
 		when(plugin.getExtensionId()).thenReturn("rmx_professional");
 

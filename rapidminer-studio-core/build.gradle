@@ -21,10 +21,7 @@ dependencies {
 	compile project(':rapidminer-studio-settings')
 	compile project(':rapidminer-studio-interfaces')
 	compile project(':rapidminer-studio-filesystem')
-	compile(project(':rapidminer-studio-license')) {
-		exclude module: 'jackson-core'
-		exclude module: 'jackson-databind'
-	}
+	compile project(':rapidminer-studio-license')
 	compile project(':rapidminer-studio-logging')
 	compile project(':rapidminer-studio-i18n')
 	compile project(':rapidminer-studio-security')
@@ -34,10 +31,10 @@ dependencies {
     compile project(':rapidminer-studio-math')
 
 	// belt project for new data core
-	compile 'com.rapidminer:belt:1.0.0'
+	compile 'com.rapidminer:belt:1.0.1'
 
 	// belt adapter for conversion between old and new core
-	compile ('com.rapidminer:belt-adapter:1.0'){
+	compile ('com.rapidminer:belt-adapter:1.0.1'){
 		exclude group: 'com.rapidminer.studio', module: 'rapidminer-studio-core'
 		exclude group: 'com.rapidminer', module: 'belt'
 	}
@@ -58,7 +55,7 @@ dependencies {
 	compile 'com.rapidminer.external:vldocking:9.0.2'
 
 	// repository supporting versioning
-	compile('com.rapidminer.repository:versioned-repository:1.0.0') {
+	compile('com.rapidminer.repository:versioned-repository:1.0.1') {
 		exclude group: 'org.bouncycastle', module: 'bcprov-jdk15on'
 		exclude group: 'commons-io', module: 'commons-io'
 		exclude group: 'org.apache.commons', module: 'commons-lang3'
@@ -159,8 +156,8 @@ dependencies {
 	compile 'com.h2database:h2:1.4.194'
 
 	// up until 7.4.1 this was a transitive dependency coming from license-commons (jackson version 2.4.0)
-	compile 'com.fasterxml.jackson.core:jackson-core:2.9.5'
-	compile 'com.fasterxml.jackson.core:jackson-databind:2.9.5'
+	compile 'com.fasterxml.jackson.core:jackson-core:2.10.5'
+	compile 'com.fasterxml.jackson.core:jackson-databind:2.10.5.1'
 
 	compile 'org.jsoup:jsoup:1.8.3'
 

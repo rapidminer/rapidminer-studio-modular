@@ -18,6 +18,9 @@
  */
 package com.rapidminer.operator.preprocessing.filter.columns;
 
+import static com.rapidminer.operator.preprocessing.filter.columns.TableSubsetSelectorFilter.SpecialFilterStrategy.FILTER;
+import static com.rapidminer.operator.preprocessing.filter.columns.TableSubsetSelectorFilter.SpecialFilterStrategy.KEEP;
+import static com.rapidminer.operator.preprocessing.filter.columns.TableSubsetSelectorFilter.SpecialFilterStrategy.REMOVE;
 import static org.junit.Assert.assertEquals;
 
 import java.time.Instant;
@@ -50,6 +53,7 @@ import com.rapidminer.tools.math.container.Range;
 /**
  * Tests the default implementations of {@link TableSubsetSelectorFilter}. These are the filters used in the {@link
  * TableSubsetSelector}.
+ *
  * @author Kevin Majchrzak
  */
 @RunWith(Enclosed.class)
@@ -69,13 +73,17 @@ public class ColumnFilterTest {
 		public void testAllColumnFilter() {
 			Table testTable = createTable();
 			assertEquals(testTable.labels(), AllColumnFilter.filterTableWithSettings(testTable,
-					false, false).labels());
+					KEEP, false).labels());
 			assertEquals(testTable.labels(), AllColumnFilter.filterTableWithSettings(testTable,
-					true, false).labels());
-			assertEquals(Collections.singletonList(SPECIAL_COLUMN),
-					AllColumnFilter.filterTableWithSettings(testTable, false, true).labels());
-			assertEquals(Collections.emptyList(),
-					AllColumnFilter.filterTableWithSettings(testTable, true, true).labels());
+					FILTER, false).labels());
+			assertEquals(removeSpecial(testTable.labels()), AllColumnFilter.filterTableWithSettings(testTable,
+					REMOVE, false).labels());
+			assertEquals(Collections.singletonList(SPECIAL_COLUMN), AllColumnFilter.filterTableWithSettings(testTable,
+					KEEP, true).labels());
+			assertEquals(Collections.emptyList(), AllColumnFilter.filterTableWithSettings(testTable,
+					FILTER, true).labels());
+			assertEquals(Collections.emptyList(), AllColumnFilter.filterTableWithSettings(testTable,
+					REMOVE, true).labels());
 		}
 
 		@Test
@@ -90,13 +98,17 @@ public class ColumnFilterTest {
 			missingValuesAndSpecial.add(SPECIAL_COLUMN);
 			// assert results
 			assertEquals(noMissingValues, NoMissingValuesColumnFilter.filterTableWithSettings(testTable,
-					false, false).labels());
+					KEEP, false).labels());
 			assertEquals(noMissingValues, NoMissingValuesColumnFilter.filterTableWithSettings(testTable,
-					true, false).labels());
+					FILTER, false).labels());
+			assertEquals(removeSpecial(noMissingValues), NoMissingValuesColumnFilter.filterTableWithSettings(testTable,
+					REMOVE, false).labels());
 			assertEquals(missingValuesAndSpecial, NoMissingValuesColumnFilter.filterTableWithSettings(testTable,
-					false, true).labels());
+					KEEP, true).labels());
 			assertEquals(missingValues, NoMissingValuesColumnFilter.filterTableWithSettings(testTable,
-					true, true).labels());
+					FILTER, true).labels());
+			assertEquals(missingValues, NoMissingValuesColumnFilter.filterTableWithSettings(testTable,
+					REMOVE, true).labels());
 		}
 
 		@Test
@@ -110,19 +122,37 @@ public class ColumnFilterTest {
 			withOutNonBinominal.remove(SPECIAL_COLUMN);
 			// assert results
 			assertEquals(Arrays.asList(INTEGER, BINOMINAL, INTEGER + MISSINGS_SUFFIX, BINOMINAL + MISSINGS_SUFFIX,
-					SPECIAL_COLUMN), ValueTypeColumnFilter.filterTableWithSettings(testTable, false,
-					false, INTEGER, BINOMINAL).labels());
+					SPECIAL_COLUMN), ValueTypeColumnFilter.filterTableWithSettings(testTable, KEEP, false,
+					INTEGER, BINOMINAL).labels());
+
+			assertEquals(Arrays.asList(INTEGER, BINOMINAL, INTEGER + MISSINGS_SUFFIX, BINOMINAL + MISSINGS_SUFFIX),
+					ValueTypeColumnFilter.filterTableWithSettings(testTable, REMOVE, false,
+					INTEGER, BINOMINAL).labels());
+
 			assertEquals(Arrays.asList(TIME, BINOMINAL, TIME + MISSINGS_SUFFIX, BINOMINAL + MISSINGS_SUFFIX),
-					ValueTypeColumnFilter.filterTableWithSettings(testTable, true, false,
-							TIME, BINOMINAL).labels());
-			assertEquals(withOutNonBinominalButWithSpecial,
-					ValueTypeColumnFilter.filterTableWithSettings(testTable, false, true,
-							NON_BINOMINAL).labels());
-			assertEquals(withOutNonBinominal,
-					ValueTypeColumnFilter.filterTableWithSettings(testTable, true, true,
-							NON_BINOMINAL).labels());
-			assertEquals(Collections.emptyList(),
-					ValueTypeColumnFilter.filterTableWithSettings(testTable, true, false).labels());
+					ValueTypeColumnFilter.filterTableWithSettings(testTable, FILTER, false, TIME, BINOMINAL).labels());
+
+			assertEquals(Arrays.asList(TIME, BINOMINAL, TIME + MISSINGS_SUFFIX, BINOMINAL + MISSINGS_SUFFIX),
+					ValueTypeColumnFilter.filterTableWithSettings(testTable, REMOVE, false, TIME, BINOMINAL).labels());
+
+			assertEquals(withOutNonBinominalButWithSpecial, ValueTypeColumnFilter.filterTableWithSettings(testTable,
+					KEEP, true, NON_BINOMINAL).labels());
+
+			assertEquals(withOutNonBinominal, ValueTypeColumnFilter.filterTableWithSettings(testTable,
+					REMOVE, true, NON_BINOMINAL).labels());
+
+			assertEquals(withOutNonBinominal, ValueTypeColumnFilter.filterTableWithSettings(testTable,
+					FILTER, true, NON_BINOMINAL).labels());
+
+			assertEquals(Collections.emptyList(), ValueTypeColumnFilter.filterTableWithSettings(testTable,
+					FILTER, false).labels());
+
+			assertEquals(Collections.singletonList(SPECIAL_COLUMN), ValueTypeColumnFilter.filterTableWithSettings(testTable,
+					KEEP, false).labels());
+
+			assertEquals(Arrays.asList(NON_BINOMINAL, NON_BINOMINAL + MISSINGS_SUFFIX),
+					ValueTypeColumnFilter.filterTableWithSettings(testTable,
+					REMOVE, false, NON_BINOMINAL).labels());
 		}
 
 		@Test
@@ -131,15 +161,21 @@ public class ColumnFilterTest {
 			List<String> withOutSpecial = new ArrayList<>(testTable.labels());
 			withOutSpecial.remove(SPECIAL_COLUMN);
 			assertEquals(Arrays.asList(REAL, SPECIAL_COLUMN), SingleColumnFilter.filterTableWithSettings(testTable,
-					false, false, REAL).labels());
+					KEEP, false, REAL).labels());
 			assertEquals(Collections.singletonList(REAL), SingleColumnFilter.filterTableWithSettings(testTable,
-					true, false, REAL).labels());
+					FILTER, false, REAL).labels());
+			assertEquals(Collections.singletonList(REAL), SingleColumnFilter.filterTableWithSettings(testTable,
+					REMOVE, false, REAL).labels());
 			assertEquals(testTable.labels(), SingleColumnFilter.filterTableWithSettings(testTable,
-					false, true, SPECIAL_COLUMN).labels());
+					KEEP, true, SPECIAL_COLUMN).labels());
 			assertEquals(withOutSpecial, SingleColumnFilter.filterTableWithSettings(testTable,
-					true, true, SPECIAL_COLUMN).labels());
+					FILTER, true, SPECIAL_COLUMN).labels());
+			assertEquals(removeSpecial(testTable.labels()), SingleColumnFilter.filterTableWithSettings(testTable,
+					REMOVE, true, SPECIAL_COLUMN).labels());
 			assertEquals(testTable.labels(), SingleColumnFilter.filterTableWithSettings(testTable,
-					true, true, null).labels());
+					FILTER, true, null).labels());
+			assertEquals(removeSpecial(testTable.labels()), SingleColumnFilter.filterTableWithSettings(testTable,
+					REMOVE, true, null).labels());
 		}
 
 		@Test
@@ -151,19 +187,27 @@ public class ColumnFilterTest {
 			List<String> withOutReal = new ArrayList<>(testTable.labels());
 			withOutReal.remove(REAL);
 			assertEquals(Arrays.asList(REAL, SPECIAL_COLUMN), SubsetColumnFilter.filterTableWithSettings(testTable,
-					false, false, new HashSet<>(Collections.singleton(REAL))).labels());
+					KEEP, false, new HashSet<>(Collections.singleton(REAL))).labels());
 			assertEquals(Collections.singletonList(REAL), SubsetColumnFilter.filterTableWithSettings(testTable,
-					true, false, new HashSet<>(Collections.singleton(REAL))).labels());
+					FILTER, false, new HashSet<>(Collections.singleton(REAL))).labels());
+			assertEquals(Collections.singletonList(REAL), SubsetColumnFilter.filterTableWithSettings(testTable,
+					REMOVE, false, new HashSet<>(Collections.singleton(REAL))).labels());
 			assertEquals(testTable.labels(), SubsetColumnFilter.filterTableWithSettings(testTable,
-					false, true, new HashSet<>()).labels());
+					KEEP, true, new HashSet<>()).labels());
+			assertEquals(removeSpecial(testTable.labels()), SubsetColumnFilter.filterTableWithSettings(testTable,
+					REMOVE, true, new HashSet<>()).labels());
 			assertEquals(Collections.singletonList(SPECIAL_COLUMN), SubsetColumnFilter.filterTableWithSettings(testTable,
-					false, false, new HashSet<>()).labels());
+					KEEP, false, new HashSet<>()).labels());
+			assertEquals(Collections.emptyList(), SubsetColumnFilter.filterTableWithSettings(testTable,
+					REMOVE, false, new HashSet<>()).labels());
 			assertEquals(withOutReal, SubsetColumnFilter.filterTableWithSettings(testTable,
-					false, true, new HashSet<>(Arrays.asList(SPECIAL_COLUMN, REAL))).labels());
+					KEEP, true, new HashSet<>(Arrays.asList(SPECIAL_COLUMN, REAL))).labels());
+			assertEquals(removeSpecial(withOutReal), SubsetColumnFilter.filterTableWithSettings(testTable,
+					REMOVE, true, new HashSet<>(Arrays.asList(SPECIAL_COLUMN, REAL))).labels());
 			assertEquals(withOutSpecialAndReal, SubsetColumnFilter.filterTableWithSettings(testTable,
-					true, true, new HashSet<>(Arrays.asList(SPECIAL_COLUMN, REAL))).labels());
+					FILTER, true, new HashSet<>(Arrays.asList(SPECIAL_COLUMN, REAL))).labels());
 			assertEquals(testTable.labels(), SubsetColumnFilter.filterTableWithSettings(testTable,
-					true, false, new HashSet<>(testTable.labels())).labels());
+					FILTER, false, new HashSet<>(testTable.labels())).labels());
 		}
 
 		@Test
@@ -173,20 +217,41 @@ public class ColumnFilterTest {
 			withOutRealMissing.remove(REAL + MISSINGS_SUFFIX);
 			List<String> withOutSpecial = new ArrayList<>(testTable.labels());
 			withOutSpecial.remove(SPECIAL_COLUMN);
+
 			assertEquals(Arrays.asList(REAL, REAL + MISSINGS_SUFFIX, SPECIAL_COLUMN),
-					RegexColumnFilter.filterTableWithSettings(testTable, false, false,
+					RegexColumnFilter.filterTableWithSettings(testTable, KEEP, false,
 							Pattern.compile(REAL + ".*"), null).labels());
+
+			assertEquals(Arrays.asList(REAL, REAL + MISSINGS_SUFFIX),
+					RegexColumnFilter.filterTableWithSettings(testTable, REMOVE, false,
+							Pattern.compile(REAL + ".*"), null).labels());
+
 			assertEquals(Collections.singletonList(REAL + MISSINGS_SUFFIX),
-					RegexColumnFilter.filterTableWithSettings(testTable, true, false,
+					RegexColumnFilter.filterTableWithSettings(testTable, FILTER, false,
 							Pattern.compile(REAL + ".*"), Pattern.compile(REAL)).labels());
+
+			assertEquals(Collections.singletonList(REAL + MISSINGS_SUFFIX),
+					RegexColumnFilter.filterTableWithSettings(testTable, REMOVE, false,
+							Pattern.compile(REAL + ".*"), Pattern.compile(REAL)).labels());
+
 			assertEquals(withOutRealMissing,
-					RegexColumnFilter.filterTableWithSettings(testTable, false, true,
+					RegexColumnFilter.filterTableWithSettings(testTable, KEEP, true,
 							Pattern.compile(REAL + ".*"), Pattern.compile(REAL)).labels());
+
+			assertEquals(removeSpecial(withOutRealMissing),
+					RegexColumnFilter.filterTableWithSettings(testTable, REMOVE, true,
+							Pattern.compile(REAL + ".*"), Pattern.compile(REAL)).labels());
+
 			assertEquals(withOutSpecial,
-					RegexColumnFilter.filterTableWithSettings(testTable, true, true, Pattern.compile(SPECIAL_COLUMN),
+					RegexColumnFilter.filterTableWithSettings(testTable, FILTER, true, Pattern.compile(SPECIAL_COLUMN),
 							null).labels());
+
 			assertEquals(testTable.labels(),
-					RegexColumnFilter.filterTableWithSettings(testTable, true, false, null,
+					RegexColumnFilter.filterTableWithSettings(testTable, FILTER, false, null,
+							null).labels());
+
+			assertEquals(removeSpecial(testTable.labels()),
+					RegexColumnFilter.filterTableWithSettings(testTable, REMOVE, false, null,
 							null).labels());
 		}
 	}
@@ -196,13 +261,17 @@ public class ColumnFilterTest {
 		public void testAllColumnFilter() {
 			TableMetaData testTableMD = createTableMetaData();
 			assertEquals(testTableMD.labels(), AllColumnFilter.filterMetaDataWithSettings(testTableMD,
-					false, false).labels());
+					KEEP, false).labels());
 			assertEquals(testTableMD.labels(), AllColumnFilter.filterMetaDataWithSettings(testTableMD,
-					true, false).labels());
+					FILTER, false).labels());
+			assertEquals(removeSpecial(testTableMD.labels()), AllColumnFilter.filterMetaDataWithSettings(testTableMD,
+					REMOVE, false).labels());
 			assertEquals(Collections.singleton(SPECIAL_COLUMN),
-					AllColumnFilter.filterMetaDataWithSettings(testTableMD, false, true).labels());
+					AllColumnFilter.filterMetaDataWithSettings(testTableMD, KEEP, true).labels());
 			assertEquals(Collections.emptySet(),
-					AllColumnFilter.filterMetaDataWithSettings(testTableMD, true, true).labels());
+					AllColumnFilter.filterMetaDataWithSettings(testTableMD, FILTER, true).labels());
+			assertEquals(Collections.emptySet(),
+					AllColumnFilter.filterMetaDataWithSettings(testTableMD, REMOVE, true).labels());
 		}
 
 		@Test
@@ -217,13 +286,17 @@ public class ColumnFilterTest {
 			missingValuesAndSpecial.add(SPECIAL_COLUMN);
 			// assert results
 			assertEquals(noMissingValues, NoMissingValuesColumnFilter.filterMetaDataWithSettings(testTableMD,
-					false, false).labels());
+					KEEP, false).labels());
 			assertEquals(noMissingValues, NoMissingValuesColumnFilter.filterMetaDataWithSettings(testTableMD,
-					true, false).labels());
+					FILTER, false).labels());
+			assertEquals(removeSpecial(noMissingValues), NoMissingValuesColumnFilter.filterMetaDataWithSettings(testTableMD,
+					REMOVE, false).labels());
 			assertEquals(missingValuesAndSpecial, NoMissingValuesColumnFilter.filterMetaDataWithSettings(testTableMD,
-					false, true).labels());
+					KEEP, true).labels());
 			assertEquals(missingValues, NoMissingValuesColumnFilter.filterMetaDataWithSettings(testTableMD,
-					true, true).labels());
+					FILTER, true).labels());
+			assertEquals(missingValues, NoMissingValuesColumnFilter.filterMetaDataWithSettings(testTableMD,
+					REMOVE, true).labels());
 		}
 
 		@Test
@@ -237,19 +310,29 @@ public class ColumnFilterTest {
 			withOutNonBinominal.remove(SPECIAL_COLUMN);
 			// assert results
 			assertEquals(new HashSet<>(Arrays.asList(INTEGER, BINOMINAL, INTEGER + MISSINGS_SUFFIX, BINOMINAL + MISSINGS_SUFFIX,
-					SPECIAL_COLUMN)), ValueTypeColumnFilter.filterMetaDataWithSettings(testTableMD, false,
+					SPECIAL_COLUMN)), ValueTypeColumnFilter.filterMetaDataWithSettings(testTableMD, KEEP,
 					false, INTEGER, BINOMINAL).labels());
 			assertEquals(new HashSet<>(Arrays.asList(TIME, BINOMINAL, TIME + MISSINGS_SUFFIX, BINOMINAL + MISSINGS_SUFFIX)),
-					ValueTypeColumnFilter.filterMetaDataWithSettings(testTableMD, true, false,
+					ValueTypeColumnFilter.filterMetaDataWithSettings(testTableMD, FILTER, false,
+							TIME, BINOMINAL).labels());
+			assertEquals(new HashSet<>(Arrays.asList(TIME, BINOMINAL, TIME + MISSINGS_SUFFIX, BINOMINAL + MISSINGS_SUFFIX)),
+					ValueTypeColumnFilter.filterMetaDataWithSettings(testTableMD, REMOVE, false,
 							TIME, BINOMINAL).labels());
 			assertEquals(withOutNonBinominalButWithSpecial,
-					ValueTypeColumnFilter.filterMetaDataWithSettings(testTableMD, false, true,
+					ValueTypeColumnFilter.filterMetaDataWithSettings(testTableMD, KEEP, true,
 							NON_BINOMINAL).labels());
 			assertEquals(withOutNonBinominal,
-					ValueTypeColumnFilter.filterMetaDataWithSettings(testTableMD, true, true,
+					ValueTypeColumnFilter.filterMetaDataWithSettings(testTableMD, FILTER, true,
+							NON_BINOMINAL).labels());
+			assertEquals(withOutNonBinominal,
+					ValueTypeColumnFilter.filterMetaDataWithSettings(testTableMD, REMOVE, true,
 							NON_BINOMINAL).labels());
 			assertEquals(Collections.emptySet(),
-					ValueTypeColumnFilter.filterMetaDataWithSettings(testTableMD, true, false).labels());
+					ValueTypeColumnFilter.filterMetaDataWithSettings(testTableMD, FILTER, false).labels());
+			assertEquals(Collections.singleton(SPECIAL_COLUMN),
+					ValueTypeColumnFilter.filterMetaDataWithSettings(testTableMD, KEEP, false).labels());
+			assertEquals(new HashSet<>(Arrays.asList(NON_BINOMINAL, NON_BINOMINAL + MISSINGS_SUFFIX)),
+					ValueTypeColumnFilter.filterMetaDataWithSettings(testTableMD, REMOVE, false, NON_BINOMINAL).labels());
 		}
 
 		@Test
@@ -258,15 +341,21 @@ public class ColumnFilterTest {
 			Set<String> withOutSpecial = new HashSet<>(testTableMD.labels());
 			withOutSpecial.remove(SPECIAL_COLUMN);
 			assertEquals(new HashSet<>(Arrays.asList(REAL, SPECIAL_COLUMN)), SingleColumnFilter.filterMetaDataWithSettings(testTableMD,
-					false, false, REAL).labels());
+					KEEP, false, REAL).labels());
 			assertEquals(Collections.singleton(REAL), SingleColumnFilter.filterMetaDataWithSettings(testTableMD,
-					true, false, REAL).labels());
+					FILTER, false, REAL).labels());
+			assertEquals(Collections.singleton(REAL), SingleColumnFilter.filterMetaDataWithSettings(testTableMD,
+					REMOVE, false, REAL).labels());
 			assertEquals(testTableMD.labels(), SingleColumnFilter.filterMetaDataWithSettings(testTableMD,
-					false, true, SPECIAL_COLUMN).labels());
+					KEEP, true, SPECIAL_COLUMN).labels());
 			assertEquals(withOutSpecial, SingleColumnFilter.filterMetaDataWithSettings(testTableMD,
-					true, true, SPECIAL_COLUMN).labels());
+					FILTER, true, SPECIAL_COLUMN).labels());
+			assertEquals(withOutSpecial, SingleColumnFilter.filterMetaDataWithSettings(testTableMD,
+					REMOVE, true, SPECIAL_COLUMN).labels());
 			assertEquals(testTableMD.labels(), SingleColumnFilter.filterMetaDataWithSettings(testTableMD,
-					true, true, null).labels());
+					FILTER, true, null).labels());
+			assertEquals(removeSpecial(testTableMD.labels()), SingleColumnFilter.filterMetaDataWithSettings(testTableMD,
+					REMOVE, true, null).labels());
 		}
 
 		@Test
@@ -278,19 +367,27 @@ public class ColumnFilterTest {
 			Set<String> withOutReal = new HashSet<>(testTableMD.labels());
 			withOutReal.remove(REAL);
 			assertEquals(new HashSet<>(Arrays.asList(REAL, SPECIAL_COLUMN)), SubsetColumnFilter.filterMetaDataWithSettings(testTableMD,
-					false, false, new HashSet<>(Collections.singleton(REAL))).labels());
+					KEEP, false, new HashSet<>(Collections.singleton(REAL))).labels());
 			assertEquals(Collections.singleton(REAL), SubsetColumnFilter.filterMetaDataWithSettings(testTableMD,
-					true, false, new HashSet<>(Collections.singleton(REAL))).labels());
+					FILTER, false, new HashSet<>(Collections.singleton(REAL))).labels());
+			assertEquals(Collections.singleton(REAL), SubsetColumnFilter.filterMetaDataWithSettings(testTableMD,
+					REMOVE, false, new HashSet<>(Collections.singleton(REAL))).labels());
 			assertEquals(testTableMD.labels(), SubsetColumnFilter.filterMetaDataWithSettings(testTableMD,
-					false, true, new HashSet<>()).labels());
+					KEEP, true, new HashSet<>()).labels());
+			assertEquals(removeSpecial(testTableMD.labels()), SubsetColumnFilter.filterMetaDataWithSettings(testTableMD,
+					REMOVE, true, new HashSet<>()).labels());
 			assertEquals(Collections.singleton(SPECIAL_COLUMN), SubsetColumnFilter.filterMetaDataWithSettings(testTableMD,
-					false, false, new HashSet<>()).labels());
+					KEEP, false, new HashSet<>()).labels());
 			assertEquals(withOutReal, SubsetColumnFilter.filterMetaDataWithSettings(testTableMD,
-					false, true, new HashSet<>(Arrays.asList(SPECIAL_COLUMN, REAL))).labels());
+					KEEP, true, new HashSet<>(Arrays.asList(SPECIAL_COLUMN, REAL))).labels());
+			assertEquals(removeSpecial(withOutReal), SubsetColumnFilter.filterMetaDataWithSettings(testTableMD,
+					REMOVE, true, new HashSet<>(Arrays.asList(SPECIAL_COLUMN, REAL))).labels());
 			assertEquals(withOutSpecialAndReal, SubsetColumnFilter.filterMetaDataWithSettings(testTableMD,
-					true, true, new HashSet<>(Arrays.asList(SPECIAL_COLUMN, REAL))).labels());
+					FILTER, true, new HashSet<>(Arrays.asList(SPECIAL_COLUMN, REAL))).labels());
 			assertEquals(testTableMD.labels(), SubsetColumnFilter.filterMetaDataWithSettings(testTableMD,
-					true, false, new HashSet<>(testTableMD.labels())).labels());
+					FILTER, false, new HashSet<>(testTableMD.labels())).labels());
+			assertEquals(removeSpecial(testTableMD.labels()), SubsetColumnFilter.filterMetaDataWithSettings(testTableMD,
+					REMOVE, false, new HashSet<>(testTableMD.labels())).labels());
 		}
 
 		@Test
@@ -301,19 +398,28 @@ public class ColumnFilterTest {
 			Set<String> withOutSpecial = new HashSet<>(testTableMD.labels());
 			withOutSpecial.remove(SPECIAL_COLUMN);
 			assertEquals(new HashSet<>(Arrays.asList(REAL, REAL + MISSINGS_SUFFIX, SPECIAL_COLUMN)),
-					RegexColumnFilter.filterMetaDataWithSettings(testTableMD, false, false,
+					RegexColumnFilter.filterMetaDataWithSettings(testTableMD, KEEP, false,
 							Pattern.compile(REAL + ".*"), null).labels());
 			assertEquals(Collections.singleton(REAL + MISSINGS_SUFFIX),
-					RegexColumnFilter.filterMetaDataWithSettings(testTableMD, true, false,
+					RegexColumnFilter.filterMetaDataWithSettings(testTableMD, FILTER, false,
 							Pattern.compile(REAL + ".*"), Pattern.compile(REAL)).labels());
 			assertEquals(withOutRealMissing,
-					RegexColumnFilter.filterMetaDataWithSettings(testTableMD, false, true,
+					RegexColumnFilter.filterMetaDataWithSettings(testTableMD, KEEP, true,
+							Pattern.compile(REAL + ".*"), Pattern.compile(REAL)).labels());
+			assertEquals(removeSpecial(withOutRealMissing),
+					RegexColumnFilter.filterMetaDataWithSettings(testTableMD, REMOVE, true,
 							Pattern.compile(REAL + ".*"), Pattern.compile(REAL)).labels());
 			assertEquals(withOutSpecial,
-					RegexColumnFilter.filterMetaDataWithSettings(testTableMD, true, true, Pattern.compile(SPECIAL_COLUMN),
+					RegexColumnFilter.filterMetaDataWithSettings(testTableMD, FILTER, true, Pattern.compile(SPECIAL_COLUMN),
+							null).labels());
+			assertEquals(withOutSpecial,
+					RegexColumnFilter.filterMetaDataWithSettings(testTableMD, REMOVE, true, Pattern.compile(SPECIAL_COLUMN),
 							null).labels());
 			assertEquals(testTableMD.labels(),
-					RegexColumnFilter.filterMetaDataWithSettings(testTableMD, true, false, null,
+					RegexColumnFilter.filterMetaDataWithSettings(testTableMD, FILTER, false, null,
+							null).labels());
+			assertEquals(removeSpecial(testTableMD.labels()),
+					RegexColumnFilter.filterMetaDataWithSettings(testTableMD, REMOVE, false, null,
 							null).labels());
 		}
 	}
@@ -345,7 +451,7 @@ public class ColumnFilterTest {
 	}
 
 	/**
-	 * Creates and returns a test TableMetaData.
+	 * Creates and returns test TableMetaData.
 	 */
 	private static TableMetaData createTableMetaData() {
 		TableMetaDataBuilder builder = new TableMetaDataBuilder(10);
@@ -367,5 +473,23 @@ public class ColumnFilterTest {
 		builder.addNominal(SPECIAL_COLUMN, Collections.singleton("value"), SetRelation.UNKNOWN, new MDInteger());
 		builder.addColumnMetaData(SPECIAL_COLUMN, ColumnRole.LABEL);
 		return builder.build();
+	}
+
+	/**
+	 * @return copy of the given list without SPECIAL_COLUMN
+	 */
+	private static List<String> removeSpecial(List<String> oldList) {
+		List<String> newList = new ArrayList<>(oldList);
+		newList.remove(SPECIAL_COLUMN);
+		return newList;
+	}
+
+	/**
+	 * @return copy of the given set without SPECIAL_COLUMN
+	 */
+	private static Set<String> removeSpecial(Set<String> oldSet) {
+		Set<String> newSet = new HashSet<>(oldSet);
+		newSet.remove(SPECIAL_COLUMN);
+		return newSet;
 	}
 }

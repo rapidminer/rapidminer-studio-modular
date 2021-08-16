@@ -32,22 +32,45 @@ import com.rapidminer.parameter.ParameterType;
  * Interface for filters that filter columns from a Belt table. Primarily used by the {@link TableSubsetSelector}.
  *
  * @author Kevin Majchrzak
- * @since 9.9
+ * @since 9.9.1
  */
 public interface TableSubsetSelectorFilter {
 
 	/**
+	 * Used to describe how filters should handle special columns. You can choose to keep or remove all special columns
+	 * or to filter them like any other column.
+	 */
+	enum SpecialFilterStrategy {
+		/**
+		 * Keep all specials columns.
+		 */
+		KEEP,
+
+		/**
+		 * Remove all special columns.
+		 */
+		REMOVE,
+
+		/**
+		 * Filter the special columns like any other columns.
+		 */
+		FILTER
+	}
+
+	/**
 	 * Takes a table and returns a filtered table.
 	 *
-	 * @param table                the table that will be filtered
-	 * @param filterSpecialColumns If this is {@code true}, then the special columns (columns with a role) are also filtered.
-	 *                             Otherwise special columns are always kept.
-	 * @param invertFilter         inverts the result of the filter (keeps the columns that would usually be removed and
-	 *                             vice versa)
+	 * @param table
+	 * 		the table that will be filtered
+	 * @param strategy
+	 * 		describes how the filter should handle special columns. See {@link SpecialFilterStrategy}.
+	 * @param invertFilter
+	 * 		inverts the result of the filter (keeps the columns that would usually be removed and vice versa)
 	 * @return the filtered table
-	 * @throws UserError if the user input and / or the table is incompatible with the filter
+	 * @throws UserError
+	 * 		if the user input and / or the table is incompatible with the filter
 	 */
-	Table filterTable(Table table, boolean filterSpecialColumns, boolean invertFilter) throws UserError;
+	Table filterTable(Table table, SpecialFilterStrategy strategy, boolean invertFilter) throws UserError;
 
 	/**
 	 * Takes belt metadata and returns filtered belt metadata.
@@ -55,18 +78,17 @@ public interface TableSubsetSelectorFilter {
 	 * @param metaData
 	 * 		the metadata that will be filtered
 	 * @param filterSpecialColumns
-	 * 		If this is true, then the special columns (columns with a role) are also filtered. Otherwise special columns
-	 * 		are always kept.
+	 * 		describes how the filter should handle special columns. See {@link SpecialFilterStrategy}.
 	 * @param invertFilter
 	 * 		inverts the result of the filter (keeps the columns that would usually be removed and vice versa)
 	 * @return the filtered metadata
 	 */
-	TableMetaData filterMetaData(TableMetaData metaData, boolean filterSpecialColumns, boolean invertFilter);
+	TableMetaData filterMetaData(TableMetaData metaData, SpecialFilterStrategy filterSpecialColumns, boolean invertFilter);
 
 	/**
 	 * Returns parameter types that should be exposed to the user. The filter will automatically make use of these
-	 * parameter types in the methods {@link #filterTable(Table, boolean, boolean)} and {@link
-	 * #filterMetaData(TableMetaData, boolean, boolean)} to configure itself.
+	 * parameter types in the methods {@link #filterTable(Table, SpecialFilterStrategy, boolean)} and {@link
+	 * #filterMetaData(TableMetaData, SpecialFilterStrategy, boolean)} to configure itself.
 	 *
 	 * @param metaDataProvider A {@link MetaDataProvider} holding metadata of the table that will be filtered. This will
 	 *                         be used e.g. to add suggestions for the user to the parameter types.

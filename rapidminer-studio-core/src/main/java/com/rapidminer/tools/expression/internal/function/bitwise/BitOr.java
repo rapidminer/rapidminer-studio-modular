@@ -29,7 +29,9 @@ import com.rapidminer.tools.expression.internal.function.Abstract2DoubleInputFun
  *
  * @author David Arnu
  *
+ * @deprecated since 9.11, see {@link com.rapidminer.tools.belt.expression.ExpressionParser}
  */
+@Deprecated
 public class BitOr extends Abstract2DoubleInputFunction {
 
 	public BitOr() {

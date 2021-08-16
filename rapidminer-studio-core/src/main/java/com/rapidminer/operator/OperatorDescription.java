@@ -559,15 +559,8 @@ public class OperatorDescription implements Comparable<OperatorDescription> {
 	 */
 	private Boolean isSupportedByLicense() {
 		if (isSupportedByLicense == null) {
-			try {
-				// check for operator annotations
-				isSupportedByLicense = Boolean
-						.valueOf(ProductConstraintManager.INSTANCE.isAllowedByAnnotations(createOperatorInstance()));
-			} catch (OperatorCreationException e) {
-			}      // does not really matter
-		}
-		if (isSupportedByLicense == null) {
-			isSupportedByLicense = Boolean.TRUE;
+			// check for operator annotations
+			isSupportedByLicense = ProductConstraintManager.INSTANCE.isAllowedByAnnotations(getOperatorClass());
 		}
 		return isSupportedByLicense;
 	}

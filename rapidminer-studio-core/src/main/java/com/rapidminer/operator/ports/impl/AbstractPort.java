@@ -180,11 +180,13 @@ public abstract class AbstractPort<S extends Port<S, O>, O extends Port<O, S>>
 				if (nullForOther) {
 					return null;
 				} else {
-					throw new PortUserError(this, "table_not_convertible.custom_column", e.getColumnName(), e.getType());
+					throw new PortUserError(this, "table_not_convertible.custom_column", e.getColumnName(),
+							e.getType());
 				}
 			}
 		} else if (!nullForOther) {
-			PortUserError error = new PortUserError(this, 156, RendererService.getName(data.getClass()), this.getName(),
+			PortUserError error = new PortUserError(this, 156, RendererService.getName(data.getClass()),
+					this.getName(),
 					RendererService.getName(desiredClass));
 			error.setExpectedType(desiredClass);
 			error.setActualType(data.getClass());

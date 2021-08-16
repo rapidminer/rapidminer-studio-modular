@@ -38,6 +38,12 @@ public class ROCPoint implements Serializable {
 
 	private final double confidence;
 
+	public ROCPoint() {
+		falsePositives = Double.NaN;
+		truePositives = Double.NaN;
+		confidence = Double.NaN;
+	}
+
 	public ROCPoint(double falsePositives, double truePositives, double confidence) {
 		this.falsePositives = falsePositives;
 		this.truePositives = truePositives;

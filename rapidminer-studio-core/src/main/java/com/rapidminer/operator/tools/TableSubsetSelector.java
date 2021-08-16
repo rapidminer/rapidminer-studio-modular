@@ -18,6 +18,10 @@
  */
 package com.rapidminer.operator.tools;
 
+import static com.rapidminer.operator.preprocessing.filter.columns.TableSubsetSelectorFilter.SpecialFilterStrategy.FILTER;
+import static com.rapidminer.operator.preprocessing.filter.columns.TableSubsetSelectorFilter.SpecialFilterStrategy.KEEP;
+import static com.rapidminer.operator.preprocessing.filter.columns.TableSubsetSelectorFilter.SpecialFilterStrategy.REMOVE;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -56,7 +60,7 @@ import com.rapidminer.tools.belt.BeltConversionTools;
  * Subset Selector for a column subset of {@link Table}s.
  *
  * @author Kevin Majchrzak
- * @since 9.9.0
+ * @since 9.9.1
  */
 public class TableSubsetSelector {
 
@@ -84,7 +88,7 @@ public class TableSubsetSelector {
 				TableMetaData tmd = BeltConversionTools.asTableMetaDataOrNull(md);
 				if (md != null) {
 					TableMetaData filtered = ValueTypeColumnFilter.filterMetaDataWithSettings(tmd,
-							true, false, allowedTypes);
+							FILTER, false, allowedTypes);
 					//must not return TableMetaData for compatibility reasons
 					return FromTableMetaDataConverter.convert(filtered);
 				}
@@ -104,14 +108,12 @@ public class TableSubsetSelector {
 					// filters out the forbidden types for emd and tmd
 					if (TableMetaData.class.equals(desiredClass)) {
 						TableMetaData filtered = ValueTypeColumnFilter.filterMetaDataWithSettings(
-								inPort.getMetaData(TableMetaData.class), true, false,
-								allowedTypes);
+								inPort.getMetaData(TableMetaData.class), FILTER, false, allowedTypes);
 						return desiredClass.cast(filtered);
 					}
 					if (ExampleSetMetaData.class.equals(desiredClass)) {
 						TableMetaData filtered = ValueTypeColumnFilter.filterMetaDataWithSettings(
-								inPort.getMetaData(TableMetaData.class), true, false,
-								allowedTypes);
+								inPort.getMetaData(TableMetaData.class), FILTER, false, allowedTypes);
 						ExampleSetMetaData emd = (FromTableMetaDataConverter.convert(filtered));
 						return desiredClass.cast(emd);
 					}
@@ -147,7 +149,12 @@ public class TableSubsetSelector {
 	/**
 	 * Parameter key for "filter special attributes"
 	 */
-	public static final String PARAMETER_FILTER_SPECIAL_ATTRIBUTES = "also_filter_on_special_attributes_(id,_label..)";
+	public static final String PARAMETER_INCLUDE_SPECIAL_ATTRIBUTES = "also_apply_to_special_attributes_(id,_label..)";
+
+	/**
+	 * The parameter value for {@link #PARAMETER_FILTER_NAME} to include all columns.
+	 */
+	public static final String ALL_ATTRIBUTES_FILTER = "all attributes";
 
 	private static final String EXCLUDE_ATTRIBUTES_STRING = "exclude attributes";
 	private static final String INCLUDE_ATTRIBUTES_STRING = "include attributes";
@@ -163,10 +170,11 @@ public class TableSubsetSelector {
 	 */
 	private static final List<String> filterNames;
 
+
 	static {
 		nameToFilterMap = new HashMap<>();
 		filterNames = new ArrayList<>();
-		registerFilter("all attributes", AllColumnFilter::new);
+		registerFilter(ALL_ATTRIBUTES_FILTER, AllColumnFilter::new);
 		registerFilter("one attribute", SingleColumnFilter::new);
 		registerFilter("a subset", SubsetColumnFilter::new);
 		registerFilter("regular expression", RegexColumnFilter::new);
@@ -195,8 +203,8 @@ public class TableSubsetSelector {
 
 	/**
 	 * Creates a subset selector for the given operator and port. Prefilters by the allowed types, so that the results
-	 * from {@link #getSubset(Table)} and {@link #getMetaDataSubset(TableMetaData)} contain only columns with the
-	 * allowed types.
+	 * from {@link #getSubset(Table, boolean)} and {@link #getMetaDataSubset(TableMetaData, boolean)} contain only
+	 * columns with the allowed types.
 	 *
 	 * @param operator
 	 * 		the operator for which to filter
@@ -219,10 +227,13 @@ public class TableSubsetSelector {
 	 *
 	 * @param metaData
 	 * 		the metadata which should be filtered
+	 * @param keepSpecialIfNotIncluded
+	 * 		if the user decides not to include special columns in the filtering, they are either always kept or always
+	 * 		removed based on this parameter
 	 * @return the filtered BeltMetaData
 	 */
-	public TableMetaData getMetaDataSubset(TableMetaData metaData) {
-		boolean filterSpecial = operator.getParameterAsBoolean(PARAMETER_FILTER_SPECIAL_ATTRIBUTES);
+	public TableMetaData getMetaDataSubset(TableMetaData metaData, boolean keepSpecialIfNotIncluded) {
+		boolean filterSpecial = operator.getParameterAsBoolean(PARAMETER_INCLUDE_SPECIAL_ATTRIBUTES);
 		boolean invert = false;
 		String filterName = filterNames.get(0);
 		try {
@@ -241,10 +252,14 @@ public class TableSubsetSelector {
 		}
 		if (allowedTypes != null) {
 			metaData = ValueTypeColumnFilter.filterMetaDataWithSettings(
-					metaData, true, false, allowedTypes);
+					metaData, FILTER, false, allowedTypes);
 		}
 		TableSubsetSelectorFilter filter = nameToFilterMap.get(filterName).apply(operator);
-		return filter.filterMetaData(metaData, filterSpecial, invert);
+		if (filterSpecial) {
+			return filter.filterMetaData(metaData, FILTER, invert);
+		} else {
+			return filter.filterMetaData(metaData, keepSpecialIfNotIncluded ? KEEP : REMOVE, invert);
+		}
 	}
 
 	/**
@@ -252,12 +267,15 @@ public class TableSubsetSelector {
 	 *
 	 * @param table
 	 * 		the table which should be filtered
+	 * @param keepSpecialIfNotIncluded
+	 * 		if the user decides not to include special columns in the filtering, they are either always kept or always
+	 * 		removed based on this parameter
 	 * @return the filtered Belt table
 	 * @throws UserError
 	 * 		the user errors are generated by the selected filter if the user input is invalid for it
 	 */
-	public Table getSubset(Table table) throws UserError {
-		boolean filterSpecial = operator.getParameterAsBoolean(PARAMETER_FILTER_SPECIAL_ATTRIBUTES);
+	public Table getSubset(Table table, boolean keepSpecialIfNotIncluded) throws UserError {
+		boolean filterSpecial = operator.getParameterAsBoolean(PARAMETER_INCLUDE_SPECIAL_ATTRIBUTES);
 		boolean invert = EXCLUDE_ATTRIBUTES_STRING.
 				equals(operator.getParameterAsString(PARAMETER_INCLUDE_OR_EXCLUDE_SELECTION));
 		String filterName = operator.getParameterAsString(PARAMETER_FILTER_NAME);
@@ -265,10 +283,14 @@ public class TableSubsetSelector {
 			filterName = filterNames.get(0);
 		}
 		if (allowedTypes != null) {
-			table = ValueTypeColumnFilter.filterTableWithSettings(table, true, false, allowedTypes);
+			table = ValueTypeColumnFilter.filterTableWithSettings(table, FILTER, false, allowedTypes);
 		}
 		TableSubsetSelectorFilter filter = nameToFilterMap.get(filterName).apply(operator);
-		return filter.filterTable(table, filterSpecial, invert);
+		if (filterSpecial) {
+			return filter.filterTable(table, FILTER, invert);
+		} else {
+			return filter.filterTable(table, keepSpecialIfNotIncluded ? KEEP : REMOVE, invert);
+		}
 	}
 
 	/**
@@ -289,7 +311,8 @@ public class TableSubsetSelector {
 
 	/**
 	 * This method creates the parameter types needed to filter columns from belt tables. Provide these parameter types
-	 * to the user before using {@link #getSubset(Table)} and {@link #getMetaDataSubset(TableMetaData)}.
+	 * to the user before using {@link #getSubset(Table, boolean)} and {@link #getMetaDataSubset(TableMetaData,
+	 * boolean)}.
 	 */
 	public List<ParameterType> getParameterTypes() {
 		List<ParameterType> types = new ArrayList<>();
@@ -317,8 +340,8 @@ public class TableSubsetSelector {
 			}
 		}
 
-		type = new ParameterTypeBoolean(PARAMETER_FILTER_SPECIAL_ATTRIBUTES,
-				"Indicates if the filter should also be applied to special attributes. By default special attributes are always kept.",
+		type = new ParameterTypeBoolean(PARAMETER_INCLUDE_SPECIAL_ATTRIBUTES,
+				"Indicates if the operator should also be applied to special attributes.",
 				false);
 		type.setExpert(false);
 		types.add(type);

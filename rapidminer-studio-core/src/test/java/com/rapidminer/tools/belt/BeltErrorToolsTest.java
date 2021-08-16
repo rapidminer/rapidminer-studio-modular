@@ -20,11 +20,19 @@ package com.rapidminer.tools.belt;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.when;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
+import org.apache.poi.ss.formula.functions.T;
 import org.junit.Test;
+import org.mockito.Mockito;
 
+import com.rapidminer.adaption.belt.IOTable;
 import com.rapidminer.belt.execution.Context;
 import com.rapidminer.belt.table.Builders;
 import com.rapidminer.belt.table.Table;
@@ -35,6 +43,10 @@ import com.rapidminer.belt.util.ColumnRole;
 import com.rapidminer.gui.processeditor.results.DisplayContext;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.UserError;
+import com.rapidminer.operator.ports.InputPort;
+import com.rapidminer.operator.ports.Ports;
+import com.rapidminer.operator.ports.metadata.MetaDataError;
+import com.rapidminer.operator.ports.metadata.table.TableMetaData;
 
 
 /**
@@ -242,6 +254,73 @@ public class BeltErrorToolsTest {
 		} catch (UserError e) {
 			assertEquals("type_check.require_sub_dictionary", e.getErrorIdentifier());
 		}
+	}
+
+	@Test
+	public void testMissingRole() {
+		Table table = Builders.newTableBuilder(10).addReal("one", i -> 1)
+				.addDateTime("two", i -> null).addNominal("three", i -> "val" +
+						i).addText("four", i -> null).addTime("five", i -> null)
+				.addMetaData("four", ColumnRole.ID).addMetaData("five", ColumnRole.SCORE).build(Belt.defaultContext());
+		try {
+			BeltErrorTools.requireUniqueRole(ColumnRole.LABEL, table, null);
+			fail();
+		} catch (UserError e) {
+			assertEquals("role_check.missing", e.getErrorIdentifier());
+		}
+	}
+
+	@Test
+	public void testDuplicateRole() {
+		Table table = Builders.newTableBuilder(10).addReal("one", i -> 1)
+				.addDateTime("two", i -> null).addNominal("three", i -> "val" +
+						i).addText("four", i -> null).addTime("five", i -> null)
+				.addMetaData("four", ColumnRole.ID).addMetaData("five", ColumnRole.ID).build(Belt.defaultContext());
+		try {
+			BeltErrorTools.requireUniqueRole(ColumnRole.ID, table, null);
+			fail();
+		} catch (UserError e) {
+			assertEquals("role_check.non_unique", e.getErrorIdentifier());
+		}
+	}
+
+	@Test
+	public void testMissingRoleMD() {
+		Table table = Builders.newTableBuilder(10).addReal("one", i -> 1)
+				.addDateTime("two", i -> null).addNominal("three", i -> "val" +
+						i).addText("four", i -> null).addTime("five", i -> null)
+				.addMetaData("four", ColumnRole.ID).addMetaData("five", ColumnRole.SCORE).build(Belt.defaultContext());
+
+		List<MetaDataError> errorList = new ArrayList<>();
+		final Ports portsMock = Mockito.mock(Ports.class);
+		final InputPort mock = Mockito.mock(InputPort.class);
+		doAnswer(invocation -> {
+			final Object argument = invocation.getArgument(0);
+			errorList.add((MetaDataError) argument);
+			return null;
+		}).when(mock).addError(any(MetaDataError.class));
+		when(mock.getPorts()).thenReturn(portsMock);
+		BeltMetaDataTools.requireUniqueRole(ColumnRole.LABEL, new TableMetaData(new IOTable(table),true), mock);
+		assertEquals(1, errorList.size());
+	}
+
+	@Test
+	public void testDuplicateRoleMD() {
+		Table table = Builders.newTableBuilder(10).addReal("one", i -> 1)
+				.addDateTime("two", i -> null).addNominal("three", i -> "val" +
+						i).addText("four", i -> null).addTime("five", i -> null)
+				.addMetaData("four", ColumnRole.ID).addMetaData("five", ColumnRole.ID).build(Belt.defaultContext());
+		List<MetaDataError> errorList = new ArrayList<>();
+		final Ports portsMock = Mockito.mock(Ports.class);
+		final InputPort mock = Mockito.mock(InputPort.class);
+		doAnswer(invocation -> {
+			final Object argument = invocation.getArgument(0);
+			errorList.add((MetaDataError) argument);
+			return null;
+		}).when(mock).addError(any(MetaDataError.class));
+		when(mock.getPorts()).thenReturn(portsMock);
+		BeltMetaDataTools.requireUniqueRole(ColumnRole.ID, new TableMetaData(new IOTable(table),true), mock);
+		assertEquals(1, errorList.size());
 	}
 
 	private static Table numericTable() {

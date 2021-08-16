@@ -18,40 +18,6 @@
  */
 package com.rapidminer.gui.viewer.metadata;
 
-import java.awt.BasicStroke;
-import java.awt.BorderLayout;
-import java.awt.CardLayout;
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Cursor;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
-import java.awt.RenderingHints;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.awt.font.TextAttribute;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
-import javax.swing.SwingConstants;
-import javax.swing.SwingUtilities;
-
-import org.jfree.chart.ChartPanel;
-
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Attributes;
 import com.rapidminer.gui.look.RapidLookAndFeel;
@@ -74,10 +40,46 @@ import com.rapidminer.gui.viewer.metadata.model.AbstractAttributeStatisticsModel
 import com.rapidminer.gui.viewer.metadata.model.DateTimeAttributeStatisticsModel;
 import com.rapidminer.gui.viewer.metadata.model.NominalAttributeStatisticsModel;
 import com.rapidminer.gui.viewer.metadata.model.NumericalAttributeStatisticsModel;
+import com.rapidminer.tools.BiasExplanation;
+import com.rapidminer.tools.BiasTools;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.Tools;
 import com.rapidminer.tools.container.ValueAndCount;
+import org.jfree.chart.ChartPanel;
+
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
+import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
+import java.awt.BasicStroke;
+import java.awt.BorderLayout;
+import java.awt.CardLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Cursor;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.RenderingHints;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.font.TextAttribute;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 
 /**
@@ -97,6 +99,8 @@ import com.rapidminer.tools.container.ValueAndCount;
 public class AttributeStatisticsPanel extends JPanel {
 
 	private static final long serialVersionUID = 1L;
+
+	private static final ImageIcon WARNING_ICON = SwingTools.createIcon("16/sign_warning.png");
 
 	/** the font size of header labels */
 	private static final float FONT_SIZE_LABEL_HEADER = 10;
@@ -1196,6 +1200,10 @@ public class AttributeStatisticsPanel extends JPanel {
 		String valueTypeString = Ontology.ATTRIBUTE_VALUE_TYPE.mapIndexToDisplayName(model.getAttribute().getValueType());
 		String construction = model.getConstruction();
 		construction = construction == null ? "-" : construction;
+		BiasExplanation potentialBias = null;
+		if (attRole == null) {
+			potentialBias = model.getPotentialBiasExplanation();
+		}
 
 		labelAttHeader.setText(attRole == null || attRole.isEmpty() ? " "
 				: Character.toUpperCase(attRole.charAt(0)) + attRole.substring(1));
@@ -1204,8 +1212,13 @@ public class AttributeStatisticsPanel extends JPanel {
 		panelAttName.setBorder(BorderFactory.createMatteBorder(0, 0, 0, 1,
 				AttributeGuiTools.getColorForAttributeRole(mapAttributeRoleName(), ColorScope.CONTENT)));
 
+		String attLabelTooltip = attLabel;
+		if (potentialBias != null) {
+			attLabelTooltip = BiasTools.generateHTMLTooltip(attLabel, potentialBias);
+		}
 		labelAttName.setText(attLabel);
-		labelAttName.setToolTipText(attLabel);
+		labelAttName.setToolTipText(attLabelTooltip);
+		labelAttName.setIcon(potentialBias != null ? WARNING_ICON : null);
 		labelAttType.setText(valueTypeString);
 		labelAttType.setIcon(null);
 		labelStatsMissing.setText(Tools.formatIntegerIfPossible(model.getNumberOfMissingValues(), 0));

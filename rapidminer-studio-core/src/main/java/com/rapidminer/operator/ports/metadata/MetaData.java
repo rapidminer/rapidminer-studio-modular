@@ -318,7 +318,7 @@ public class MetaData implements DataSummary, Serializable {
 	 */
 	public Collection<MetaDataError> getErrorsForInput(InputPort inputPort, MetaData isData, CompatibilityLevel level) {
 		if (!this.dataClass.isAssignableFrom(isData.dataClass) &&
-				!AtPortConverter.isConvertible(this.dataClass, isData.dataClass)) {
+				!AtPortConverter.isConvertible(isData.dataClass, this.dataClass)) {
 			return Collections.<MetaDataError> singletonList(new InputMissingMetaDataError(inputPort, this.getObjectClass(),
 					isData.getObjectClass()));
 		}

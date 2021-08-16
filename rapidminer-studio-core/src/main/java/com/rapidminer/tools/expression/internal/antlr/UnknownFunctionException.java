@@ -29,7 +29,9 @@ import com.rapidminer.tools.expression.ExpressionParsingException;
  *
  * @author Gisa Schaefer
  *
+ * @deprecated since 9.11, see {@link com.rapidminer.tools.belt.expression.ExpressionParser}
  */
+@Deprecated
 public class UnknownFunctionException extends ExpressionParsingException {
 
 	private static final long serialVersionUID = -7352680996412482697L;

@@ -18,16 +18,6 @@
  */
 package com.rapidminer.gui.viewer.metadata.model;
 
-import java.awt.Font;
-import java.lang.ref.WeakReference;
-import java.util.Locale;
-import java.util.Map;
-import javax.swing.event.EventListenerList;
-
-import org.jfree.chart.ChartTheme;
-import org.jfree.chart.JFreeChart;
-import org.jfree.chart.StandardChartTheme;
-
 import com.rapidminer.belt.column.Statistics.Result;
 import com.rapidminer.belt.column.Statistics.Statistic;
 import com.rapidminer.belt.table.Table;
@@ -36,7 +26,18 @@ import com.rapidminer.gui.viewer.metadata.BeltColumnStatisticsPanel;
 import com.rapidminer.gui.viewer.metadata.event.AttributeStatisticsEvent;
 import com.rapidminer.gui.viewer.metadata.event.AttributeStatisticsEvent.EventType;
 import com.rapidminer.gui.viewer.metadata.event.AttributeStatisticsEventListener;
+import com.rapidminer.tools.BiasExplanation;
+import com.rapidminer.tools.BiasTools;
 import com.rapidminer.tools.FontTools;
+import org.jfree.chart.ChartTheme;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.StandardChartTheme;
+
+import javax.swing.event.EventListenerList;
+import java.awt.Font;
+import java.lang.ref.WeakReference;
+import java.util.Locale;
+import java.util.Map;
 
 
 /**
@@ -76,6 +77,10 @@ public abstract class AbstractBeltColumnStatisticsModel {
 	/** the number of missing values */
 	protected double missing;
 
+	/** indicates if this attribute is likely to introduce bias */
+	private BiasExplanation potentialBiasExplanation;
+
+
 	/** event listener for this model */
 	private final EventListenerList eventListener;
 
@@ -84,6 +89,8 @@ public abstract class AbstractBeltColumnStatisticsModel {
 		this.weakTable = new WeakReference<>(table);
 		ColumnRole role = table.getFirstMetaData(columnName, ColumnRole.class);
 		this.specialColumnName = role != null ? role.toString().toLowerCase(Locale.ENGLISH) : null;
+
+		this.potentialBiasExplanation = BiasTools.checkForBias(table, columnName);
 
 		this.eventListener = new EventListenerList();
 	}
@@ -182,6 +189,16 @@ public abstract class AbstractBeltColumnStatisticsModel {
 	 */
 	public String getColumnName() {
 		return columnName;
+	}
+
+	/**
+	 * Returns a bias explanation if the attribute is likely to potentially introduce some bias.
+	 *
+	 * @return the bias explanation or null
+	 * @since 9.10
+	 */
+	public BiasExplanation getPotentialBiasExplanation() {
+		return potentialBiasExplanation;
 	}
 
 	/**

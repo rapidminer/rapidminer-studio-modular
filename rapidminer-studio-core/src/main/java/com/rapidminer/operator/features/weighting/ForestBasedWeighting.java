@@ -31,6 +31,7 @@ import java.util.Map.Entry;
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.AttributeWeights;
 import com.rapidminer.gui.renderer.RendererService;
+import com.rapidminer.operator.GeneralModel;
 import com.rapidminer.operator.Model;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorDescription;
@@ -90,7 +91,7 @@ public class ForestBasedWeighting extends Operator {
 		private static final long serialVersionUID = 1L;
 
 		public RandomForestModelMetaData() {
-			super(ConfigurableRandomForestModel.class, new ExampleSetMetaData());
+			super(ConfigurableRandomForestModel.class, new ExampleSetMetaData(), GeneralModel.ModelKind.SUPERVISED);
 		}
 
 		@Override

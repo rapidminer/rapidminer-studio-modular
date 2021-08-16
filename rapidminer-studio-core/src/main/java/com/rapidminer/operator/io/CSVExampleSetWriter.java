@@ -18,10 +18,14 @@
  */
 package com.rapidminer.operator.io;
 
+import static com.rapidminer.operator.io.ExcelExampleSetWriter.DEFAULT_DATE_FORMAT;
+import static com.rapidminer.parameter.ParameterTypeDateFormat.PARAMETER_DATE_FORMAT;
+
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.sql.Date;
 import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
@@ -38,7 +42,10 @@ import com.rapidminer.operator.OperatorVersion;
 import com.rapidminer.operator.ProcessStoppedException;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeBoolean;
+import com.rapidminer.parameter.ParameterTypeDateFormat;
 import com.rapidminer.parameter.ParameterTypeString;
+import com.rapidminer.parameter.conditions.AboveOperatorVersionCondition;
+import com.rapidminer.parameter.conditions.BooleanParameterCondition;
 import com.rapidminer.parameter.conditions.PortConnectedCondition;
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.Ontology;
@@ -74,15 +81,15 @@ public class CSVExampleSetWriter extends AbstractStreamWriter {
 	public static final String PARAMETER_APPEND_FILE = "append_to_file";
 
 	/**
-	 * Indicates if date attributes are written as a formated string or as milliseconds past since
-	 * January 1, 1970, 00:00:00 GMT
+	 * Indicates if date attributes are written as a formatted string or as milliseconds
 	 */
-	// TODO introduce parameter which allows to determine the written format see
-	// Nominal2Date operator
 	public static final String PARAMETER_FORMAT_DATE = "format_date_attributes";
 
 	/** The last version which treated integer as real. */
 	public static final OperatorVersion INTEGER_AS_REAL = new OperatorVersion(8, 2, 0);
+
+	/** The last version which had no customizable date format. */
+	public static final OperatorVersion NO_CUSTOMIZABLE_DATE_FORMAT = new OperatorVersion(9, 9, 2);
 
 	public CSVExampleSetWriter(OperatorDescription description) {
 		super(description);
@@ -339,10 +346,24 @@ public class CSVExampleSetWriter extends AbstractStreamWriter {
 		boolean quoteNominalValues = getParameterAsBoolean(PARAMETER_QUOTE_NOMINAL_VALUES);
 		boolean writeAttribNames = getParameterAsBoolean(PARAMETER_WRITE_ATTRIBUTE_NAMES);
 		boolean formatDate = getParameterAsBoolean(PARAMETER_FORMAT_DATE);
+		DateFormat dateFormat = null;
+		if (formatDate) {
+			if (getCompatibilityLevel().isAtMost(NO_CUSTOMIZABLE_DATE_FORMAT)) {
+				// old handling with default date format
+				dateFormat = DateFormat.getInstance();
+			} else {
+				// new handling with a customizable date format
+				// check if date format is valid
+				ParameterTypeDateFormat.createCheckedDateFormat(this, null);
+				dateFormat = new SimpleDateFormat(getParameterAsString(PARAMETER_DATE_FORMAT));
+			}
+
+		}
+
 		try (PrintWriter out = new PrintWriter(new OutputStreamWriter(outputStream, Encoding.getEncoding(this)))) {
 			// init operator progress
 			getProgress().setTotal(exampleSet.size());
-			writeCSV(exampleSet, out, columnSeparator, quoteNominalValues, writeAttribNames, formatDate ? DateFormat.getInstance() : null, String.valueOf(Double.POSITIVE_INFINITY), getProgress());
+			writeCSV(exampleSet, out, columnSeparator, quoteNominalValues, writeAttribNames, dateFormat, String.valueOf(Double.POSITIVE_INFINITY), getProgress());
 			getProgress().complete();
 		}
 	}
@@ -363,15 +384,18 @@ public class CSVExampleSetWriter extends AbstractStreamWriter {
 		ParameterType type = makeFileParameterType();
 		type.setPrimary(true);
 		types.add(type);
-		// "The CSV file which should be written.", "csv", false));
 		types.add(new ParameterTypeString(PARAMETER_COLUMN_SEPARATOR, "The column separator.", ";", false));
 		types.add(new ParameterTypeBoolean(PARAMETER_WRITE_ATTRIBUTE_NAMES,
 				"Indicates if the attribute names should be written as first row.", true, false));
 		types.add(new ParameterTypeBoolean(PARAMETER_QUOTE_NOMINAL_VALUES,
 				"Indicates if nominal values should be quoted with double quotes.", true, false));
 		types.add(new ParameterTypeBoolean(PARAMETER_FORMAT_DATE,
-				"Indicates if date attributes are written as a formated string or as milliseconds past since January 1, 1970, 00:00:00 GMT",
+				"Indicates if date attributes are written as a formatted string or as milliseconds past since January 1, 1970, 00:00:00 GMT",
 				true, true));
+		type = new ParameterTypeDateFormat(PARAMETER_DATE_FORMAT, "The date format to use for date attributes.", DEFAULT_DATE_FORMAT, false);
+		type.registerDependencyCondition(new BooleanParameterCondition(this, PARAMETER_FORMAT_DATE, true, true));
+		type.registerDependencyCondition(new AboveOperatorVersionCondition(this, NO_CUSTOMIZABLE_DATE_FORMAT));
+		types.add(type);
 		type = new ParameterTypeBoolean(PARAMETER_APPEND_FILE,
 				"Indicates if new content should be appended to the file or if the pre-existing file content should be overwritten.",
 				false, false);
@@ -395,8 +419,9 @@ public class CSVExampleSetWriter extends AbstractStreamWriter {
 	public OperatorVersion[] getIncompatibleVersionChanges() {
 		OperatorVersion[] incompatibleVersions = super.getIncompatibleVersionChanges();
 		OperatorVersion[] extendedIncompatibleVersions = Arrays.copyOf(incompatibleVersions,
-				incompatibleVersions.length + 1);
+				incompatibleVersions.length + 2);
 		extendedIncompatibleVersions[incompatibleVersions.length] = INTEGER_AS_REAL;
+		extendedIncompatibleVersions[incompatibleVersions.length + 1] = NO_CUSTOMIZABLE_DATE_FORMAT;
 		return extendedIncompatibleVersions;
 	}
 }

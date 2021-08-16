@@ -33,7 +33,9 @@ import com.rapidminer.tools.expression.internal.ExpressionParserConstants;
  *
  * @author Jan Czogalla, David Arnu
  * @since 9.6.0
+ * @deprecated since 9.11, see {@link com.rapidminer.tools.belt.expression.ExpressionParser}
  */
+@Deprecated
 public abstract class AbstractDateLongManipulationFunction extends AbstractDateManipulationFunction {
 
 	/** maximum that can be properly processed in {@link Calendar#add(int, int)} or {@link Calendar#set(int, int)} calls */

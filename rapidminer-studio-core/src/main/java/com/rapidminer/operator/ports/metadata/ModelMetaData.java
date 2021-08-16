@@ -18,6 +18,7 @@
  */
 package com.rapidminer.operator.ports.metadata;
 
+import com.rapidminer.operator.GeneralModel;
 import com.rapidminer.operator.Model;
 import com.rapidminer.operator.ports.InputPort;
 
@@ -34,11 +35,9 @@ import com.rapidminer.operator.ports.InputPort;
  * 
  * @author Simon Fischer, Sebastian Land
  */
-public class ModelMetaData extends MetaData {
+public class ModelMetaData extends GeneralModelMetaData<ExampleSetMetaData, ExampleSetMetaData> {
 
 	private static final long serialVersionUID = 1L;
-
-	private ExampleSetMetaData trainingSetMetaData;
 
 	/** Clone constructor */
 	protected ModelMetaData() {}
@@ -48,13 +47,17 @@ public class ModelMetaData extends MetaData {
 	}
 
 	public ModelMetaData(Class<? extends Model> mclass, ExampleSetMetaData trainingSetMetaData) {
-		super(mclass);
-		this.trainingSetMetaData = trainingSetMetaData;
+		super(mclass, trainingSetMetaData);
+	}
+
+	public ModelMetaData(Class<? extends Model> mclass, ExampleSetMetaData trainingSetMetaData,
+						 GeneralModel.ModelKind... modelKinds) {
+		super(mclass, trainingSetMetaData, modelKinds);
 	}
 
 	public ModelMetaData(Model model, boolean shortened) {
-		super(model.getClass());
-		this.trainingSetMetaData = (ExampleSetMetaData) MetaData.forIOObject(model.getTrainingHeader(), shortened);
+		super(model.getClass(), (ExampleSetMetaData) MetaData.forIOObject(model.getTrainingHeader(), shortened),
+				GeneralModelMetaData.modelKindsAsArray(model));
 	}
 
 	@Override
@@ -66,34 +69,32 @@ public class ModelMetaData extends MetaData {
 	 * This method simulates the application of a model. First the compatibility of the model with
 	 * the current example set is checked and then the effects are applied.
 	 */
+	@Override
 	public final ExampleSetMetaData apply(ExampleSetMetaData emd, InputPort inputPort) {
-		checkCompatibility(emd, inputPort);
-		return applyEffects(emd, inputPort);
+		return super.apply(emd, inputPort);
 	}
 
-	private void checkCompatibility(ExampleSetMetaData emd, InputPort inputPort) {
-
+	@Override
+	protected void checkCompatibility(ExampleSetMetaData emd, InputPort inputPort) {
+		//does nothing by default
 	}
 
 	/**
 	 * This method must be implemented by subclasses in order to apply any changes on the meta data,
 	 * that would occur on application of the real model. TODO: This method should be abstract.
 	 */
+	@Override
 	protected ExampleSetMetaData applyEffects(ExampleSetMetaData emd, InputPort inputPort) {
 		return emd;
 	}
 
 	@Override
 	public ModelMetaData clone() {
-		ModelMetaData md = (ModelMetaData) super.clone();
-		if (trainingSetMetaData != null) {
-			md.trainingSetMetaData = trainingSetMetaData.clone();
-		}
-		return md;
+		return (ModelMetaData) super.clone();
 	}
 
 	public ExampleSetMetaData getTrainingSetMetaData() {
-		return trainingSetMetaData;
+		return super.getTrainingMetaData();
 	}
 
 }

@@ -22,11 +22,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
-
 import javax.xml.transform.Source;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.stream.StreamSource;
@@ -36,18 +33,15 @@ import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorDescription;
-import com.rapidminer.operator.ports.InputPort;
-import com.rapidminer.operator.ports.Port;
-import com.rapidminer.operator.ports.Ports;
-import com.rapidminer.operator.ports.metadata.MetaData;
-import com.rapidminer.operator.ports.metadata.Precondition;
-import com.rapidminer.parameter.ParameterType;
-import com.rapidminer.parameter.Parameters;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.LogService;
+import com.rapidminer.tools.OperatorSignatureRegistry;
 import com.rapidminer.tools.Tools;
 import com.rapidminer.tools.WebServiceTools;
 import com.rapidminer.tools.documentation.ExampleProcess;
+import com.rapidminer.tools.plugin.Plugin;
+import com.rapidminer.tools.signature.IOType;
+import com.rapidminer.tools.signature.ParameterSignature;
 
 
 /**
@@ -86,17 +80,35 @@ public class OperatorDocLoader {
 	 * @return HTML string of the operator documentation
 	 */
 	static String getDocumentation(Operator operator) {
+		return getDocumentation(operator == null ? null : operator.getOperatorDescription());
+	}
+
+	/**
+	 * Gets the operator documentation as an HTML string.
+	 *
+	 * The documentation sources will be used in the following order: 1. Documentation Cache 2.
+	 * Single-XML documentation format (for each operator) 3. OperatorsDoc.xml file documentation
+	 * format
+	 *
+	 * Previously uncached documentations will be cached after reading for a better response time.
+	 * If something goes wrong, a log message will be triggered.
+	 *
+	 * @param description
+	 *            The operator description from that to get the documentation.
+	 * @return HTML string of the operator documentation
+	 */
+	static String getDocumentation(OperatorDescription description) {
 		String html = null;
-		if (operator != null) {
+		if (description != null) {
 
 			// load cache
-			String key = operator.getOperatorDescription().getKey();
+			String key = description.getKey();
 			if (DOC_CACHE.containsKey(key)) {
 				return DOC_CACHE.get(key);
 			}
 
 			// load XML
-			URL resourceURL = OperatorDocumentationBrowser.getDocResourcePath(operator);
+			URL resourceURL = OperatorDocumentationBrowser.getDocResourcePath(description);
 			if (resourceURL != null) {
 				try (InputStream xmlStream = WebServiceTools.openStreamFromURL(resourceURL)) {
 					Source xmlSource = new StreamSource(xmlStream);
@@ -113,7 +125,7 @@ public class OperatorDocLoader {
 
 			// load operatorsDoc
 			if (html == null) {
-				html = makeOperatorDocumentation(operator);
+				html = makeOperatorDocumentation(description);
 				if (html == null) {
 					LogService.getRoot().log(Level.INFO, "com.rapidminer.gui.OperatorDocLoader.operatorsdoc_error");
 				}
@@ -126,18 +138,17 @@ public class OperatorDocLoader {
 			}
 		}
 		LogService.getRoot().log(Level.INFO, "com.rapidminer.gui.OperatorDocLoader.operator_not_found");
-		return getErrorText(operator);
+		return getErrorText(description);
 	}
 
 	/**
 	 * This generates the operator documentation from the operatorsDoc
 	 */
-	private static String makeOperatorDocumentation(Operator displayedOperator) {
-		OperatorDescription descr = displayedOperator.getOperatorDescription();
+	private static String makeOperatorDocumentation(OperatorDescription description) {
 		StringBuilder buf = new StringBuilder(2048);
 		buf.append("<html><body><table><tr><td>");
 
-		String iconName = "icons/24/" + displayedOperator.getOperatorDescription().getIconName();
+		String iconName = "icons/24/" + description.getIconName();
 		URL resource = Tools.getResource(iconName);
 		if (resource != null) {
 			buf.append("<img src=\"");
@@ -146,18 +157,18 @@ public class OperatorDocLoader {
 		}
 
 		buf.append("<td valign=\"middle\" align=\"left\"> <h2 class=\"firstHeading\" id=\"firstHeading\">");
-		buf.append(descr.getName());
+		buf.append(description.getName());
 
 		buf.append("<span class=\"packageName\"><br/>");
-		buf.append(descr.getProviderName());
+		buf.append(description.getProviderName());
 
 		buf.append("</span></h2></td></tr></table><div style=\"border-top: 1px solid #bbbbbb\">");
-		buf.append(OperatorDocToHtmlConverter.getTagHtmlForDescription(descr));
+		buf.append(OperatorDocToHtmlConverter.getTagHtmlForDescription(description));
 
 		buf.append("<h4>Synopsis</h4><p>");
-		buf.append(descr.getShortDescription());
+		buf.append(description.getShortDescription());
 		buf.append("</p></p><br/><h4>Description</h4>");
-		String descriptionText = descr.getLongDescriptionHTML();
+		String descriptionText = description.getLongDescriptionHTML();
 		if (descriptionText != null) {
 			if (!descriptionText.trim().startsWith("<p>")) {
 				buf.append("<p>");
@@ -168,62 +179,15 @@ public class OperatorDocLoader {
 			}
 			buf.append("<br/>");
 		}
-		appendPortsToDocumentation(displayedOperator.getInputPorts(), "Input", buf);
-		appendPortsToDocumentation(displayedOperator.getOutputPorts(), "Output", buf);
+		appendPortsToDocumentation(description, true, "Input", buf);
+		appendPortsToDocumentation(description, false, "Output", buf);
 
-		Parameters parameters = displayedOperator.getParameters();
-		if (parameters.getKeys().size() > 0) {
-			buf.append("<h4 class=\"parametersHeading\">Parameters</h4><table class=\"parametersTable\">");
-			for (String key : parameters.getKeys()) {
-				ParameterType type = parameters.getParameterType(key);
-				if (type == null) {
-					LogService.getRoot().log(Level.WARNING, "com.rapidminer.gui.OperatorDocLoader.unkwown_parameter_key",
-							new Object[] { displayedOperator.getName(), key });
-					continue;
-				}
-				buf.append("<tr><td><b>");
+		appendParametersDocumentation(description, buf);
 
-				buf.append(makeParameterHeader(type));
-				buf.append("</b>");
-
-				if (type.isOptional()) {
-					buf.append(" (optional)");
-				}
-
-				buf.append("</td></tr><tr><td>");
-				buf.append(type.getDescription());
-				buf.append("</td></tr><tr><td class=\"parameterDetailsCell\"><span class=\"parameterDetails\">");
-
-				String parameterType = OperatorDocToHtmlConverter.getParameterType(descr.getKey(), key);
-				buf.append("<b>Type: </b> <i>");
-				buf.append(parameterType);
-				buf.append("</i>");
-
-				if (parameterType.equals(OperatorDocToHtmlConverter.REAL_LABEL)
-						|| parameterType.equals(OperatorDocToHtmlConverter.INTEGER_LABEL)
-						|| parameterType.equals(OperatorDocToHtmlConverter.LONG_LABEL)
-						|| parameterType.equals(OperatorDocToHtmlConverter.SELECTION_LABEL)) {
-					buf.append("<br/><b>Range: </b> <i>");
-					buf.append(OperatorDocToHtmlConverter.getParameterRange(descr.getKey(), key));
-					buf.append("</i>");
-				}
-
-				String parameterDefault = OperatorDocToHtmlConverter.getParameterDefault(descr.getKey(), key);
-				if (!parameterDefault.trim().isEmpty()) {
-					buf.append("<br/><b>Default: </b> <i>");
-					buf.append(OperatorDocToHtmlConverter.getParameterDefault(descr.getKey(), key));
-					buf.append("</i>");
-				}
-
-				buf.append("</span></td></tr>");
-			}
-			buf.append("</table>");
-		}
-
-		if (!descr.getOperatorDocumentation().getExamples().isEmpty()) {
+		if (!description.getOperatorDocumentation().getExamples().isEmpty()) {
 			buf.append("<h4>Examples</h4><ul>");
 			int i = 0;
-			for (ExampleProcess exampleProcess : descr.getOperatorDocumentation().getExamples()) {
+			for (ExampleProcess exampleProcess : description.getOperatorDocumentation().getExamples()) {
 				buf.append("<li>");
 				buf.append(exampleProcess.getComment());
 				buf.append(makeExampleFooter(i));
@@ -237,45 +201,92 @@ public class OperatorDocLoader {
 		return buf.toString();
 	}
 
+	private static void appendParametersDocumentation(OperatorDescription description, StringBuilder buf) {
+		Map<String, ParameterSignature> parameterSignatures = OperatorSignatureRegistry.INSTANCE.lookupParameters(description.getKey());
+		if (parameterSignatures.isEmpty()) {
+			return;
+		}
+		buf.append("<h4 class=\"parametersHeading\">Parameters</h4><table class=\"parametersTable\">");
+		parameterSignatures.forEach((key, signature) -> {
+			buf.append("<tr><td><b>");
+
+			buf.append(makeParameterHeader(key));
+			buf.append("</b>");
+
+			if (signature.isOptional()) {
+				buf.append(" (optional)");
+			}
+
+			buf.append("</td></tr><tr><td>");
+			buf.append(signature.getDescription());
+			buf.append("</td></tr><tr><td class=\"parameterDetailsCell\"><span class=\"parameterDetails\">");
+
+			String parameterType = OperatorDocToHtmlConverter.getParameterType(description.getKey(), key);
+			buf.append("<b>Type: </b> <i>");
+			buf.append(parameterType);
+			buf.append("</i>");
+
+			if (parameterType.equals(OperatorDocToHtmlConverter.REAL_LABEL)
+					|| parameterType.equals(OperatorDocToHtmlConverter.INTEGER_LABEL)
+					|| parameterType.equals(OperatorDocToHtmlConverter.LONG_LABEL)
+					|| parameterType.equals(OperatorDocToHtmlConverter.SELECTION_LABEL)) {
+				buf.append("<br/><b>Range: </b> <i>");
+				buf.append(OperatorDocToHtmlConverter.getParameterRange(description.getKey(), key));
+				buf.append("</i>");
+			}
+
+			String parameterDefault = OperatorDocToHtmlConverter.getParameterDefault(description.getKey(), key);
+			if (!parameterDefault.trim().isEmpty()) {
+				buf.append("<br/><b>Default: </b> <i>");
+				buf.append(OperatorDocToHtmlConverter.getParameterDefault(description.getKey(), key));
+				buf.append("</i>");
+			}
+
+			buf.append("</span></td></tr>");
+		});
+		buf.append("</table>");
+	}
+
 	private static Object makeExampleFooter(int exampleIndex) {
 		return "<br/><a href=\"show_example_" + exampleIndex + "\">Show example process</a>.";
 	}
 
-	private static void appendPortsToDocumentation(Ports<?> ports, String title, StringBuilder buf) {
-		if (ports.getNumberOfPorts() > 0) {
-			buf.append("<h4>" + title + "</h4><table border=\"0\" cellspacing=\"0\"><tr><td>");
-			for (Port port : ports.getAllPorts()) {
-				buf.append("<table><tr>");
-				buf.append("<td class=\"lilIcon\">");
-				Class<? extends IOObject> typeClass = null;
-				if (port instanceof InputPort) {
-					// Input Port
-					InputPort inputPort = (InputPort) port;
-					List<Precondition> preconditions = new LinkedList<>(inputPort.getAllPreconditions());
-					if (preconditions.size() > 0) {
-						MetaData metaData = preconditions.get(0).getExpectedMetaData();
-						if (metaData != null) {
-							typeClass = metaData.getObjectClass();
-						}
-					}
-				}
-				String imgSrc = getIconNameForType(typeClass);
-				buf.append("<img src=\"" + imgSrc + "\" class=\"typeIcon\" />");
-				buf.append("</td><td>");
-				buf.append("<b>" + port.getName() + "</b>");
-				if (typeClass != null) {
-					buf.append("<i>" + OperatorDocToHtmlConverter.getTypeNameForType(typeClass) + "</i>");
-				}
-				buf.append("</td>");
-				buf.append("</tr>");
-				buf.append("</table></td></tr>");
-			}
-			buf.append("</table><br/>");
+	private static void appendPortsToDocumentation(OperatorDescription description, boolean input, String title, StringBuilder buf) {
+		Map<String, IOType> portSignatures = OperatorSignatureRegistry.INSTANCE.lookup(description.getKey(), input);
+		if (portSignatures.isEmpty()) {
+			return;
 		}
+		buf.append("<h4>").append(title).append("</h4><table border=\"0\" cellspacing=\"0\"><tr><td>");
+		portSignatures.forEach((name, type) -> {
+			buf.append("<table><tr>");
+			buf.append("<td class=\"lilIcon\">");
+			Class<? extends IOObject> typeClass = null;
+			if (type.isSpecific()) {
+				try {
+					Class<?> foundClass = Plugin.getMajorClassLoader().loadClass(type.getClassName());
+					if (foundClass != null && IOObject.class.isAssignableFrom(foundClass)) {
+						typeClass = (Class<? extends IOObject>) foundClass;
+					}
+				} catch (ClassNotFoundException e) {
+					// ignore
+				}
+			}
+			String imgSrc = getIconNameForType(typeClass);
+			buf.append("<img src=\"").append(imgSrc).append("\" class=\"typeIcon\" />");
+			buf.append("</td><td>");
+			buf.append("<b>").append(name).append("</b>");
+			if (typeClass != null) {
+				buf.append("<i>").append(OperatorDocToHtmlConverter.getTypeNameForType(typeClass)).append("</i>");
+			}
+			buf.append("</td>");
+			buf.append("</tr>");
+			buf.append("</table></td></tr>");
+		});
+		buf.append("</table><br/>");
 	}
 
-	private static String makeParameterHeader(ParameterType type) {
-		return type.getKey().replace('_', ' ');
+	private static String makeParameterHeader(String key) {
+		return key.replace('_', ' ');
 	}
 
 	/**
@@ -307,14 +318,14 @@ public class OperatorDocLoader {
 	 * Generates a HTML string which contains an error text for the case that an operator
 	 * documentation was not found.
 	 *
-	 * @param operator
-	 *            The operator which documentation not was found
+	 * @param description
+	 *            The operator description which documentation was not found
 	 * @return An error HTML which says, that no documentation for the operator was found
 	 */
-	private static String getErrorText(Operator operator) {
+	private static String getErrorText(OperatorDescription description) {
 		String opName;
-		if (operator != null) {
-			opName = operator.getName();
+		if (description != null) {
+			opName = description.getShortName();
 		} else {
 			opName = "unnamed";
 		}

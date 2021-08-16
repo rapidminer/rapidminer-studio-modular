@@ -18,7 +18,9 @@
  */
 package com.rapidminer.operator.performance;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.rapidminer.operator.IOObject;
+import com.rapidminer.repository.versioned.JsonStorableIOObject;
 import com.rapidminer.tools.FunctionWithThrowable;
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.Tools;
@@ -36,7 +38,7 @@ import java.util.logging.Level;
  * 
  * @author Ingo Mierswa, Simon Fischer Exp $
  */
-public class PerformanceVector extends AverageVector {
+public class PerformanceVector extends AverageVector implements JsonStorableIOObject {
 
 	private static final long serialVersionUID = 3123587140049371098L;
 
@@ -66,6 +68,7 @@ public class PerformanceVector extends AverageVector {
 	private Map<String, Double> currentValues = null;
 
 	/** Used to compare two average vectors. */
+	@JsonIgnore
 	private PerformanceComparator comparator = new DefaultComparator();
 
 	/** Name of the main criterion. */

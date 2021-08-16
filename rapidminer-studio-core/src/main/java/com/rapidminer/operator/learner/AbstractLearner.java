@@ -36,8 +36,13 @@ import com.rapidminer.operator.ports.metadata.MetaData;
 import com.rapidminer.operator.ports.metadata.MetaDataError;
 import com.rapidminer.operator.ports.metadata.PassThroughRule;
 import com.rapidminer.operator.ports.metadata.SimpleMetaDataError;
+import com.rapidminer.tools.BiasExplanation;
+import com.rapidminer.tools.BiasTools;
+import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.ParameterService;
 import com.rapidminer.tools.Tools;
+
+import java.util.Map;
 
 
 /**
@@ -148,7 +153,23 @@ public abstract class AbstractLearner extends Operator implements Learner {
 				|| onlyWarnForNonSufficientCapabilities());
 		check.checkLearnerCapabilities(this, exampleSet);
 
+		// bias checks -> only create warning logs for now
+		Map<String, BiasExplanation> potentialBiasMap = BiasTools.checkForBias(exampleSet);
+		if (!potentialBiasMap.isEmpty()) {
+			for (Map.Entry<String, BiasExplanation> potentialBias : potentialBiasMap.entrySet()) {
+				logWarning(BiasTools.getWarningMessage(potentialBias.getKey(), potentialBias.getValue()));
+			}
+		}
+
 		Model model = learn(exampleSet);
+
+		// add bias information as annotations
+		if (!potentialBiasMap.isEmpty()) {
+			for (Map.Entry<String, BiasExplanation> potentialBias : potentialBiasMap.entrySet()) {
+				model.getAnnotations().setAnnotation(potentialBias.getKey() + " (" + I18N.getGUILabel("bias.potential") + ")", BiasTools.getShortWarningMessage(potentialBias.getValue()));
+			}
+		}
+
 		modelOutput.deliver(model);
 
 		// weights must be calculated _after_ learning

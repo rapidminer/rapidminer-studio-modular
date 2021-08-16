@@ -353,4 +353,9 @@ public class SVDModel extends AbstractModel implements ComponentWeightsCreatable
 		}
 		return result.toString();
 	}
+
+	@Override
+	public boolean isModelKind(ModelKind modelKind) {
+		return modelKind == ModelKind.PREPROCESSING;
+	}
 }

@@ -20,19 +20,12 @@ package com.rapidminer.tools;
 
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertSame;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
-import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.rapidminer.Process;
-import com.rapidminer.operator.Operator;
-import com.rapidminer.operator.OperatorCreationException;
-import com.rapidminer.operator.OperatorDescription;
-import com.rapidminer.operator.ProcessRootOperator;
-import com.rapidminer.tools.documentation.OperatorDocumentation;
+import com.rapidminer.TestUtils;
 
 
 /**
@@ -43,27 +36,9 @@ import com.rapidminer.tools.documentation.OperatorDocumentation;
  */
 public class ProcessToolsTest {
 
-	private static OperatorDescription desc;
-
 	@BeforeClass
-	public static void setup() throws OperatorCreationException {
-		OperatorDocumentation doc = new OperatorDocumentation("Process");
-		desc = mock(OperatorDescription.class);
-		when(desc.getGroup()).thenReturn("");
-		when(desc.getKey()).thenReturn("process");
-		when(desc.getKeyWithoutPrefix()).thenReturn("process");
-		Class<? extends Operator> rootClass = ProcessRootOperator.class;
-		when(desc.getOperatorClass()).then(invocation -> rootClass);
-		when(desc.createOperatorInstance()).then(invocation -> new ProcessRootOperator(desc));
-		when(desc.getOperatorDocumentation()).thenReturn(doc);
-
-		OperatorService.registerOperator(desc, null);
-	}
-
-	@AfterClass
-	public static void tearDown() {
-		OperatorService.unregisterOperator(desc);
-		desc = null;
+	public static void setup() throws Exception {
+		TestUtils.INSTANCE.minimalProcessUsageSetup();
 	}
 
 	/**

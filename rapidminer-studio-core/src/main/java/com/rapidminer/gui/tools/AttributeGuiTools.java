@@ -29,6 +29,7 @@ import com.rapidminer.example.Attributes;
 import com.rapidminer.gui.viewer.metadata.MetaDataStatisticsViewer;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.Ontology;
+import com.rapidminer.tools.belt.expression.ExpressionType;
 
 
 /**
@@ -50,7 +51,10 @@ public class AttributeGuiTools {
 	/** contains a mapping between each existing value type and a symbol for it */
 	private static final Map<Integer, String> mapOfValueTypeIcons = new HashMap<>();
 
-	/** mapping between {@link SpecialAttribute} and colors */
+	/** contains a mapping between each existing value type and a symbol for it */
+	private static final Map<ExpressionType, String> mapOfExpressionTypeIcons = new HashMap<>();
+
+	/** mapping between special attribute and colors */
 	private static final Map<String, Color> mapAttributeRoleNamesToColors = new HashMap<>();
 
 	/** mapping between value types and a color */
@@ -83,6 +87,28 @@ public class AttributeGuiTools {
 		mapOfValueTypeIcons.put(Ontology.DATE_TIME,
 				I18N.getMessage(I18N.getGUIBundle(), "gui.icon.attribute_Value_type.date_time.icon"));
 
+		// fill mapping between expression types and icons
+		mapOfExpressionTypeIcons.put(null,
+				I18N.getMessage(I18N.getGUIBundle(), "gui.icon.attribute_value_type.attribute_value.icon"));
+		// TODO add icons for string set and string list when creating new expression parser gui
+		mapOfExpressionTypeIcons.put(ExpressionType.STRING_SET,
+				I18N.getMessage(I18N.getGUIBundle(), "gui.icon.attribute_value_type.attribute_value.icon"));
+		mapOfExpressionTypeIcons.put(ExpressionType.STRING_LIST,
+				I18N.getMessage(I18N.getGUIBundle(), "gui.icon.attribute_value_type.attribute_value.icon"));
+		mapOfExpressionTypeIcons.put(ExpressionType.DOUBLE,
+				I18N.getMessage(I18N.getGUIBundle(), "gui.icon.attribute_value_type.numerical.icon"));
+		mapOfExpressionTypeIcons.put(ExpressionType.INTEGER,
+				I18N.getMessage(I18N.getGUIBundle(), "gui.icon.attribute_value_type.numerical.icon"));
+		mapOfExpressionTypeIcons.put(ExpressionType.STRING,
+				I18N.getMessage(I18N.getGUIBundle(), "gui.icon.attribute_value_type.nominal.icon"));
+		mapOfExpressionTypeIcons.put(ExpressionType.BOOLEAN,
+				I18N.getMessage(I18N.getGUIBundle(), "gui.icon.attribute_value_type.binominal.icon"));
+		mapOfExpressionTypeIcons.put(ExpressionType.INSTANT,
+				I18N.getMessage(I18N.getGUIBundle(), "gui.icon.attribute_Value_type.date_time.icon"));
+		// TODO add a separate icon for local time when creating new expression parser gui
+		mapOfExpressionTypeIcons.put(ExpressionType.LOCAL_TIME,
+				I18N.getMessage(I18N.getGUIBundle(), "gui.icon.attribute_Value_type.date_time.icon"));
+
 		// fill color mapping for attribute roles
 		mapAttributeRoleNamesToColors.put(Attributes.WEIGHT_NAME, new Color(240, 213, 230));
 		mapAttributeRoleNamesToColors.put(Attributes.LABEL_NAME, new Color(199, 224, 205));
@@ -106,6 +132,27 @@ public class AttributeGuiTools {
 		mapOfValueTypeColors.put(Ontology.NUMERICAL, new Color(127, 201, 127));
 		mapOfValueTypeColors.put(Ontology.NOMINAL, new Color(127, 201, 127));
 		mapOfValueTypeColors.put(Ontology.DATE_TIME, new Color(127, 201, 127));
+	}
+
+	/**
+	 * Returns the {@link ImageIcon} used to represent the given (Belt) {@link ExpressionType}.
+	 *
+	 * @param type
+	 * 		the expression type
+	 * @param smallIcon
+	 * 		set this to true if the image should be small
+	 * @return the corresponding icon
+	 */
+	public static ImageIcon getIconForExpressionType(ExpressionType type, boolean smallIcon) {
+		String iconName = mapOfExpressionTypeIcons.get(type);
+		ImageIcon icon;
+		if (smallIcon) {
+			icon = SwingTools.createIcon("16/" + iconName, true);
+		} else {
+			icon = SwingTools.createIcon("24/" + iconName, true);
+		}
+
+		return icon;
 	}
 
 	/**

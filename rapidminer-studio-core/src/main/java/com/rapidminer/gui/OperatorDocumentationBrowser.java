@@ -102,7 +102,7 @@ public class OperatorDocumentationBrowser extends JPanel implements Dockable, Pr
 
 	private JEditorPane editor;
 
-	private Operator displayedOperator = null;
+	private OperatorDescription displayedDescription = null;
 
 	private boolean ignoreSelections = false;
 
@@ -194,7 +194,8 @@ public class OperatorDocumentationBrowser extends JPanel implements Dockable, Pr
 	public void setSelection(List<Operator> selection) {
 		if (selection != null && !selection.isEmpty()) {
 			Operator operator = selection.get(0);
-			if (!operator.equals(displayedOperator) && !ignoreSelections) {
+			if ((displayedDescription == null ||
+					!operator.getOperatorDescription().getKey().equals(displayedDescription.getKey())) && !ignoreSelections) {
 				assignDocumentation(operator);
 			}
 		}
@@ -205,8 +206,16 @@ public class OperatorDocumentationBrowser extends JPanel implements Dockable, Pr
 	 * indicates the corresponding documentation XML file.
 	 */
 	private void assignDocumentation(Operator operator) {
-		changeDocumentation(operator);
-		displayedOperator = operator;
+		assignDocumentation(operator.getOperatorDescription());
+	}
+
+	/**
+	 * This is called by the {@link #setSelection(List)} method. It creates an absolute path that
+	 * indicates the corresponding documentation XML file.
+	 */
+	private void assignDocumentation(OperatorDescription description) {
+		changeDocumentation(description);
+		displayedDescription = description;
 	}
 
 	@Override
@@ -236,7 +245,7 @@ public class OperatorDocumentationBrowser extends JPanel implements Dockable, Pr
 					int index = Integer.parseInt(e.getDescription().substring("tutorial:".length())) - 1;
 					try {
 						ignoreSelections = true;
-						openTutorialProcess(displayedOperator.getOperatorDescription().getKey(), index);
+						openTutorialProcess(displayedDescription.getKey(), index);
 					} finally {
 						ignoreSelections = false;
 					}
@@ -274,13 +283,13 @@ public class OperatorDocumentationBrowser extends JPanel implements Dockable, Pr
 	/**
 	 * Refreshes the documentation text.
 	 *
-	 * @param operator
-	 *           the operator for which to load the documentation
+	 * @param description
+	 *           the operator description for which to load the documentation
 	 */
-	private void changeDocumentation(final Operator operator) {
+	private void changeDocumentation(final OperatorDescription description) {
 		documentationUpdateQueue.execute(() -> {
 
-			final String finalHtml = OperatorDocLoader.getDocumentation(operator);
+			final String finalHtml = OperatorDocLoader.getDocumentation(description);
 			SwingUtilities.invokeLater(() -> {
 				editor.setText("<html>" + finalHtml + "</html>");
 				editor.setCaretPosition(0);
@@ -288,7 +297,7 @@ public class OperatorDocumentationBrowser extends JPanel implements Dockable, Pr
 				if (feedbackForm != null) {
 					contentPanel.remove(feedbackForm);
 				}
-				feedbackForm = new FeedbackForm(FEEDBACK_KEY_DOCUMENTATION, operator.getOperatorDescription().getKey());
+				feedbackForm = new FeedbackForm(FEEDBACK_KEY_DOCUMENTATION, description.getKey());
 				feedbackForm.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, Colors.TAB_BORDER));
 				contentPanel.add(feedbackForm, contentGbc);
 			});
@@ -335,9 +344,22 @@ public class OperatorDocumentationBrowser extends JPanel implements Dockable, Pr
 	 * 		the operator for which to show the documentation
 	 */
 	public void setDisplayedOperator(Operator operator) {
-		if (operator != null && !operator.getOperatorDescription().isDeprecated() && (this.displayedOperator == null || !operator.getOperatorDescription()
-				.getKey().equals(this.displayedOperator.getOperatorDescription().getKey()))) {
+		if (operator != null && !operator.getOperatorDescription().isDeprecated() && (this.displayedDescription == null || !operator.getOperatorDescription()
+				.getKey().equals(this.displayedDescription.getKey()))) {
 			assignDocumentation(operator);
+		}
+	}
+
+	/**
+	 * Sets the {@link OperatorDescription} for which the operator documentation is shown.
+	 *
+	 * @param description
+	 * 		the operator description for which to show the documentation
+	 */
+	public void setDisplayedOperator(OperatorDescription description) {
+		if (!description.isDeprecated() && (this.displayedDescription == null ||
+				!description.getKey().equals(this.displayedDescription.getKey()))) {
+			assignDocumentation(description);
 		}
 	}
 
@@ -348,10 +370,19 @@ public class OperatorDocumentationBrowser extends JPanel implements Dockable, Pr
 	 * @return the resource path
 	 */
 	public static URL getDocResourcePath(Operator op) {
-		Plugin provider = op.getOperatorDescription().getProvider();
+		return getDocResourcePath(op.getOperatorDescription());
+	}
+		/**
+		 * Returns the resource path to the operator_name.xml of the given operator
+		 *
+		 * @param description the operator description
+		 * @return the resource path
+		 */
+	public static URL getDocResourcePath(OperatorDescription description) {
+		Plugin provider = description.getProvider();
 		boolean isExtension = provider != null;
 		String documentationRoot = isExtension ? provider.getPrefix() + "/" : DOCUMENTATION_ROOT;
-		String groupPath = op.getOperatorDescription().getGroup().replace(".", "/");
+		String groupPath = description.getGroup().replace(".", "/");
 
 		// if extension uses the extension folder as tree root...
 		if (isExtension && provider.useExtensionTreeRoot()
@@ -370,7 +401,7 @@ public class OperatorDocumentationBrowser extends JPanel implements Dockable, Pr
 		} else {
 			groupPath += "/";
 		}
-		String key = op.getOperatorDescription().getKeyWithoutPrefix();
+		String key = description.getKeyWithoutPrefix();
 
 		String opDescXMLResourcePath = documentationRoot + groupPath + key + ".xml";
 		return Plugin.getMajorClassLoader().getResource(opDescXMLResourcePath);

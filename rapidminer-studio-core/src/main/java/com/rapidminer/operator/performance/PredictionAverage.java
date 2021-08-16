@@ -18,6 +18,7 @@
  */
 package com.rapidminer.operator.performance;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
@@ -43,8 +44,10 @@ public class PredictionAverage extends MeasuredPerformance {
 
 	private double count;
 
+	@JsonIgnore
 	private Attribute labelAttribute;
 
+	@JsonIgnore
 	private Attribute weightAttribute;
 
 	public PredictionAverage() {}

@@ -20,6 +20,7 @@ package com.rapidminer.tools.belt;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import com.rapidminer.belt.column.Column;
@@ -28,6 +29,7 @@ import com.rapidminer.belt.execution.Context;
 import com.rapidminer.belt.execution.ExecutionUtils;
 import com.rapidminer.belt.table.Table;
 import com.rapidminer.belt.table.Tables;
+import com.rapidminer.belt.util.ColumnRole;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.UserError;
@@ -241,6 +243,28 @@ public final class BeltErrorTools {
 				case NOT_SUB_DICTIONARY:
 					throw new UserError(operator, "type_check.require_sub_dictionary", entry.getKey());
 			}
+		}
+	}
+
+	/**
+	 * Throws a UserError if the given table contains the role not exactly once.
+	 *
+	 * @param role
+	 * 		the role to check for
+	 * @param table
+	 * 		the table to check
+	 * @param operator
+	 * 		the offending operator. Can be {@code null}
+	 * @throws UserError
+	 * 		with error id {@code role_check.missing} or {@code role_check.non_unique}
+	 */
+	public static void requireUniqueRole(ColumnRole role, Table table, Operator operator) throws UserError {
+		List<String> labels = table.select().withMetaData(role).labels();
+		if (labels.isEmpty()) {
+			throw new UserError(operator, "role_check.missing", role.name().toLowerCase(Locale.ROOT));
+		}
+		if (labels.size() > 1) {
+			throw new UserError(operator, "role_check.non_unique", role.name().toLowerCase(Locale.ROOT));
 		}
 	}
 

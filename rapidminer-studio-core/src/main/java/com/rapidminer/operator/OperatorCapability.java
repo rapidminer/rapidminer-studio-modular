@@ -19,7 +19,7 @@
 package com.rapidminer.operator;
 
 /**
- * The possible capabilities for all learners.
+ * The possible capabilities for all learners. For new operators, {@link TableCapability} should be used.
  * 
  * @author Julien Nioche, Ingo Mierswa
  */

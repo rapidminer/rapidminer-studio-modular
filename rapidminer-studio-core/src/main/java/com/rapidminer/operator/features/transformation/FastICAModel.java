@@ -266,4 +266,9 @@ public class FastICAModel extends AbstractModel implements ComponentWeightsCreat
 		result.append("Number of Components: " + numberOfComponents + Tools.getLineSeparator());
 		return result.toString();
 	}
+
+	@Override
+	public boolean isModelKind(ModelKind modelKind) {
+		return modelKind == ModelKind.PREPROCESSING;
+	}
 }

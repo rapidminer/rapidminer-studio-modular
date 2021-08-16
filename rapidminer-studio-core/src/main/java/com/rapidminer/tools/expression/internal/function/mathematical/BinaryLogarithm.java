@@ -27,7 +27,9 @@ import com.rapidminer.tools.expression.internal.function.Abstract1DoubleInputFun
  *
  * @author Marcel Seifert
  *
+ * @deprecated since 9.11, see {@link com.rapidminer.tools.belt.expression.ExpressionParser}
  */
+@Deprecated
 public class BinaryLogarithm extends Abstract1DoubleInputFunction {
 
 	private static final double LOG2 = Math.log(2);

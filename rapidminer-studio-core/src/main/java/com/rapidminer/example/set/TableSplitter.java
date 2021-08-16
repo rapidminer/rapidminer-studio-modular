@@ -18,11 +18,6 @@
  */
 package com.rapidminer.example.set;
 
-import static com.rapidminer.example.set.SplittedExampleSet.AUTOMATIC;
-import static com.rapidminer.example.set.SplittedExampleSet.LINEAR_SAMPLING;
-import static com.rapidminer.example.set.SplittedExampleSet.SHUFFLED_SAMPLING;
-import static com.rapidminer.example.set.SplittedExampleSet.STRATIFIED_SAMPLING;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,28 +28,40 @@ import com.rapidminer.belt.reader.NumericReader;
 import com.rapidminer.belt.reader.Readers;
 import com.rapidminer.belt.table.Table;
 import com.rapidminer.belt.util.ColumnRole;
-import com.rapidminer.example.Attribute;
-import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.UserError;
 import com.rapidminer.tools.Tools;
 
 
 /**
- * A helper to split a {@link Table} into subsets by using a partition. Works similar to {@link SplittedExampleSet}
- * but creates a new {@link Table} on {@link #selectSingleSubset} and {@link #selectAllSubsetsBut} instead of
- * changing the internal state.
+ * A helper to partition a {@link Table} into multiple subsets. Supports both randomized and user provided partitions.
  *
  * @author Gisa Meier
  * @since 9.4.0
- * @see SplittedExampleSet
  */
 public class TableSplitter {
 
+	/** Indicates a non-shuffled sampling for partition building. */
+	public static final int LINEAR_SAMPLING = SplittedExampleSet.LINEAR_SAMPLING;
+
+	/** Indicates a shuffled sampling for partition building. */
+	public static final int SHUFFLED_SAMPLING = SplittedExampleSet.SHUFFLED_SAMPLING;
+
+	/** Indicates a stratified shuffled sampling for partition building. */
+	public static final int STRATIFIED_SAMPLING = SplittedExampleSet.STRATIFIED_SAMPLING;
+
+	/**
+	 * Indicates the usage of the automatic mode, where stratified sampling
+	 * is used per default for partition building. If it isn't applicable, shuffled
+	 * sampling will be used instead.
+	 */
+	public static final int AUTOMATIC = SplittedExampleSet.AUTOMATIC;
+
+
 	/** The partition. */
-	private ImmutablePartition partition;
+	private final ImmutablePartition partition;
 
 	/** The table. */
-	private Table table;
+	private final Table table;
 
 	/** Constructs a helper to split a table with regard to the given partition. */
 	private TableSplitter(Table table, ImmutablePartition partition) {
@@ -85,9 +92,8 @@ public class TableSplitter {
 	 * 		the ratio for the first set (as value between {@code 0} and {@code 1}), the second set will have the
 	 * 		complementary ratio so that they add up to {@code 1}
 	 * @param samplingType
-	 * 		the sampling type, one of {@link SplittedExampleSet#LINEAR_SAMPLING},
-	 * 		{@link SplittedExampleSet#SHUFFLED_SAMPLING}, {@link SplittedExampleSet#STRATIFIED_SAMPLING} or
-	 * 		{@link SplittedExampleSet#AUTOMATIC}
+	 * 		the sampling type, one of {@link #LINEAR_SAMPLING}, {@link #SHUFFLED_SAMPLING}, {@link #STRATIFIED_SAMPLING}
+	 * 		or {@link #AUTOMATIC}
 	 * @param useLocalRandomSeed
 	 * 		whether to use the random seed given as the next parameter
 	 * @param seed
@@ -108,9 +114,8 @@ public class TableSplitter {
 	 * @param splitRatios
 	 * 		array of positive ratios, summing up to 1
 	 * @param samplingType
-	 * 		the sampling type, one of {@link SplittedExampleSet#LINEAR_SAMPLING},
-	 * 		{@link SplittedExampleSet#SHUFFLED_SAMPLING}, {@link SplittedExampleSet#STRATIFIED_SAMPLING} or
-	 * 		{@link SplittedExampleSet#AUTOMATIC}
+	 * 		the sampling type, one of {@link #LINEAR_SAMPLING}, {@link #SHUFFLED_SAMPLING}, {@link #STRATIFIED_SAMPLING}
+	 * 		or {@link #AUTOMATIC}
 	 * @param useLocalRandomSeed
 	 * 		whether to use the random seed given as the next parameter
 	 * @param seed
@@ -132,9 +137,8 @@ public class TableSplitter {
 	 * @param numberOfSubsets
 	 * 		the number of subsets to partition in
 	 * @param samplingType
-	 * 		the sampling type, one of {@link SplittedExampleSet#LINEAR_SAMPLING},
-	 * 		{@link SplittedExampleSet#SHUFFLED_SAMPLING}, {@link SplittedExampleSet#STRATIFIED_SAMPLING} or
-	 * 		{@link SplittedExampleSet#AUTOMATIC}
+	 * 		the sampling type, one of {@link #LINEAR_SAMPLING}, {@link #SHUFFLED_SAMPLING}, {@link #STRATIFIED_SAMPLING}
+	 * 		or {@link #AUTOMATIC}
 	 * @param useLocalRandomSeed
 	 * 		whether to use the random seed given as the next parameter
 	 * @param seed
@@ -203,7 +207,6 @@ public class TableSplitter {
 	 * 		if the table does not contain the columnName
 	 * @throws UnsupportedOperationException
 	 * 		if the specified column is not numeric readable
-	 * @see SplittedExampleSet#splitByAttribute(ExampleSet, Attribute)
 	 */
 	public static TableSplitter splitByAttribute(Table table, String columnName) {
 		Column column = table.column(columnName);
@@ -245,7 +248,6 @@ public class TableSplitter {
 	 * 		if the table does not contain the columnName
 	 * @throws UnsupportedOperationException
 	 * 		if the specified column is not numeric readable
-	 * @see SplittedExampleSet#splitByAttribute(ExampleSet, Attribute, double)
 	 */
 	public static TableSplitter splitByAttribute(Table table, String columnName, double value) {
 		Column column = table.column(columnName);

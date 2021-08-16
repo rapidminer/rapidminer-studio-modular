@@ -21,9 +21,12 @@ package com.rapidminer.tools.math;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.databind.annotation.JsonTypeIdResolver;
 import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.ResultObjectAdapter;
 import com.rapidminer.report.Readable;
+import com.rapidminer.repository.versioned.JsonStorableAveragableResolver;
 import com.rapidminer.tools.Tools;
 
 
@@ -33,6 +36,8 @@ import com.rapidminer.tools.Tools;
  * 
  * @author Ingo Mierswa
  */
+@JsonTypeInfo(use = JsonTypeInfo.Id.CUSTOM, include = JsonTypeInfo.As.PROPERTY, property = "type")
+@JsonTypeIdResolver(JsonStorableAveragableResolver.class)
 public abstract class Averagable extends ResultObjectAdapter implements Cloneable, Readable {
 
 	private static final long serialVersionUID = 3193522429555690641L;

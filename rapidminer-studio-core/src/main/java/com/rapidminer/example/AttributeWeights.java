@@ -39,13 +39,17 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.rapidminer.RapidMiner;
+import com.rapidminer.adaption.belt.IOTable;
 import com.rapidminer.datatable.DataTable;
 import com.rapidminer.datatable.SimpleDataTable;
 import com.rapidminer.datatable.SimpleDataTableRow;
 import com.rapidminer.io.process.XMLTools;
 import com.rapidminer.operator.IOObject;
+import com.rapidminer.repository.versioned.JsonStorableIOObject;
 import com.rapidminer.tools.Tools;
+import com.rapidminer.tools.belt.BeltTools;
 import com.rapidminer.tools.math.AverageVector;
 
 
@@ -56,7 +60,7 @@ import com.rapidminer.tools.math.AverageVector;
  * 
  * @author Ingo Mierswa
  */
-public class AttributeWeights extends AverageVector {
+public class AttributeWeights extends AverageVector implements JsonStorableIOObject {
 
 	private static final long serialVersionUID = 7000978931118131854L;
 
@@ -114,6 +118,7 @@ public class AttributeWeights extends AverageVector {
 	private int weightType = ORIGINAL_WEIGHTS;
 
 	/** Maps the name of an attribute to the corresponding attribute weight. */
+	@JsonManagedReference
 	private Map<String, AttributeWeight> weightMap = new LinkedHashMap<>();
 
 	/** Creates a new empty attribute weights object. */
@@ -126,6 +131,16 @@ public class AttributeWeights extends AverageVector {
 	public AttributeWeights(ExampleSet exampleSet) {
 		for (Attribute attribute : exampleSet.getAttributes()) {
 			setWeight(attribute.getName(), 1.0d);
+		}
+	}
+
+	/**
+	 * Creates a new attribute weights object containing a weight of 1 for each of the regular columns of the given input
+	 * table.
+	 */
+	public AttributeWeights(IOTable table) {
+		for (String name : BeltTools.regularSubtable(table.getTable()).labels()) {
+			setWeight(name, 1.0d);
 		}
 	}
 

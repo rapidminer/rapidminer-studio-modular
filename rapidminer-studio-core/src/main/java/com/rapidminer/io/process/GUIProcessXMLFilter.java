@@ -43,6 +43,14 @@ import com.rapidminer.operator.ports.Port;
  */
 public class GUIProcessXMLFilter implements ProcessXMLFilter {
 
+	/**
+	 * Thread local to turn of the application of the gui xml filters. Set this before calling {@code new Process()}
+	 * and reset it when done. If not set, filters are applied.
+	 *
+	 * @since 9.10
+	 */
+	public static final ThreadLocal<Boolean> IGNORE_FILTERS = new ThreadLocal<>();
+
 	/** @deprecated use {@link AnnotationProcessXMLFilter#KEY_OPERATOR_ANNOTATION} instead */
 	@Deprecated
 	public static final String KEY_OPERATOR_ANNOTATION = AnnotationProcessXMLFilter.KEY_OPERATOR_ANNOTATION;
@@ -69,30 +77,38 @@ public class GUIProcessXMLFilter implements ProcessXMLFilter {
 
 	@Override
 	public void operatorExported(final Operator op, final Element opElement) {
-		layoutProcessXMLFilter.operatorExported(op, opElement);
-		annotationProcessXMLFilter.operatorExported(op, opElement);
-		backgroundImageProcessXMLFilter.operatorExported(op, opElement);
+		if (!Boolean.TRUE.equals(IGNORE_FILTERS.get())) {
+			layoutProcessXMLFilter.operatorExported(op, opElement);
+			annotationProcessXMLFilter.operatorExported(op, opElement);
+			backgroundImageProcessXMLFilter.operatorExported(op, opElement);
+		}
 	}
 
 	@Override
 	public void executionUnitExported(final ExecutionUnit process, final Element element) {
-		layoutProcessXMLFilter.executionUnitExported(process, element);
-		annotationProcessXMLFilter.executionUnitExported(process, element);
-		backgroundImageProcessXMLFilter.executionUnitExported(process, element);
+		if (!Boolean.TRUE.equals(IGNORE_FILTERS.get())) {
+			layoutProcessXMLFilter.executionUnitExported(process, element);
+			annotationProcessXMLFilter.executionUnitExported(process, element);
+			backgroundImageProcessXMLFilter.executionUnitExported(process, element);
+		}
 	}
 
 	@Override
 	public void operatorImported(final Operator op, final Element opElement) {
-		layoutProcessXMLFilter.operatorImported(op, opElement);
-		annotationProcessXMLFilter.operatorImported(op, opElement);
-		backgroundImageProcessXMLFilter.operatorImported(op, opElement);
+		if (!Boolean.TRUE.equals(IGNORE_FILTERS.get())) {
+			layoutProcessXMLFilter.operatorImported(op, opElement);
+			annotationProcessXMLFilter.operatorImported(op, opElement);
+			backgroundImageProcessXMLFilter.operatorImported(op, opElement);
+		}
 	}
 
 	@Override
 	public void executionUnitImported(final ExecutionUnit process, final Element element) {
-		layoutProcessXMLFilter.executionUnitImported(process, element);
-		annotationProcessXMLFilter.executionUnitImported(process, element);
-		backgroundImageProcessXMLFilter.executionUnitImported(process, element);
+		if (!Boolean.TRUE.equals(IGNORE_FILTERS.get())) {
+			layoutProcessXMLFilter.executionUnitImported(process, element);
+			annotationProcessXMLFilter.executionUnitImported(process, element);
+			backgroundImageProcessXMLFilter.executionUnitImported(process, element);
+		}
 	}
 
 	/**

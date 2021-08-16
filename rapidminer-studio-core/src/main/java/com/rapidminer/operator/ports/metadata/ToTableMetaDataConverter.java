@@ -27,7 +27,6 @@ import java.util.ListIterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.regex.Pattern;
 
 import com.rapidminer.belt.column.Column;
 import com.rapidminer.belt.column.ColumnType;

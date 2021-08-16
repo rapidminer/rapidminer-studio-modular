@@ -18,6 +18,7 @@
  */
 package com.rapidminer.operator.performance;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
@@ -108,12 +109,15 @@ public class BinaryClassificationPerformance extends MeasuredPerformance {
 	private String negativeClassName = "";
 
 	/** The predicted label attribute. */
+	@JsonIgnore
 	private Attribute predictedLabelAttribute;
 
 	/** The label attribute. */
+	@JsonIgnore
 	private Attribute labelAttribute;
 
 	/** The weight attribute. Might be null. */
+	@JsonIgnore
 	private Attribute weightAttribute;
 
 	/**

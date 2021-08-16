@@ -25,6 +25,7 @@ import com.rapidminer.adaption.belt.ContextAdapter;
 import com.rapidminer.belt.column.Column;
 import com.rapidminer.belt.column.ColumnType;
 import com.rapidminer.belt.execution.Context;
+import com.rapidminer.belt.execution.SequentialContext;
 import com.rapidminer.belt.reader.CategoricalReader;
 import com.rapidminer.belt.reader.NumericReader;
 import com.rapidminer.belt.reader.ObjectReader;
@@ -152,8 +153,9 @@ public final class BeltTools {
 	}
 
 	/**
-	 * Creates a {@link Context} for the given operator. Calling this method is equivalent to calling {@code
-	 * ContextAdapter.adapt(Resources.getConcurrencyContext(operator))}.
+	 * Creates a {@link Context} for the given operator. Calling this method for a non-{@code null} operator is
+	 * equivalent to calling {@code ContextAdapter.adapt(Resources.getConcurrencyContext(operator))}. If the
+	 * operator is {@code null} a new {@link SequentialContext} is returned since 9.10.
 	 *
 	 * @param operator
 	 * 		will be used to create a {@link ConcurrencyContext} and then wrap it into a {@link Context}.
@@ -161,6 +163,9 @@ public final class BeltTools {
 	 * @since 9.8.0
 	 */
 	public static Context getContext(Operator operator) {
+		if (operator == null) {
+			return new SequentialContext();
+		}
 		return ContextAdapter.adapt(Resources.getConcurrencyContext(operator));
 	}
 

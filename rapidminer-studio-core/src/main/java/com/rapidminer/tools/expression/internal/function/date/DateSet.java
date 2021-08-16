@@ -30,7 +30,9 @@ import com.rapidminer.tools.expression.FunctionDescription;
  *
  * @author David Arnu, Jan Czogalla
  *
+ * @deprecated since 9.11, see {@link com.rapidminer.tools.belt.expression.ExpressionParser}
  */
+@Deprecated
 public class DateSet extends AbstractDateLongManipulationFunction {
 
 	public DateSet() {

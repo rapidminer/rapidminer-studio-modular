@@ -1612,7 +1612,7 @@
             &amp;quot;?&amp;quot;.&lt;/p&gt;</help>
     <key>read_excel_format</key>
   </operator>
-  
+
     <operator>
         <name>Local Polynomial Regression</name>
         <synopsis>Generates word vectors from a single text.</synopsis>
@@ -5342,6 +5342,16 @@
     <key>classification_by_regression</key>
   </operator>
     <operator>
+        <name>Function Fitting</name>
+        <key>function_fitting</key>
+        <tags>
+            <tag>Supervised</tag>
+            <tag>Regression</tag>
+            <tag>Fitting</tag>
+            <tag>Custom</tag>
+        </tags>
+    </operator>
+    <operator>
         <name>Polynomial Regression</name>
         <synopsis>Polynomial regression.</synopsis>
         <help>&lt;p&gt;This regression learning operator fits a polynomial of
@@ -6410,6 +6420,23 @@
     </tags>
     <shortName>Clustering</shortName>
   </operator>
+    <operator>
+        <name>Generate Attributes With Indices</name>
+        <key>belt_generate_attributes</key>
+        <tags>
+            <tag>Calculate</tag>
+            <tag>Create</tag>
+            <tag>New</tag>
+            <tag>Extract</tag>
+            <tag>Expressions</tag>
+            <tag>Features</tag>
+            <tag>Variables</tag>
+            <tag>Columns</tag>
+            <tag>Functions</tag>
+            <tag>Index</tag>
+            <tag>Rows</tag>
+        </tags>
+    </operator>
     <operator>
         <name>Generate Attributes</name>
         <synopsis>This operator constructs new user defined attributes from

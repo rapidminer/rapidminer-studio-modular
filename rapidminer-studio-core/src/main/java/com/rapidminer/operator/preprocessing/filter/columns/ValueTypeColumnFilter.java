@@ -38,15 +38,13 @@ import com.rapidminer.parameter.MetaDataProvider;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeCheckBoxGroup;
 import com.rapidminer.parameter.UndefinedParameterError;
-import com.rapidminer.tools.belt.BeltMetaDataTools;
-import com.rapidminer.tools.belt.BeltTools;
 
 
 /**
  * Column filter that keeps the columns of the selected value types.
  *
  * @author Kevin Majchrzak
- * @since 9.9.0
+ * @since 9.9.1
  */
 public class ValueTypeColumnFilter implements TableSubsetSelectorFilter {
 
@@ -80,18 +78,18 @@ public class ValueTypeColumnFilter implements TableSubsetSelectorFilter {
 	}
 
 	@Override
-	public Table filterTable(Table table, boolean filterSpecialColumns, boolean invertFilter) throws UserError {
+	public Table filterTable(Table table, SpecialFilterStrategy strategy, boolean invertFilter) throws UserError {
 		String valueTypeString = operator.getParameterAsString(PARAMETER_VALUE_TYPES);
 		if (valueTypeString == null || valueTypeString.isEmpty()) {
-			return filterTableWithSettings(table, filterSpecialColumns, invertFilter);
+			return filterTableWithSettings(table, strategy, invertFilter);
 		}
-		return filterTableWithSettings(table, filterSpecialColumns, invertFilter,
+		return filterTableWithSettings(table, strategy, invertFilter,
 				valueTypeString.split(String.valueOf(ParameterTypeCheckBoxGroup.CHECKBOX_SEPARATOR)));
 
 	}
 
 	@Override
-	public TableMetaData filterMetaData(TableMetaData metaData, boolean filterSpecialColumns, boolean invertFilter) {
+	public TableMetaData filterMetaData(TableMetaData metaData, SpecialFilterStrategy strategy, boolean invertFilter) {
 		if (operator.isParameterSet(PARAMETER_VALUE_TYPES)) {
 			String valueTypeString = null;
 			try {
@@ -100,12 +98,12 @@ public class ValueTypeColumnFilter implements TableSubsetSelectorFilter {
 				// should never happen
 			}
 			if (valueTypeString != null && !valueTypeString.isEmpty()) {
-				return filterMetaDataWithSettings(metaData, filterSpecialColumns, invertFilter,
+				return filterMetaDataWithSettings(metaData, strategy, invertFilter,
 						valueTypeString.split(String.valueOf(ParameterTypeCheckBoxGroup.CHECKBOX_SEPARATOR)));
 			}
 		}
 
-		return filterMetaDataWithSettings(metaData, filterSpecialColumns, invertFilter);
+		return filterMetaDataWithSettings(metaData, strategy, invertFilter);
 	}
 
 	@Override
@@ -130,9 +128,8 @@ public class ValueTypeColumnFilter implements TableSubsetSelectorFilter {
 	 *
 	 * @param table
 	 * 		the table to be filtered
-	 * @param filterSpecialColumns
-	 * 		If this is {@code true}, then the special columns (columns with a role) are also filtered. Otherwise special
-	 * 		columns are always kept.
+	 * @param strategy
+	 * 		describes how the filter should handle special columns. See {@link SpecialFilterStrategy}.
 	 * @param invertFilter
 	 * 		inverts the result of the filter (keeps the columns that would usually be removed and vice versa)
 	 * @param valueTypes
@@ -140,7 +137,7 @@ public class ValueTypeColumnFilter implements TableSubsetSelectorFilter {
 	 *        {@link #TYPE_DATE_TIME}, {@link #TYPE_BINOMINAL} and {@link #TYPE_NON_BINOMINAL}.
 	 * @return the filtered table
 	 */
-	public static Table filterTableWithSettings(Table table, boolean filterSpecialColumns, boolean invertFilter,
+	public static Table filterTableWithSettings(Table table, SpecialFilterStrategy strategy, boolean invertFilter,
 												String... valueTypes) {
 		Predicate<String> filter;
 		if (valueTypes == null || valueTypes.length == 0) {
@@ -149,13 +146,7 @@ public class ValueTypeColumnFilter implements TableSubsetSelectorFilter {
 			final HashSet<String> selectedTypes = new HashSet<>(Arrays.asList(valueTypes));
 			filter = columnName -> isOfSelectedType(table, columnName, selectedTypes);
 		}
-		if (invertFilter) {
-			filter = filter.negate();
-		}
-		if (!filterSpecialColumns) {
-			Predicate<String> isSpecialColumn = columnName -> BeltTools.isSpecial(table, columnName);
-			filter = isSpecialColumn.or(filter);
-		}
+		filter = FilterUtils.addDefaultFilters(table, strategy, invertFilter, filter);
 		return table.columns(table.labels().stream().filter(filter).collect(Collectors.toList()));
 	}
 
@@ -164,9 +155,8 @@ public class ValueTypeColumnFilter implements TableSubsetSelectorFilter {
 	 *
 	 * @param metaData
 	 * 		the meta data to be filtered
-	 * @param filterSpecialColumns
-	 * 		If this is {@code true}, then the special columns (columns with a role) are also filtered. Otherwise special
-	 * 		columns are always kept.
+	 * @param strategy
+	 * 		describes how the filter should handle special columns. See {@link SpecialFilterStrategy}.
 	 * @param invertFilter
 	 * 		inverts the result of the filter (keeps the columns that would usually be removed and vice versa)
 	 * @param valueTypes
@@ -174,7 +164,7 @@ public class ValueTypeColumnFilter implements TableSubsetSelectorFilter {
 	 *        {@link #TYPE_DATE_TIME}, {@link #TYPE_BINOMINAL} and {@link #TYPE_NON_BINOMINAL}.
 	 * @return the filtered meta data
 	 */
-	public static TableMetaData filterMetaDataWithSettings(TableMetaData metaData, boolean filterSpecialColumns,
+	public static TableMetaData filterMetaDataWithSettings(TableMetaData metaData, SpecialFilterStrategy strategy,
 														   boolean invertFilter, String... valueTypes) {
 		Predicate<String> filter;
 		if (valueTypes == null || valueTypes.length == 0) {
@@ -183,13 +173,7 @@ public class ValueTypeColumnFilter implements TableSubsetSelectorFilter {
 			final HashSet<String> selectedTypes = new HashSet<>(Arrays.asList(valueTypes));
 			filter = columnName -> isOfSelectedType(metaData, columnName, selectedTypes);
 		}
-		if (invertFilter) {
-			filter = filter.negate();
-		}
-		if (!filterSpecialColumns) {
-			Predicate<String> isSpecialColumn = columnName -> BeltMetaDataTools.isSpecial(metaData, columnName);
-			filter = isSpecialColumn.or(filter);
-		}
+		filter = FilterUtils.addDefaultFilters(metaData, strategy, invertFilter, filter);
 		return metaData.columns(metaData.labels().stream().filter(filter).collect(Collectors.toList()));
 	}
 

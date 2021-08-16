@@ -19,15 +19,16 @@
 package com.rapidminer.tools.expression;
 
 
-
 /**
- * Exception that happens while parsing a string expression or checking its syntax. Can contain a
- * {@link ExpressionParsingException} or a subclass determining the reason for the parsing error.
- * See {@link ExpressionParsingException} for standard marker subclasses.
+ * Exception that happens while parsing a string expression or checking its syntax. Can contain a {@link
+ * ExpressionParsingException} or a subclass determining the reason for the parsing error. See {@link
+ * ExpressionParsingException} for standard marker subclasses.
  *
  * @author Gisa Schaefer
  * @since 6.5.0
+ * @deprecated since 9.11, see {@link com.rapidminer.tools.belt.expression.ExpressionParser}
  */
+@Deprecated
 public class ExpressionException extends Exception {
 
 	private static final long serialVersionUID = 1566969757994992388L;

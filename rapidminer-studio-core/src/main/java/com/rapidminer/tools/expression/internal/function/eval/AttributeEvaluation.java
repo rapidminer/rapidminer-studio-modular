@@ -38,7 +38,9 @@ import com.rapidminer.tools.expression.Function;
  *
  * @author Gisa Meier
  * @since 9.3.0
+ * @deprecated since 9.11, see {@link com.rapidminer.tools.belt.expression.ExpressionParser}
  */
+@Deprecated
 public class AttributeEvaluation extends AbstractEvaluation {
 
 	private ExpressionContext context;

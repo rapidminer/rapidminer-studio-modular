@@ -19,6 +19,7 @@
 package com.rapidminer.operator.ports.metadata;
 
 import com.rapidminer.example.Attributes;
+import com.rapidminer.operator.GeneralModel;
 import com.rapidminer.operator.clustering.ClusterModel;
 import com.rapidminer.operator.ports.InputPort;
 import com.rapidminer.tools.Ontology;
@@ -58,7 +59,7 @@ public class ClusterModelMetaData extends ModelMetaData {
      * @param trainingSetMetaData {@link ExampleSetMetaData} of the ExampleSet on which the cluster model was trained.
      */
     public ClusterModelMetaData(Class<? extends ClusterModel> modelClass, boolean addAsLabel, ExampleSetMetaData trainingSetMetaData) {
-        super(modelClass, trainingSetMetaData);
+        super(modelClass, trainingSetMetaData, GeneralModel.ModelKind.UNSUPERVISED);
         this.addAsLabel = addAsLabel;
         if (isAddAsLabel()) {
             clusterMetaData = new AttributeMetaData(Attributes.LABEL_NAME, Ontology.NOMINAL, Attributes.LABEL_NAME);

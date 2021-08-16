@@ -36,15 +36,13 @@ import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeAttributeSubset;
 import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.tools.Ontology;
-import com.rapidminer.tools.belt.BeltMetaDataTools;
-import com.rapidminer.tools.belt.BeltTools;
 
 
 /**
  * Column filter that keeps the selected subset of columns of the given table.
  *
  * @author Kevin Majchrzak
- * @since 9.9.0
+ * @since 9.9.1
  */
 public class SubsetColumnFilter implements TableSubsetSelectorFilter {
 
@@ -67,13 +65,13 @@ public class SubsetColumnFilter implements TableSubsetSelectorFilter {
 	}
 
 	@Override
-	public Table filterTable(Table table, boolean filterSpecialColumns, boolean invertFilter) throws UserError {
+	public Table filterTable(Table table, SpecialFilterStrategy strategy, boolean invertFilter) throws UserError {
 		Set<String> columnNames = subsetStringToSet(operator.getParameterAsString(PARAMETER_SELECT_SUBSET));
-		return filterTableWithSettings(table, filterSpecialColumns, invertFilter, columnNames);
+		return filterTableWithSettings(table, strategy, invertFilter, columnNames);
 	}
 
 	@Override
-	public TableMetaData filterMetaData(TableMetaData metaData, boolean filterSpecialColumns, boolean invertFilter) {
+	public TableMetaData filterMetaData(TableMetaData metaData, SpecialFilterStrategy strategy, boolean invertFilter) {
 		Set<String> columnNames = null;
 		if(operator.isParameterSet(PARAMETER_SELECT_SUBSET)) {
 			try {
@@ -82,7 +80,7 @@ public class SubsetColumnFilter implements TableSubsetSelectorFilter {
 				// should never happen
 			}
 		}
-		return filterMetaDataWithSettings(metaData, filterSpecialColumns, invertFilter, columnNames);
+		return filterMetaDataWithSettings(metaData, strategy, invertFilter, columnNames);
 	}
 
 	@Override
@@ -101,9 +99,8 @@ public class SubsetColumnFilter implements TableSubsetSelectorFilter {
 	 *
 	 * @param table
 	 * 		the table to be filtered
-	 * @param filterSpecialColumns
-	 * 		If this is {@code true}, then the special columns (columns with a role) are also filtered. Otherwise special
-	 * 		columns are always kept.
+	 * @param strategy
+	 * 		describes how the filter should handle special columns. See {@link SpecialFilterStrategy}.
 	 * @param invertFilter
 	 * 		inverts the result of the filter (keeps the columns that would usually be removed and vice versa) or empty it
 	 * 		accepts all columns.
@@ -111,20 +108,14 @@ public class SubsetColumnFilter implements TableSubsetSelectorFilter {
 	 * 		the names of the columns that should be kept.
 	 * @return the filtered table
 	 */
-	public static Table filterTableWithSettings(Table table, boolean filterSpecialColumns, boolean invertFilter, Set<String> columnNames) {
+	public static Table filterTableWithSettings(Table table, SpecialFilterStrategy strategy, boolean invertFilter, Set<String> columnNames) {
 		Predicate<String> filter;
 		if (columnNames == null || columnNames.isEmpty()) {
 			filter = columnName -> false;
 		} else {
 			filter = columnNames::contains;
 		}
-		if (invertFilter) {
-			filter = filter.negate();
-		}
-		if (!filterSpecialColumns) {
-			Predicate<String> isSpecialColumn = columnName -> BeltTools.isSpecial(table, columnName);
-			filter = isSpecialColumn.or(filter);
-		}
+		filter = FilterUtils.addDefaultFilters(table, strategy, invertFilter, filter);
 		return table.columns(table.labels().stream().filter(filter).collect(Collectors.toList()));
 	}
 
@@ -133,9 +124,8 @@ public class SubsetColumnFilter implements TableSubsetSelectorFilter {
 	 *
 	 * @param metaData
 	 * 		the meta data to be filtered
-	 * @param filterSpecialColumns
-	 * 		If this is {@code true}, then the special columns (columns with a role) are also filtered. Otherwise special
-	 * 		columns are always kept.
+	 * @param strategy
+	 * 		describes how the filter should handle special columns. See {@link SpecialFilterStrategy}.
 	 * @param invertFilter
 	 * 		inverts the result of the filter (keeps the columns that would usually be removed and vice versa) or empty it
 	 * 		accepts all columns.
@@ -143,7 +133,7 @@ public class SubsetColumnFilter implements TableSubsetSelectorFilter {
 	 * 		the names of the columns that should be kept.
 	 * @return the filtered meta data
 	 */
-	public static TableMetaData filterMetaDataWithSettings(TableMetaData metaData, boolean filterSpecialColumns,
+	public static TableMetaData filterMetaDataWithSettings(TableMetaData metaData, SpecialFilterStrategy strategy,
 														   boolean invertFilter, Set<String> columnNames) {
 		Predicate<String> filter;
 		if (columnNames == null || columnNames.isEmpty()) {
@@ -151,13 +141,7 @@ public class SubsetColumnFilter implements TableSubsetSelectorFilter {
 		} else {
 			filter = columnNames::contains;
 		}
-		if (invertFilter) {
-			filter = filter.negate();
-		}
-		if (!filterSpecialColumns) {
-			Predicate<String> isSpecialColumn = columnName -> BeltMetaDataTools.isSpecial(metaData, columnName);
-			filter = isSpecialColumn.or(filter);
-		}
+		filter = FilterUtils.addDefaultFilters(metaData, strategy, invertFilter, filter);
 		return metaData.columns(metaData.labels().stream().filter(filter).collect(Collectors.toList()));
 	}
 

@@ -133,6 +133,11 @@ public class OpenSourceLicenseManager implements LicenseManager {
 	}
 
 	@Override
+	public boolean isAllowedByAnnotations(Class<?> clazz) {
+		return true;
+	}
+
+	@Override
 	public Pair<Product, License> validateLicense(Product product, String licenseText)
 			throws UnknownProductException, LicenseValidationException {
 		Objects.requireNonNull(product);

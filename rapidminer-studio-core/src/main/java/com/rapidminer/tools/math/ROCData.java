@@ -43,6 +43,10 @@ public class ROCData implements Iterable<ROCPoint>, Serializable {
 
 	private double bestIsometricsTP;
 
+	public ROCData() {
+		// made this explicit for jackson
+	}
+
 	public void addPoint(ROCPoint point) {
 		points.add(point);
 	}

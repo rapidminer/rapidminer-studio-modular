@@ -782,6 +782,24 @@ public class Plugin {
 	}
 
 	/**
+	 * Registers all {@link com.rapidminer.operator.IOObject IOObjects} that are mentioned in this plugin's
+	 * {@code ioobjects.xml} file.
+	 *
+	 * @since 9.10
+	 */
+	public void registerIOObjects() {
+		if (pluginResourceObjects != null) {
+			URL resource = this.classLoader.getResource(pluginResourceObjects);
+			if (resource != null) {
+				this.classLoader.setIgnoreDependencyClassloaders(false);
+				OperatorService.initIOObjects(name, resource, this.classLoader);
+			} else {
+				// no ioobjects to register
+			}
+		}
+	}
+
+	/**
 	 * Register all things delivered with this plugin.
 	 *
 	 * @throws PluginException
@@ -908,7 +926,9 @@ public class Plugin {
 					final Plugin plugin = new Plugin(file);
 					final Plugin conflict = getPluginByExtensionId(plugin.getExtensionId(), newPlugins);
 					if (conflict == null) {
-						newPlugins.add(plugin);
+						if (isExtensionVersionAllowed(plugin, new VersionNumber(plugin.getVersion()))) {
+							newPlugins.add(plugin);
+						}
 					} else {
 						resolveVersionConflict(plugin, conflict, newPlugins);
 					}
@@ -1355,6 +1375,7 @@ public class Plugin {
 	public static void registerAllPluginOperators() {
 		for (Plugin plugin : ALL_PLUGINS) {
 			long start = System.currentTimeMillis();
+			plugin.registerIOObjects();
 			plugin.registerOperators();
 			recordLoadingTime(plugin.getExtensionId(), start);
 		}

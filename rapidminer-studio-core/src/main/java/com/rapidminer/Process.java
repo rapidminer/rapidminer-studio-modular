@@ -55,7 +55,6 @@ import com.rapidminer.core.license.LicenseViolationException;
 import com.rapidminer.core.license.ProductConstraintManager;
 import com.rapidminer.datatable.DataTable;
 import com.rapidminer.datatable.SimpleDataTable;
-import com.rapidminer.tools.encryption.EncryptionProvider;
 import com.rapidminer.example.table.AttributeFactory;
 import com.rapidminer.gui.tools.ProgressThread;
 import com.rapidminer.gui.tools.ProgressThreadStoppedException;
@@ -115,6 +114,7 @@ import com.rapidminer.tools.WrapperLoggingHandler;
 import com.rapidminer.tools.XMLException;
 import com.rapidminer.tools.XMLParserException;
 import com.rapidminer.tools.container.Pair;
+import com.rapidminer.tools.encryption.EncryptionProvider;
 import com.rapidminer.tools.usagestats.ActionStatisticsCollector;
 
 

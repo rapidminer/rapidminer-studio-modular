@@ -33,7 +33,9 @@ import com.rapidminer.tools.expression.ExpressionType;
  *
  * @author Gisa Schaefer
  *
+ * @deprecated since 9.11, see {@link com.rapidminer.tools.belt.expression.ExpressionParser}
  */
+@Deprecated
 public class SimpleExpressionEvaluator implements ExpressionEvaluator {
 
 	private final Callable<String> stringCallable;

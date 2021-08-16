@@ -26,7 +26,9 @@ import org.antlr.v4.runtime.ParserRuleContext;
  *
  * @author Gisa Schaefer
  *
+ * @deprecated since 9.11, see {@link com.rapidminer.tools.belt.expression.ExpressionParser}
  */
+@Deprecated
 public class FunctionInputException extends ExpressionParsingException {
 
 	private static final long serialVersionUID = 4495628675895791328L;

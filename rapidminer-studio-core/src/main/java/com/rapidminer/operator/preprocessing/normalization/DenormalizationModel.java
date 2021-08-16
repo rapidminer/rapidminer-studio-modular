@@ -18,6 +18,12 @@
  */
 package com.rapidminer.operator.preprocessing.normalization;
 
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.AttributeRole;
 import com.rapidminer.example.Attributes;
@@ -26,14 +32,12 @@ import com.rapidminer.example.SimpleAttributes;
 import com.rapidminer.example.set.ExampleSetUtilities;
 import com.rapidminer.example.set.ExampleSetUtilities.SetsCompareOption;
 import com.rapidminer.example.set.ExampleSetUtilities.TypesCompareOption;
+import com.rapidminer.example.set.HeaderExampleSet;
 import com.rapidminer.example.table.ViewAttribute;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.preprocessing.normalization.DenormalizationOperator.LinearTransformation;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.Tools;
-
-import java.util.Iterator;
-import java.util.Map;
 
 
 /**
@@ -45,9 +49,12 @@ public class DenormalizationModel extends AbstractNormalizationModel {
 
 	private static final long serialVersionUID = 1370670246351357686L;
 
+	private static final Pattern PREDICTION_PATTERN = Pattern.compile(Attributes.PREDICTION_NAME + "\\((.+)\\)");
+
 	private Map<String, LinearTransformation> attributeTransformations;
 	private AbstractNormalizationModel invertedModel;
 	private boolean failOnMissing;
+	private boolean denormPredictions;
 
 	protected DenormalizationModel(ExampleSet exampleSet, Map<String, LinearTransformation> attributeTransformations,
 			AbstractNormalizationModel model) {
@@ -55,11 +62,17 @@ public class DenormalizationModel extends AbstractNormalizationModel {
 	}
 
 	protected DenormalizationModel(ExampleSet exampleSet, Map<String, LinearTransformation> attributeTransformations,
-			AbstractNormalizationModel model, boolean failOnMissingAttributes) {
+							   AbstractNormalizationModel model, boolean failOnMissingAttributes) {
+		this(exampleSet, attributeTransformations, model, failOnMissingAttributes, false);
+	}
+
+	protected DenormalizationModel(ExampleSet exampleSet, Map<String, LinearTransformation> attributeTransformations,
+								   AbstractNormalizationModel model, boolean failOnMissingAttributes, boolean denormPredictions) {
 		super(exampleSet);
 		this.attributeTransformations = attributeTransformations;
 		this.invertedModel = model;
 		this.failOnMissing = failOnMissingAttributes;
+		this.denormPredictions = denormPredictions;
 	}
 
 	@Override
@@ -75,7 +88,7 @@ public class DenormalizationModel extends AbstractNormalizationModel {
 		}
 		// add regular attributes
 		for (Attribute attribute : viewParent.getAttributes()) {
-			if (!attribute.isNumerical() || !attributeTransformations.containsKey(attribute.getName())) {
+			if (!attribute.isNumerical() || getTransformationWithPrediction(attribute.getName()) == null) {
 				attributes.addRegular(attribute);
 			} else {
 				// giving new attributes old name: connection to rangesMap
@@ -87,11 +100,25 @@ public class DenormalizationModel extends AbstractNormalizationModel {
 
 	@Override
 	public double getValue(Attribute targetAttribute, double value) {
-		LinearTransformation linearTransformation = attributeTransformations.get(targetAttribute.getName());
+		String targetName = targetAttribute.getName();
+		LinearTransformation linearTransformation = getTransformationWithPrediction(targetName);
+
 		if (linearTransformation != null) {
 			return (value - linearTransformation.b) / linearTransformation.a;
 		}
 		return value;
+	}
+
+	private LinearTransformation getTransformationWithPrediction(String targetName) {
+		LinearTransformation linearTransformation = attributeTransformations.get(targetName);
+		if (linearTransformation != null || !denormPredictions) {
+			return linearTransformation;
+		}
+		return Optional.ofNullable(targetName)
+				.map(PREDICTION_PATTERN::matcher)
+				.filter(Matcher::matches)
+				.map(m -> attributeTransformations.get(m.group(1)))
+				.orElse(null);
 	}
 
 	@Override
@@ -112,6 +139,25 @@ public class DenormalizationModel extends AbstractNormalizationModel {
 					exampleSet.getAttributes(), SetsCompareOption.ALLOW_SUPERSET, TypesCompareOption.ALLOW_SAME_PARENTS);
 		}
 		return super.applyOnData(exampleSet);
+	}
+
+	@Override
+	protected ExampleSet getNonSpecialRemappedTarget(ExampleSet exampleSet, HeaderExampleSet trainingHeader, boolean keepAdditional) {
+		if (denormPredictions) {
+			trainingHeader = (HeaderExampleSet) trainingHeader.clone();
+			Attributes targetAttributes = trainingHeader.getAttributes();
+			exampleSet.getAttributes().allAttributeRoles()
+					.forEachRemaining(role -> {
+						String attName = role.getAttribute().getName();
+						if (targetAttributes.findRoleByName(attName) == null) {
+							Matcher matcher = PREDICTION_PATTERN.matcher(attName);
+							if (matcher.matches() && targetAttributes.findRoleByName(matcher.group(1)) != null) {
+								targetAttributes.addRegular(role.getAttribute());
+							}
+						}
+					});
+		}
+		return super.getNonSpecialRemappedTarget(exampleSet, trainingHeader, keepAdditional);
 	}
 
 	public Map<String, LinearTransformation> getAttributeTransformations() {

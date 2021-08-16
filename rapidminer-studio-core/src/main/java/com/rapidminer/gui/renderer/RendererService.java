@@ -91,7 +91,7 @@ public class RendererService {
 		}
 	}
 
-	private static final String CORE_IOOBJECTS_XML = "ioobjects.xml";
+	public static final String CORE_IOOBJECTS_XML = "ioobjects.xml";
 
 	/**
 	 * Contains all simple renderers that have been migrated to the new HTML5 Visualizations. Can be removed once the "show legacy simple charts" setting is removed.

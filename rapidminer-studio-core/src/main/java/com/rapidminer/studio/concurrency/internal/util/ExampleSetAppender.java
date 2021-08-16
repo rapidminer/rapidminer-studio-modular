@@ -228,10 +228,9 @@ public class ExampleSetAppender {
 
 	private static void throwIncompatible(Attribute oldAttribute, Attribute otherAttribute, Operator caller)
 			throws UserError {
-		throw new UserError(caller, 925,
-				"Attribute '" + oldAttribute.getName() + "' has incompatible types ("
-						+ Ontology.ATTRIBUTE_VALUE_TYPE.mapIndex(oldAttribute.getValueType()) + " and "
-						+ Ontology.ATTRIBUTE_VALUE_TYPE.mapIndex(otherAttribute.getValueType()) + ") in two input sets.");
+		throw new UserError(caller, "append_compatibility.incompatible_type",
+				oldAttribute.getName(), Ontology.ATTRIBUTE_VALUE_TYPE.mapIndex(oldAttribute.getValueType()),
+						Ontology.ATTRIBUTE_VALUE_TYPE.mapIndex(otherAttribute.getValueType()));
 	}
 
 	/**
@@ -244,15 +243,16 @@ public class ExampleSetAppender {
 	private static void checkForCompatibility(List<ExampleSet> allExampleSets, Operator caller) throws OperatorException {
 		Iterator<ExampleSet> i = allExampleSets.iterator();
 		ExampleSet first = i.next();
+		int index = 1;
 		while (i.hasNext()) {
-			checkForCompatibility(first, i.next(), caller);
+			checkForCompatibility(first, i.next(), index++, caller);
 		}
 	}
 
-	private static void checkForCompatibility(ExampleSet first, ExampleSet second, Operator caller)
+	private static void checkForCompatibility(ExampleSet first, ExampleSet second, int exampleSetNumber, Operator caller)
 			throws OperatorException {
 		if (first.getAttributes().allSize() != second.getAttributes().allSize()) {
-			throw new UserError(caller, 925, "numbers of attributes are different");
+			throw new UserError(caller, "append_compatibility.incompatible_width", exampleSetNumber);
 		}
 
 		Iterator<Attribute> firstIterator = first.getAttributes().allAttributes();
@@ -260,8 +260,8 @@ public class ExampleSetAppender {
 			Attribute firstAttribute = firstIterator.next();
 			Attribute secondAttribute = second.getAttributes().get(firstAttribute.getName());
 			if (secondAttribute == null) {
-				throw new UserError(caller, 925,
-						"Attribute with name '" + firstAttribute.getName() + "' is not part of second example set.");
+				throw new UserError(caller, "append_compatibility.incompatible_column",
+						exampleSetNumber, firstAttribute.getName());
 			}
 		}
 	}

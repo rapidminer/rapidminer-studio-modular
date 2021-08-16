@@ -18,6 +18,7 @@
  */
 package com.rapidminer.operator;
 
+import java.util.Arrays;
 import java.util.List;
 
 import com.rapidminer.example.ExampleSet;
@@ -80,7 +81,8 @@ public class ModelGrouper extends Operator {
 					if (input != null) {
 						ExampleSetMetaData trainMD = input.getTrainingSetMetaData();
 						if (trainMD != null) {
-							ModelMetaData mmd = new ModelMetaData(GroupedModel.class, trainMD);
+							GeneralModel.ModelKind[] modelKinds = calculateModelKinds(metaDatas);
+							ModelMetaData mmd = new ModelMetaData(GroupedModel.class, trainMD, modelKinds);
 							mmd.addToHistory(modelOutput);
 							modelOutput.deliverMD(mmd);
 							return;
@@ -111,5 +113,43 @@ public class ModelGrouper extends Operator {
 		}
 
 		modelOutput.deliver(groupedModel);
+	}
+
+	/**
+	 * Calculates the model kinds based of those from the model meta data list.
+	 */
+	private GeneralModel.ModelKind[] calculateModelKinds(List<ModelMetaData> metaDatas) {
+		return Arrays.stream(GeneralModel.ModelKind.values()).filter(k -> {
+			if (k == GeneralModel.ModelKind.POSTPROCESSING || k ==
+					GeneralModel.ModelKind.PREPROCESSING) {
+				return allAreModelKind(k, metaDatas);
+			} else {
+				return oneIsModelKind(k, metaDatas);
+			}
+		}).toArray(GeneralModel.ModelKind[]::new);
+	}
+
+	/**
+	 * Returns {@code true} iff all of the model meta datas if of the given kind.
+	 */
+	private boolean allAreModelKind(GeneralModel.ModelKind modelKind, List<ModelMetaData> metaDatas) {
+		for (ModelMetaData model : metaDatas) {
+			if (model != null && model.isModelKind(modelKind)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Returns {@code true} iff one of the model meta datas if of the given kind.
+	 */
+	private boolean oneIsModelKind(GeneralModel.ModelKind modelKind, List<ModelMetaData> metaDatas) {
+		for (ModelMetaData model : metaDatas) {
+			if (model != null && !model.isModelKind(modelKind)) {
+				return false;
+			}
+		}
+		return true;
 	}
 }

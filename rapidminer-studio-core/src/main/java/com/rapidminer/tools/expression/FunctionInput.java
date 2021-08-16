@@ -31,7 +31,9 @@ import com.rapidminer.tools.Ontology;
  *
  * @author Sabrina Kirstein
  * @since 6.5.0
+ * @deprecated since 9.11, see {@link com.rapidminer.tools.belt.expression.ExpressionParser}
  */
+@Deprecated
 public class FunctionInput {
 
 	public enum Category {

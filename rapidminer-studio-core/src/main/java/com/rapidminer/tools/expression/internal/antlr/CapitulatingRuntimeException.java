@@ -23,8 +23,9 @@ package com.rapidminer.tools.expression.internal.antlr;
  * {@link CapitulatingErrorStrategy} encounters an error it does not want to recover from.
  *
  * @author Gisa Schaefer
- *
+ * @deprecated since 9.11, see {@link com.rapidminer.tools.belt.expression.ExpressionParser}
  */
+@Deprecated
 class CapitulatingRuntimeException extends RuntimeException {
 
 	private static final long serialVersionUID = -4281221436108519452L;

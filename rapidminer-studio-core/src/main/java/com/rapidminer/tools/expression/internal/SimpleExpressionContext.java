@@ -43,7 +43,9 @@ import com.rapidminer.tools.expression.Resolver;
  *
  * @author Gisa Schaefer
  *
+ * @deprecated since 9.11, see {@link com.rapidminer.tools.belt.expression.ExpressionParser}
  */
+@Deprecated
 public class SimpleExpressionContext implements ExpressionContext {
 
 	private Map<String, Function> functionMap;

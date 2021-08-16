@@ -190,9 +190,10 @@ public class ParameterTypeExpression extends ParameterTypeString {
 		}
 
 		if (version != null && version.isAtMost(ExpressionParserBuilder.OLD_EXPRESSION_PARSER_FUNCTIONS)) {
-			// do not replace macros in case the compatibility level is at most 6.4
+			// replace macros in case the compatibility level is at most 6.4
 			return super.substituteMacros(parameterValue, mh);
 		} else {
+			// replacement is done later via the grammar
 			return parameterValue;
 		}
 
@@ -209,9 +210,10 @@ public class ParameterTypeExpression extends ParameterTypeString {
 		}
 
 		if (version != null && version.isAtMost(ExpressionParserBuilder.OLD_EXPRESSION_PARSER_FUNCTIONS)) {
-			// do not replace macros in case the compatibility level is at most 6.4
+			// replace macros in case the compatibility level is at most 6.4
 			return super.substitutePredefinedMacros(parameterValue, operator);
 		} else {
+			// replacement is done later via the grammar
 			return parameterValue;
 		}
 	}

@@ -20,6 +20,7 @@ package com.rapidminer.operator.performance.cost;
 
 import java.util.HashMap;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.Example;
@@ -56,12 +57,18 @@ public class RankingCriterion extends MeasuredPerformance {
 	private int version = AFTER_BROKEN_FITNESS;
 
 	private double costs;
+	@JsonIgnore
 	private Attribute label;
+	@JsonIgnore
 	private Attribute[] confidenceAttributes;
 	private double exampleCount;
 	private int[] rankIntervallStarts;
 	private double[] rankIntervallCost;
-	private HashMap<String, Integer> confidenceAttributesMap = new HashMap<String, Integer>();
+	private HashMap<String, Integer> confidenceAttributesMap = new HashMap<>();
+
+	private RankingCriterion() {
+		// needed for jackson
+	}
 
 	/**
 	 * Clone Constructor
@@ -106,7 +113,7 @@ public class RankingCriterion extends MeasuredPerformance {
 
 	@Override
 	public String getDescription() {
-		return "This Criterion delievers the ranking costs";
+		return "This Criterion delivers the ranking costs";
 	}
 
 	@Override

@@ -138,7 +138,7 @@ public class ParameterTypeLong extends ParameterTypeNumber {
 	@Override
 	public String getRange() {
 		String range = "Long; ";
-		if (min == -Long.MAX_VALUE) {
+		if (min == Long.MIN_VALUE) {
 			range += "-\u221E";
 		} else {
 			range += min;

@@ -40,8 +40,9 @@ import com.rapidminer.tools.expression.internal.function.AbstractFunction;
  * by the subexpression. Requires a second parameter that specifies the type in case of non-constant input.
  *
  * @author Gisa Schaefer
- *
+ * @deprecated since 9.11, see {@link com.rapidminer.tools.belt.expression.ExpressionParser}
  */
+@Deprecated
 abstract class AbstractEvaluation extends AbstractFunction {
 
 

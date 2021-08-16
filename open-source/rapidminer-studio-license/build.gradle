@@ -5,5 +5,13 @@ dependencies {
 
 	// RapidMiner license framework for license management
 	compile "com.rapidminer.license:rapidminer-license-api:$licenseVersion"
-	compile("com.rapidminer.license:rapidminer-license-commons:$licenseVersion")
+	compile "com.rapidminer.license:rapidminer-license-commons:$licenseVersion"
+	constraints {
+		compile('com.fasterxml.jackson.core:jackson-core:2.10.5') {
+			because 'want same version as for studio core'
+		}
+		compile('com.fasterxml.jackson.core:jackson-databind:2.10.5.1') {
+			because 'want same version as for studio core'
+		}
+	}
 }

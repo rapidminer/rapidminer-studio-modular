@@ -28,7 +28,9 @@ import com.rapidminer.tools.expression.ExpressionParsingException;
  *
  * @author Gisa Meier
  * @since 9.3.0
+ * @deprecated since 9.11, see {@link com.rapidminer.tools.belt.expression.ExpressionParser}
  */
+@Deprecated
 public class AttributeEvaluationException extends ExpressionParsingException {
 
 	private static final long serialVersionUID = -7644715146786931281L;

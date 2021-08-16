@@ -29,7 +29,9 @@ import com.rapidminer.tools.expression.FunctionInputException;
  *
  * @author Thilo Kamradt
  *
+ * @deprecated since 9.11, see {@link com.rapidminer.tools.belt.expression.ExpressionParser}
  */
+@Deprecated
 public class Finds extends Abstract2StringInputBooleanOutputFunction {
 
 	/**

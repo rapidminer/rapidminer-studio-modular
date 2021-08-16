@@ -29,7 +29,9 @@ import com.rapidminer.tools.expression.internal.function.Abstract1DoubleInputFun
  *
  * @author Thilo Kamradt
  *
+ * @deprecated since 9.11, see {@link com.rapidminer.tools.belt.expression.ExpressionParser}
  */
+@Deprecated
 public class Floor extends Abstract1DoubleInputFunction {
 
 	public Floor() {

@@ -25,7 +25,9 @@ package com.rapidminer.tools.expression.internal.function.text;
  *
  * @author David Arnu
  *
+ * @deprecated since 9.11, see {@link com.rapidminer.tools.belt.expression.ExpressionParser}
  */
+@Deprecated
 public class Compare extends Abstract2StringInputIntegerOutputFunction {
 
 	/**

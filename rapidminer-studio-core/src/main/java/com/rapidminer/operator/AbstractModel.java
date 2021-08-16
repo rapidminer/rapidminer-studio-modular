@@ -74,6 +74,20 @@ public abstract class AbstractModel extends ResultObjectAdapter implements Model
 		return this.headerExampleSet;
 	}
 
+	@Override
+	public ExampleSet apply(ExampleSet testObject, Operator operator) throws OperatorException {
+		if (operator != null) {
+			setOperator(operator);
+			setShowProgress(true);
+			ExampleSet applied = apply(testObject);
+			setOperator(null);
+			setShowProgress(false);
+			return applied;
+		} else {
+			return apply(testObject);
+		}
+	}
+
 	/**
 	 * This default implementation returns false. Note that subclasses overriding this method should
 	 * also override the method {@link #updateModel(ExampleSet)}.
@@ -91,6 +105,27 @@ public abstract class AbstractModel extends ResultObjectAdapter implements Model
 	@Override
 	public void updateModel(ExampleSet updateExampleSet) throws OperatorException {
 		throw new UserError(null, 135, getClass().getName());
+	}
+
+	/**
+	 * This default implementation throws an {@link UserError}. Subclasses overriding this method to
+	 * update the model according to the given example set should also override the method
+	 * {@link #isUpdatable()} by delivering true.
+	 */
+	@Override
+	public void updateModel(ExampleSet updateObject, Operator operator) throws OperatorException {
+		if (!isUpdatable()) {
+			throw new UserError(operator, 135, getClass().getName());
+		}
+		if (operator != null) {
+			setOperator(operator);
+			setShowProgress(true);
+			updateModel(updateObject);
+			setOperator(null);
+			setShowProgress(false);
+		} else {
+			updateModel(updateObject);
+		}
 	}
 
 	/**

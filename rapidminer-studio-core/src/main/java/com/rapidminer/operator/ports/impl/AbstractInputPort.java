@@ -104,17 +104,16 @@ public abstract class AbstractInputPort extends AbstractPort<InputPort, OutputPo
 			return metaData;
 		}
 	}
-
-	@SuppressWarnings("unchecked")
+	
 	@Override
 	public <T extends MetaData> T getMetaData(Class<T> desiredClass) throws IncompatibleMDClassException {
 		if (realMetaData != null) {
 			return getCompatibleMetaData(desiredClass, realMetaData, this);
 		} else {
 			if (metaData != null) {
-				getCompatibleMetaData(desiredClass, metaData, this);
+				return getCompatibleMetaData(desiredClass, metaData, this);
 			}
-			return (T) metaData;
+			return null;
 		}
 	}
 

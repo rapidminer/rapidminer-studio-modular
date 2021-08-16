@@ -22,7 +22,6 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
-import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.ports.InputPort;
 import com.rapidminer.operator.ports.OutputPort;
 import com.rapidminer.operator.ports.metadata.ExampleSetMetaData;
@@ -38,10 +37,11 @@ import com.rapidminer.parameter.ParameterTypeString;
 
 
 /**
- * This operator applies a {@link Model} to an {@link ExampleSet}. All parameters of the training
- * process should be stored within the model. However, this operator is able to take any parameters
+ * This operator applies a {@link GeneralModel} to an {@link IOObject}, usually a
+ * {@link com.rapidminer.example.ExampleSet} or {@link com.rapidminer.adaption.belt.IOTable}. All parameters of the
+ * training process should be stored within the model. However, this operator is able to take any parameters
  * for the rare case that the particular model evaluates parameters during application. Models can
- * be read from a file by using a {@link com.rapidminer.extension.legacy.operator.io.ModelLoader}.
+ * be read from a file by using a retrieve operator.
  *
  * @author Ingo Mierswa, Simon Fischer
  */
@@ -71,31 +71,25 @@ public class ModelApplier extends Operator {
 	}
 
 	private final InputPort modelInput = getInputPorts().createPort("model");
-	private final InputPort exampleSetInput = getInputPorts().createPort("unlabelled data");
-	private final OutputPort exampleSetOutput = getOutputPorts().createPort("labelled data");
+	private final InputPort initialDataInput = getInputPorts().createPort("unlabelled data");
+	private final OutputPort transformedDataOutput = getOutputPorts().createPort("labelled data");
 	private final OutputPort modelOutput = getOutputPorts().createPort("model");
 
 	public ModelApplier(OperatorDescription description) {
 		super(description);
 		modelInput.addPrecondition(
 				new SimplePrecondition(modelInput, new ModelMetaData(Model.class, new ExampleSetMetaData())));
-		exampleSetInput.addPrecondition(new SimplePrecondition(exampleSetInput, new ExampleSetMetaData()));
-		getTransformer().addRule(new ModelApplicationRule(exampleSetInput, exampleSetOutput, modelInput, false));
+		initialDataInput.addPrecondition(new SimplePrecondition(initialDataInput, new ExampleSetMetaData()));
+		getTransformer().addRule(new ModelApplicationRule(initialDataInput, transformedDataOutput, modelInput, false));
 		getTransformer().addRule(new PassThroughRule(modelInput, modelOutput, false));
 	}
 
 	/**
-	 * Applies the operator and labels the {@link ExampleSet}. The example set in the input is not
-	 * consumed.
+	 * Applies the operator by applying the model to the initial data. The transformed data is at the output.
 	 */
 	@Override
 	public void doWork() throws OperatorException {
-		ExampleSet inputExampleSet = exampleSetInput.getData(ExampleSet.class);
-		Model model = modelInput.getData(Model.class);
-		if (AbstractModel.class.isAssignableFrom(model.getClass())) {
-			((AbstractModel) model).setOperator(this);
-			((AbstractModel) model).setShowProgress(true);
-		}
+		GeneralModel<?, ?> model = modelInput.getData(GeneralModel.class);
 
 		log("Set parameters for " + model.getClass().getName());
 		List<String[]> modelParameters = getParameterList(PARAMETER_APPLICATION_PARAMETERS);
@@ -128,24 +122,28 @@ public class ModelApplier extends Operator {
 			}
 		}
 
+		IOObject result = applyModel(model);
+
+		transformedDataOutput.deliver(result);
+		modelOutput.deliver(model);
+	}
+
+	/**
+	 * Applies the model in a generic way.
+	 *
+	 * @since 9.10
+	 */
+	private <T extends IOObject, S extends IOObject> S applyModel(GeneralModel<T, S> model) throws OperatorException {
+		T data = initialDataInput.getData(model.getInputType());
 		log("Applying " + model.getClass().getName());
-		ExampleSet result = inputExampleSet;
 		try {
-			result = model.apply(inputExampleSet);
+			return model.apply(data, this);
 		} catch (UserError e) {
 			if (e.getOperator() == null) {
 				e.setOperator(this);
 			}
 			throw e;
 		}
-
-		if (AbstractModel.class.isAssignableFrom(model.getClass())) {
-			((AbstractModel) model).setOperator(null);
-			((AbstractModel) model).setShowProgress(false);
-		}
-
-		exampleSetOutput.deliver(result);
-		modelOutput.deliver(model);
 	}
 
 	@Override

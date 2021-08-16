@@ -1248,7 +1248,7 @@ public class SwingTools {
 		// if debug mode is enabled, send exception to logger
 		if ("true".equals(ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_GENERAL_DEBUGMODE))) {
 			LogService.getRoot().log(Level.WARNING, I18N.getMessage(LogService.getRoot().getResourceBundle(),
-					"com.rapidminer.gui.tools.SwingTools.show_simple_get_message", e.getMessage()), e);
+					"com.rapidminer.gui.tools.SwingTools.show_simple_get_message", e != null ? e.getMessage() : null), e);
 		}
 		invokeLater(new Runnable() {
 

@@ -25,22 +25,21 @@ import static org.mockito.Mockito.when;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.rapidminer.Process;
+import com.rapidminer.TestUtils;
 import com.rapidminer.gui.tools.ProgressThread;
 import com.rapidminer.gui.tools.ProgressThreadStateListener;
 import com.rapidminer.operator.ExecutionUnit;
 import com.rapidminer.operator.IOObject;
-import com.rapidminer.operator.OperatorCreationException;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
-import com.rapidminer.operator.ProcessRootOperator;
 import com.rapidminer.operator.UserData;
 import com.rapidminer.operator.io.AbstractReader;
 import com.rapidminer.operator.ports.metadata.MetaData;
 import com.rapidminer.tools.LogService;
-import com.rapidminer.tools.OperatorService;
 import com.rapidminer.tools.documentation.OperatorDocumentation;
 
 
@@ -56,6 +55,11 @@ public class MetaDataUpdateQueueTest {
 	private static final int TIMES_TO_CHECK_STOP_CONDITION = 10;
 	private static final int WAIT_TIME_BETWEEN_CHECKS = 50;
 	private static final int DELAY_FOR_MD_GENERATION = 200;
+
+	@BeforeClass
+	public static void setup() throws Exception {
+		TestUtils.INSTANCE.minimalProcessUsageSetup();
+	}
 
 	/** Test meta data generation in the background */
 	@Test
@@ -105,27 +109,6 @@ public class MetaDataUpdateQueueTest {
 		};
 		ProgressThread.addProgressThreadStateListener(counter);
 
-		// dummy docu/desc for ProcessRootOperator
-		OperatorDocumentation docu = mock(OperatorDocumentation.class);
-		OperatorDescription desc = mock(OperatorDescription.class);
-		doReturn(docu).when(desc).getOperatorDocumentation();
-
-		// preparation for calling new Process()
-		doReturn("root").when(docu).getShortName();
-		doReturn("process").when(desc).getKey();
-		doReturn(true).when(desc).isIconDefined();
-		doReturn("").when(desc).getGroup();
-		doReturn(ProcessRootOperator.class).when(desc).getOperatorClass();
-		try {
-			doReturn(new ProcessRootOperator(desc)).when(desc).createOperatorInstance();
-		} catch (OperatorCreationException e) {
-			e.printStackTrace();
-		}
-		try {
-			OperatorService.registerOperator(desc, null);
-		} catch (OperatorCreationException e) {
-			e.printStackTrace();
-		}
 		Process p = new Process();
 		ExecutionUnit subprocess = p.getRootOperator().getSubprocess(0);
 
